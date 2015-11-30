@@ -1,4 +1,0 @@
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'y0g@frc^$8=ajg#eczjz41=#=1&4q_4ukfx%%7lefzhwr#_5yj'
-ROOT_URLCONF = 'fuelup.urls'
-WSGI_APPLICATION = 'fuelup.wsgi.application'
