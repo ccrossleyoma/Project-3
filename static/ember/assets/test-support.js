@@ -9,7 +9,7 @@
  *            Portions Copyright 2008-2011 Apple Inc. All rights reserved.
  * @license   Licensed under MIT license
  *            See https://raw.github.com/emberjs/ember.js/master/LICENSE
- * @version   1.12.0
+ * @version   1.13.7
  */
 
 (function() {
@@ -17,8 +17,12 @@ var enifed, requireModule, eriuqer, requirejs, Ember;
 var mainContext = this;
 
 (function() {
+  var isNode = typeof process !== 'undefined' && {}.toString.call(process) === '[object process]';
 
-  Ember = this.Ember = this.Ember || {};
+  if (!isNode) {
+    Ember = this.Ember = this.Ember || {};
+  }
+
   if (typeof Ember === 'undefined') { Ember = {}; };
 
   if (typeof Ember.__loader === 'undefined') {
@@ -114,50 +118,77 @@ var mainContext = this;
   }
 })();
 
-enifed('ember-debug', ['exports', 'ember-metal/core', 'ember-metal/utils', 'ember-metal/error', 'ember-metal/logger', 'ember-metal/environment'], function (exports, Ember, utils, EmberError, Logger, environment) {
+enifed("ember-debug", ["exports", "ember-metal/core", "ember-metal/error", "ember-metal/logger", "ember-debug/deprecation-manager", "ember-metal/environment"], function (exports, _emberMetalCore, _emberMetalError, _emberMetalLogger, _emberDebugDeprecationManager, _emberMetalEnvironment) {
+  /*global __fail__*/
 
-  'use strict';
+  "use strict";
 
   exports._warnIfUsingStrippedFeatureFlags = _warnIfUsingStrippedFeatureFlags;
 
   /**
-    Will call `Ember.warn()` if ENABLE_ALL_FEATURES, ENABLE_OPTIONAL_FEATURES, or
-    any specific FEATURES flag is truthy.
-
-    This method is called automatically in debug canary builds.
-
-    @private
-    @method _warnIfUsingStrippedFeatureFlags
-    @return {void}
+  @module ember
+  @submodule ember-debug
   */
-  Ember['default'].assert = function (desc, test) {
+
+  /**
+  @class Ember
+  @public
+  */
+
+  function isPlainFunction(test) {
+    return typeof test === 'function' && test.PrototypeMixin === undefined;
+  }
+
+  /**
+    Define an assertion that will throw an exception if the condition is not
+    met. Ember build tools will remove any calls to `Ember.assert()` when
+    doing a production build. Example:
+  
+    ```javascript
+    // Test for truthiness
+    Ember.assert('Must pass a valid object', obj);
+  
+    // Fail unconditionally
+    Ember.assert('This code path should never be run');
+    ```
+  
+    @method assert
+    @param {String} desc A description of the assertion. This will become
+      the text of the Error thrown if the assertion fails.
+    @param {Boolean|Function} test Must be truthy for the assertion to pass. If
+      falsy, an exception will be thrown. If this is a function, it will be executed and
+      its return value will be used as condition.
+    @public
+  */
+  _emberMetalCore["default"].assert = function (desc, test) {
     var throwAssertion;
 
-    if (utils.typeOf(test) === "function") {
+    if (isPlainFunction(test)) {
       throwAssertion = !test();
     } else {
       throwAssertion = !test;
     }
 
     if (throwAssertion) {
-      throw new EmberError['default']("Assertion Failed: " + desc);
+      throw new _emberMetalError["default"]("Assertion Failed: " + desc);
     }
   };
 
   /**
     Display a warning with the provided message. Ember build tools will
     remove any calls to `Ember.warn()` when doing a production build.
-
+  
     @method warn
     @param {String} message A warning to display.
     @param {Boolean} test An optional boolean. If falsy, the warning
       will be displayed.
+    @public
   */
-  Ember['default'].warn = function (message, test) {
+  _emberMetalCore["default"].warn = function (message, test) {
     if (!test) {
-      Logger['default'].warn("WARNING: " + message);
-      if ("trace" in Logger['default']) {
-        Logger['default'].trace();
+      _emberMetalLogger["default"].warn("WARNING: " + message);
+      if ('trace' in _emberMetalLogger["default"]) {
+        _emberMetalLogger["default"].trace();
       }
     }
   };
@@ -165,35 +196,47 @@ enifed('ember-debug', ['exports', 'ember-metal/core', 'ember-metal/utils', 'embe
   /**
     Display a debug notice. Ember build tools will remove any calls to
     `Ember.debug()` when doing a production build.
-
+  
     ```javascript
     Ember.debug('I\'m a debug notice!');
     ```
-
+  
     @method debug
     @param {String} message A debug message to display.
+    @public
   */
-  Ember['default'].debug = function (message) {
-    Logger['default'].debug("DEBUG: " + message);
+  _emberMetalCore["default"].debug = function (message) {
+    _emberMetalLogger["default"].debug("DEBUG: " + message);
   };
 
   /**
     Display a deprecation warning with the provided message and a stack trace
     (Chrome and Firefox only). Ember build tools will remove any calls to
     `Ember.deprecate()` when doing a production build.
-
+  
     @method deprecate
     @param {String} message A description of the deprecation.
     @param {Boolean|Function} test An optional boolean. If falsy, the deprecation
       will be displayed. If this is a function, it will be executed and its return
       value will be used as condition.
     @param {Object} options An optional object that can be used to pass
-      in a `url` to the transition guide on the emberjs.com website.
+      in a `url` to the transition guide on the emberjs.com website, and a unique
+      `id` for this deprecation. The `id` can be used by Ember debugging tools
+      to change the behavior (raise, log or silence) for that specific deprecation.
+      The `id` should be namespaced by dots, e.g. "view.helper.select".
+    @public
   */
-  Ember['default'].deprecate = function (message, test, options) {
+  _emberMetalCore["default"].deprecate = function (message, test, options) {
+    if (_emberMetalCore["default"].ENV.RAISE_ON_DEPRECATION) {
+      _emberDebugDeprecationManager["default"].setDefaultLevel(_emberDebugDeprecationManager.deprecationLevels.RAISE);
+    }
+    if (_emberDebugDeprecationManager["default"].getLevel(options && options.id) === _emberDebugDeprecationManager.deprecationLevels.SILENCE) {
+      return;
+    }
+
     var noDeprecation;
 
-    if (typeof test === "function") {
+    if (isPlainFunction(test)) {
       noDeprecation = test();
     } else {
       noDeprecation = test;
@@ -203,8 +246,12 @@ enifed('ember-debug', ['exports', 'ember-metal/core', 'ember-metal/utils', 'embe
       return;
     }
 
-    if (Ember['default'].ENV.RAISE_ON_DEPRECATION) {
-      throw new EmberError['default'](message);
+    if (options && options.id) {
+      message = message + (" [deprecation id: " + options.id + "]");
+    }
+
+    if (_emberDebugDeprecationManager["default"].getLevel(options && options.id) === _emberDebugDeprecationManager.deprecationLevels.RAISE) {
+      throw new _emberMetalError["default"](message);
     }
 
     var error;
@@ -217,150 +264,234 @@ enifed('ember-debug', ['exports', 'ember-metal/core', 'ember-metal/utils', 'embe
     }
 
     if (arguments.length === 3) {
-      Ember['default'].assert("options argument to Ember.deprecate should be an object", options && typeof options === "object");
+      _emberMetalCore["default"].assert('options argument to Ember.deprecate should be an object', options && typeof options === 'object');
       if (options.url) {
-        message += " See " + options.url + " for more details.";
+        message += ' See ' + options.url + ' for more details.';
       }
     }
 
-    if (Ember['default'].LOG_STACKTRACE_ON_DEPRECATION && error.stack) {
+    if (_emberMetalCore["default"].LOG_STACKTRACE_ON_DEPRECATION && error.stack) {
       var stack;
-      var stackStr = "";
+      var stackStr = '';
 
-      if (error["arguments"]) {
+      if (error['arguments']) {
         // Chrome
-        stack = error.stack.replace(/^\s+at\s+/gm, "").replace(/^([^\(]+?)([\n$])/gm, "{anonymous}($1)$2").replace(/^Object.<anonymous>\s*\(([^\)]+)\)/gm, "{anonymous}($1)").split("\n");
+        stack = error.stack.replace(/^\s+at\s+/gm, '').replace(/^([^\(]+?)([\n$])/gm, '{anonymous}($1)$2').replace(/^Object.<anonymous>\s*\(([^\)]+)\)/gm, '{anonymous}($1)').split('\n');
         stack.shift();
       } else {
         // Firefox
-        stack = error.stack.replace(/(?:\n@:0)?\s+$/m, "").replace(/^\(/gm, "{anonymous}(").split("\n");
+        stack = error.stack.replace(/(?:\n@:0)?\s+$/m, '').replace(/^\(/gm, '{anonymous}(').split('\n');
       }
 
       stackStr = "\n    " + stack.slice(2).join("\n    ");
       message = message + stackStr;
     }
 
-    Logger['default'].warn("DEPRECATION: " + message);
+    _emberMetalLogger["default"].warn("DEPRECATION: " + message);
   };
 
   /**
     Alias an old, deprecated method with its new counterpart.
-
+  
     Display a deprecation warning with the provided message and a stack trace
     (Chrome and Firefox only) when the assigned method is called.
-
+  
     Ember build tools will not remove calls to `Ember.deprecateFunc()`, though
     no warnings will be shown in production.
-
+  
     ```javascript
     Ember.oldMethod = Ember.deprecateFunc('Please use the new, updated method', Ember.newMethod);
     ```
-
+  
     @method deprecateFunc
     @param {String} message A description of the deprecation.
+    @param {Object} [options] The options object for Ember.deprecate.
     @param {Function} func The new function called to replace its deprecated counterpart.
     @return {Function} a new function that wrapped the original function with a deprecation warning
+    @private
   */
-  Ember['default'].deprecateFunc = function (message, func) {
-    return function () {
-      Ember['default'].deprecate(message);
-      return func.apply(this, arguments);
-    };
+  _emberMetalCore["default"].deprecateFunc = function () {
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    if (args.length === 3) {
+      var _ret = (function () {
+        var message = args[0];
+        var options = args[1];
+        var func = args[2];
+
+        return {
+          v: function () {
+            _emberMetalCore["default"].deprecate(message, false, options);
+            return func.apply(this, arguments);
+          }
+        };
+      })();
+
+      if (typeof _ret === "object") return _ret.v;
+    } else {
+      var _ret2 = (function () {
+        var message = args[0];
+        var func = args[1];
+
+        return {
+          v: function () {
+            _emberMetalCore["default"].deprecate(message);
+            return func.apply(this, arguments);
+          }
+        };
+      })();
+
+      if (typeof _ret2 === "object") return _ret2.v;
+    }
   };
 
   /**
     Run a function meant for debugging. Ember build tools will remove any calls to
     `Ember.runInDebug()` when doing a production build.
-
+  
     ```javascript
-    Ember.runInDebug(function() {
-      Ember.Handlebars.EachView.reopen({
-        didInsertElement: function() {
-          console.log('I\'m happy');
+    Ember.runInDebug(() => {
+      Ember.Component.reopen({
+        didInsertElement() {
+          console.log("I'm happy");
         }
       });
     });
     ```
-
+  
     @method runInDebug
     @param {Function} func The function to be executed.
     @since 1.5.0
+    @public
   */
-  Ember['default'].runInDebug = function (func) {
+  _emberMetalCore["default"].runInDebug = function (func) {
     func();
   };
+
+  /**
+    Will call `Ember.warn()` if ENABLE_ALL_FEATURES, ENABLE_OPTIONAL_FEATURES, or
+    any specific FEATURES flag is truthy.
+  
+    This method is called automatically in debug canary builds.
+  
+    @private
+    @method _warnIfUsingStrippedFeatureFlags
+    @return {void}
+  */
+
   function _warnIfUsingStrippedFeatureFlags(FEATURES, featuresWereStripped) {
     if (featuresWereStripped) {
-      Ember['default'].warn("Ember.ENV.ENABLE_ALL_FEATURES is only available in canary builds.", !Ember['default'].ENV.ENABLE_ALL_FEATURES);
-      Ember['default'].warn("Ember.ENV.ENABLE_OPTIONAL_FEATURES is only available in canary builds.", !Ember['default'].ENV.ENABLE_OPTIONAL_FEATURES);
+      _emberMetalCore["default"].warn('Ember.ENV.ENABLE_ALL_FEATURES is only available in canary builds.', !_emberMetalCore["default"].ENV.ENABLE_ALL_FEATURES);
+      _emberMetalCore["default"].warn('Ember.ENV.ENABLE_OPTIONAL_FEATURES is only available in canary builds.', !_emberMetalCore["default"].ENV.ENABLE_OPTIONAL_FEATURES);
 
       for (var key in FEATURES) {
-        if (FEATURES.hasOwnProperty(key) && key !== "isEnabled") {
-          Ember['default'].warn("FEATURE[\"" + key + "\"] is set as enabled, but FEATURE flags are only available in canary builds.", !FEATURES[key]);
+        if (FEATURES.hasOwnProperty(key) && key !== 'isEnabled') {
+          _emberMetalCore["default"].warn('FEATURE["' + key + '"] is set as enabled, but FEATURE flags are only available in canary builds.', !FEATURES[key]);
         }
       }
     }
   }
 
-  if (!Ember['default'].testing) {
+  if (!_emberMetalCore["default"].testing) {
     // Complain if they're using FEATURE flags in builds other than canary
-    Ember['default'].FEATURES["features-stripped-test"] = true;
+    _emberMetalCore["default"].FEATURES['features-stripped-test'] = true;
     var featuresWereStripped = true;
 
     
-    delete Ember['default'].FEATURES["features-stripped-test"];
-    _warnIfUsingStrippedFeatureFlags(Ember['default'].ENV.FEATURES, featuresWereStripped);
+    delete _emberMetalCore["default"].FEATURES['features-stripped-test'];
+    _warnIfUsingStrippedFeatureFlags(_emberMetalCore["default"].ENV.FEATURES, featuresWereStripped);
 
     // Inform the developer about the Ember Inspector if not installed.
-    var isFirefox = typeof InstallTrigger !== "undefined";
-    var isChrome = environment['default'].isChrome;
+    var isFirefox = _emberMetalEnvironment["default"].isFirefox;
+    var isChrome = _emberMetalEnvironment["default"].isChrome;
 
-    if (typeof window !== "undefined" && (isFirefox || isChrome) && window.addEventListener) {
+    if (typeof window !== 'undefined' && (isFirefox || isChrome) && window.addEventListener) {
       window.addEventListener("load", function () {
         if (document.documentElement && document.documentElement.dataset && !document.documentElement.dataset.emberExtension) {
           var downloadURL;
 
           if (isChrome) {
-            downloadURL = "https://chrome.google.com/webstore/detail/ember-inspector/bmdblncegkenkacieihfhpjfppoconhi";
+            downloadURL = 'https://chrome.google.com/webstore/detail/ember-inspector/bmdblncegkenkacieihfhpjfppoconhi';
           } else if (isFirefox) {
-            downloadURL = "https://addons.mozilla.org/en-US/firefox/addon/ember-inspector/";
+            downloadURL = 'https://addons.mozilla.org/en-US/firefox/addon/ember-inspector/';
           }
 
-          Ember['default'].debug("For more advanced debugging, install the Ember Inspector from " + downloadURL);
+          _emberMetalCore["default"].debug('For more advanced debugging, install the Ember Inspector from ' + downloadURL);
         }
       }, false);
     }
   }
 
+  _emberMetalCore["default"].Debug = {
+    _addDeprecationLevel: function (id, level) {
+      _emberDebugDeprecationManager["default"].setLevel(id, level);
+    },
+    _deprecationLevels: _emberDebugDeprecationManager.deprecationLevels
+  };
+
   /*
     We are transitioning away from `ember.js` to `ember.debug.js` to make
     it much clearer that it is only for local development purposes.
-
+  
     This flag value is changed by the tooling (by a simple string replacement)
     so that if `ember.js` (which must be output for backwards compat reasons) is
     used a nice helpful warning message will be printed out.
   */
   var runningNonEmberDebugJS = false;
-  if (runningNonEmberDebugJS) {
-    Ember['default'].warn("Please use `ember.debug.js` instead of `ember.js` for development and debugging.");
-  }
-
   exports.runningNonEmberDebugJS = runningNonEmberDebugJS;
-
+  if (runningNonEmberDebugJS) {
+    _emberMetalCore["default"].warn('Please use `ember.debug.js` instead of `ember.js` for development and debugging.');
+  }
 });
-enifed('ember-testing', ['ember-metal/core', 'ember-testing/initializers', 'ember-testing/support', 'ember-testing/setup_for_testing', 'ember-testing/test', 'ember-testing/adapters/adapter', 'ember-testing/adapters/qunit', 'ember-testing/helpers'], function (Ember, __dep1__, __dep2__, setupForTesting, Test, Adapter, QUnitAdapter) {
-
+enifed('ember-debug/deprecation-manager', ['exports', 'ember-metal/dictionary', 'ember-metal/utils'], function (exports, _emberMetalDictionary, _emberMetalUtils) {
   'use strict';
 
-  Ember['default'].Test = Test['default'];
-  Ember['default'].Test.Adapter = Adapter['default'];
-  Ember['default'].Test.QUnitAdapter = QUnitAdapter['default'];
-  Ember['default'].setupForTesting = setupForTesting['default'];
+  var deprecationLevels = {
+    RAISE: _emberMetalUtils.symbol('RAISE'),
+    LOG: _emberMetalUtils.symbol('LOG'),
+    SILENCE: _emberMetalUtils.symbol('SILENCE')
+  };
 
+  exports.deprecationLevels = deprecationLevels;
+  exports["default"] = {
+    defaultLevel: deprecationLevels.LOG,
+    individualLevels: _emberMetalDictionary["default"](null),
+    setDefaultLevel: function (level) {
+      this.defaultLevel = level;
+    },
+    setLevel: function (id, level) {
+      this.individualLevels[id] = level;
+    },
+    getLevel: function (id) {
+      var level = this.individualLevels[id];
+      if (!level) {
+        level = this.defaultLevel;
+      }
+      return level;
+    }
+  };
 });
-enifed('ember-testing/adapters/adapter', ['exports', 'ember-runtime/system/object'], function (exports, EmberObject) {
+enifed("ember-testing", ["exports", "ember-metal/core", "ember-testing/initializers", "ember-testing/support", "ember-testing/setup_for_testing", "ember-testing/test", "ember-testing/adapters/adapter", "ember-testing/adapters/qunit", "ember-testing/helpers"], function (exports, _emberMetalCore, _emberTestingInitializers, _emberTestingSupport, _emberTestingSetup_for_testing, _emberTestingTest, _emberTestingAdaptersAdapter, _emberTestingAdaptersQunit, _emberTestingHelpers) {
+  "use strict";
 
-  'use strict';
+  // adds helpers to helpers object in Test
+
+  /**
+    @module ember
+    @submodule ember-testing
+  */
+
+  _emberMetalCore["default"].Test = _emberTestingTest["default"];
+  _emberMetalCore["default"].Test.Adapter = _emberTestingAdaptersAdapter["default"];
+  _emberMetalCore["default"].Test.QUnitAdapter = _emberTestingAdaptersQunit["default"];
+  _emberMetalCore["default"].setupForTesting = _emberTestingSetup_for_testing["default"];
+});
+// to setup initializer
+// to handle various edge cases
+enifed("ember-testing/adapters/adapter", ["exports", "ember-runtime/system/object"], function (exports, _emberRuntimeSystemObject) {
+  "use strict";
 
   function K() {
     return this;
@@ -374,11 +505,12 @@ enifed('ember-testing/adapters/adapter', ['exports', 'ember-runtime/system/objec
   /**
     The primary purpose of this class is to create hooks that can be implemented
     by an adapter for various test frameworks.
-
+  
     @class Adapter
     @namespace Ember.Test
+    @public
   */
-  var Adapter = EmberObject['default'].extend({
+  var Adapter = _emberRuntimeSystemObject["default"].extend({
     /**
       This callback will be called whenever an async operation is about to start.
        Override this to call your framework's methods that handle async
@@ -414,14 +546,21 @@ enifed('ember-testing/adapters/adapter', ['exports', 'ember-runtime/system/objec
     }
   });
 
-  exports['default'] = Adapter;
-
+  exports["default"] = Adapter;
 });
-enifed('ember-testing/adapters/qunit', ['exports', 'ember-testing/adapters/adapter', 'ember-metal/utils'], function (exports, Adapter, utils) {
+enifed("ember-testing/adapters/qunit", ["exports", "ember-testing/adapters/adapter", "ember-metal/utils"], function (exports, _emberTestingAdaptersAdapter, _emberMetalUtils) {
+  "use strict";
 
-  'use strict';
-
-  exports['default'] = Adapter['default'].extend({
+  /**
+    This class implements the methods defined by Ember.Test.Adapter for the
+    QUnit testing framework.
+  
+    @class QUnitAdapter
+    @namespace Ember.Test
+    @extends Ember.Test.Adapter
+    @public
+  */
+  exports["default"] = _emberTestingAdaptersAdapter["default"].extend({
     asyncStart: function () {
       QUnit.stop();
     },
@@ -429,53 +568,56 @@ enifed('ember-testing/adapters/qunit', ['exports', 'ember-testing/adapters/adapt
       QUnit.start();
     },
     exception: function (error) {
-      ok(false, utils.inspect(error));
+      ok(false, _emberMetalUtils.inspect(error));
     }
   });
-
 });
-enifed('ember-testing/helpers', ['ember-metal/core', 'ember-metal/property_get', 'ember-metal/error', 'ember-metal/run_loop', 'ember-views/system/jquery', 'ember-testing/test', 'ember-runtime/ext/rsvp'], function (Ember, property_get, EmberError, run, jQuery, Test, RSVP) {
+enifed("ember-testing/helpers", ["exports", "ember-metal/core", "ember-metal/property_get", "ember-metal/error", "ember-metal/run_loop", "ember-views/system/jquery", "ember-testing/test", "ember-runtime/ext/rsvp"], function (exports, _emberMetalCore, _emberMetalProperty_get, _emberMetalError, _emberMetalRun_loop, _emberViewsSystemJquery, _emberTestingTest, _emberRuntimeExtRsvp) {
+  "use strict";
 
-  'use strict';
+  /**
+  @module ember
+  @submodule ember-testing
+  */
 
-  var helper = Test['default'].registerHelper;
-  var asyncHelper = Test['default'].registerAsyncHelper;
+  var helper = _emberTestingTest["default"].registerHelper;
+  var asyncHelper = _emberTestingTest["default"].registerAsyncHelper;
 
   function currentRouteName(app) {
-    var appController = app.__container__.lookup("controller:application");
+    var appController = app.__container__.lookup('controller:application');
 
-    return property_get.get(appController, "currentRouteName");
+    return _emberMetalProperty_get.get(appController, 'currentRouteName');
   }
 
   function currentPath(app) {
-    var appController = app.__container__.lookup("controller:application");
+    var appController = app.__container__.lookup('controller:application');
 
-    return property_get.get(appController, "currentPath");
+    return _emberMetalProperty_get.get(appController, 'currentPath');
   }
 
   function currentURL(app) {
-    var router = app.__container__.lookup("router:main");
+    var router = app.__container__.lookup('router:main');
 
-    return property_get.get(router, "location").getURL();
+    return _emberMetalProperty_get.get(router, 'location').getURL();
   }
 
   function pauseTest() {
-    Test['default'].adapter.asyncStart();
-    return new Ember['default'].RSVP.Promise(function () {}, "TestAdapter paused promise");
+    _emberTestingTest["default"].adapter.asyncStart();
+    return new _emberMetalCore["default"].RSVP.Promise(function () {}, 'TestAdapter paused promise');
   }
 
   function focus(el) {
-    if (el && el.is(":input, [contenteditable=true]")) {
-      var type = el.prop("type");
-      if (type !== "checkbox" && type !== "radio" && type !== "hidden") {
-        run['default'](el, function () {
+    if (el && el.is(':input, [contenteditable=true]')) {
+      var type = el.prop('type');
+      if (type !== 'checkbox' && type !== 'radio' && type !== 'hidden') {
+        _emberMetalRun_loop["default"](el, function () {
           // Firefox does not trigger the `focusin` event if the window
           // does not have focus. If the document doesn't have focus just
           // use trigger('focusin') instead.
           if (!document.hasFocus || document.hasFocus()) {
             this.focus();
           } else {
-            this.trigger("focusin");
+            this.trigger('focusin');
           }
         });
       }
@@ -483,15 +625,23 @@ enifed('ember-testing/helpers', ['ember-metal/core', 'ember-metal/property_get',
   }
 
   function visit(app, url) {
-    var router = app.__container__.lookup("router:main");
+    var router = app.__container__.lookup('router:main');
+    var shouldHandleURL = false;
+
+    app.boot().then(function () {
+      router.location.setURL(url);
+
+      if (shouldHandleURL) {
+        _emberMetalRun_loop["default"](app.__deprecatedInstance__, 'handleURL', url);
+      }
+    });
 
     if (app._readinessDeferrals > 0) {
-      router["initialURL"] = url;
-      run['default'](app, "advanceReadiness");
-      delete router["initialURL"];
+      router['initialURL'] = url;
+      _emberMetalRun_loop["default"](app, 'advanceReadiness');
+      delete router['initialURL'];
     } else {
-      router.location.setURL(url);
-      run['default'](app.__deprecatedInstance__, "handleURL", url);
+      shouldHandleURL = true;
     }
 
     return app.testHelpers.wait();
@@ -499,23 +649,23 @@ enifed('ember-testing/helpers', ['ember-metal/core', 'ember-metal/property_get',
 
   function click(app, selector, context) {
     var $el = app.testHelpers.findWithAssert(selector, context);
-    run['default']($el, "mousedown");
+    _emberMetalRun_loop["default"]($el, 'mousedown');
 
     focus($el);
 
-    run['default']($el, "mouseup");
-    run['default']($el, "click");
+    _emberMetalRun_loop["default"]($el, 'mouseup');
+    _emberMetalRun_loop["default"]($el, 'click');
 
     return app.testHelpers.wait();
   }
 
   function check(app, selector, context) {
     var $el = app.testHelpers.findWithAssert(selector, context);
-    var type = $el.prop("type");
+    var type = $el.prop('type');
 
-    Ember['default'].assert("To check '" + selector + "', the input must be a checkbox", type === "checkbox");
+    _emberMetalCore["default"].assert('To check \'' + selector + '\', the input must be a checkbox', type === 'checkbox');
 
-    if (!$el.prop("checked")) {
+    if (!$el.prop('checked')) {
       app.testHelpers.click(selector, context);
     }
 
@@ -524,11 +674,11 @@ enifed('ember-testing/helpers', ['ember-metal/core', 'ember-metal/property_get',
 
   function uncheck(app, selector, context) {
     var $el = app.testHelpers.findWithAssert(selector, context);
-    var type = $el.prop("type");
+    var type = $el.prop('type');
 
-    Ember['default'].assert("To uncheck '" + selector + "', the input must be a checkbox", type === "checkbox");
+    _emberMetalCore["default"].assert('To uncheck \'' + selector + '\', the input must be a checkbox', type === 'checkbox');
 
-    if ($el.prop("checked")) {
+    if ($el.prop('checked')) {
       app.testHelpers.click(selector, context);
     }
 
@@ -568,9 +718,9 @@ enifed('ember-testing/helpers', ['ember-metal/core', 'ember-metal/property_get',
 
     var $el = app.testHelpers.findWithAssert(selector, context);
 
-    var event = jQuery['default'].Event(type, options);
+    var event = _emberViewsSystemJquery["default"].Event(type, options);
 
-    run['default']($el, "trigger", event);
+    _emberMetalRun_loop["default"]($el, 'trigger', event);
 
     return app.testHelpers.wait();
   }
@@ -578,7 +728,7 @@ enifed('ember-testing/helpers', ['ember-metal/core', 'ember-metal/property_get',
   function keyEvent(app, selector, contextOrType, typeOrKeyCode, keyCode) {
     var context, type;
 
-    if (typeof keyCode === "undefined") {
+    if (typeof keyCode === 'undefined') {
       context = null;
       keyCode = typeOrKeyCode;
       type = contextOrType;
@@ -592,14 +742,14 @@ enifed('ember-testing/helpers', ['ember-metal/core', 'ember-metal/property_get',
 
   function fillIn(app, selector, contextOrText, text) {
     var $el, context;
-    if (typeof text === "undefined") {
+    if (typeof text === 'undefined') {
       text = contextOrText;
     } else {
       context = contextOrText;
     }
     $el = app.testHelpers.findWithAssert(selector, context);
     focus($el);
-    run['default'](function () {
+    _emberMetalRun_loop["default"](function () {
       $el.val(text).change();
     });
     return app.testHelpers.wait();
@@ -608,14 +758,14 @@ enifed('ember-testing/helpers', ['ember-metal/core', 'ember-metal/property_get',
   function findWithAssert(app, selector, context) {
     var $el = app.testHelpers.find(selector, context);
     if ($el.length === 0) {
-      throw new EmberError['default']("Element " + selector + " not found.");
+      throw new _emberMetalError["default"]("Element " + selector + " not found.");
     }
     return $el;
   }
 
   function find(app, selector, context) {
     var $el;
-    context = context || property_get.get(app, "rootElement");
+    context = context || _emberMetalProperty_get.get(app, 'rootElement');
     $el = app.$(selector, context);
 
     return $el;
@@ -626,10 +776,10 @@ enifed('ember-testing/helpers', ['ember-metal/core', 'ember-metal/property_get',
   }
 
   function wait(app, value) {
-    return new RSVP['default'].Promise(function (resolve) {
+    return new _emberRuntimeExtRsvp["default"].Promise(function (resolve) {
       // Every 10ms, poll for the async thing to have finished
       var watcher = setInterval(function () {
-        var router = app.__container__.lookup("router:main");
+        var router = app.__container__.lookup('router:main');
 
         // 1. If the router is loading, keep polling
         var routerIsLoading = router.router && !!router.router.activeTransition;
@@ -638,15 +788,15 @@ enifed('ember-testing/helpers', ['ember-metal/core', 'ember-metal/property_get',
         }
 
         // 2. If there are pending Ajax requests, keep polling
-        if (Test['default'].pendingAjaxRequests) {
+        if (_emberTestingTest["default"].pendingAjaxRequests) {
           return;
         }
 
         // 3. If there are scheduled timers or we are inside of a run loop, keep polling
-        if (run['default'].hasScheduledTimers() || run['default'].currentRunLoop) {
+        if (_emberMetalRun_loop["default"].hasScheduledTimers() || _emberMetalRun_loop["default"].currentRunLoop) {
           return;
         }
-        if (Test['default'].waiters && Test['default'].waiters.any(function (waiter) {
+        if (_emberTestingTest["default"].waiters && _emberTestingTest["default"].waiters.any(function (waiter) {
           var context = waiter[0];
           var callback = waiter[1];
           return !callback.call(context);
@@ -657,237 +807,248 @@ enifed('ember-testing/helpers', ['ember-metal/core', 'ember-metal/property_get',
         clearInterval(watcher);
 
         // Synchronously resolve the promise
-        run['default'](null, resolve, value);
+        _emberMetalRun_loop["default"](null, resolve, value);
       }, 10);
     });
   }
 
   /**
-  * Loads a route, sets up any controllers, and renders any templates associated
-  * with the route as though a real user had triggered the route change while
-  * using your app.
-  *
-  * Example:
-  *
-  * ```javascript
-  * visit('posts/index').then(function() {
-  *   // assert something
-  * });
-  * ```
-  *
-  * @method visit
-  * @param {String} url the name of the route
-  * @return {RSVP.Promise}
+    Loads a route, sets up any controllers, and renders any templates associated
+    with the route as though a real user had triggered the route change while
+    using your app.
+  
+    Example:
+  
+    ```javascript
+    visit('posts/index').then(function() {
+      // assert something
+    });
+    ```
+  
+    @method visit
+    @param {String} url the name of the route
+    @return {RSVP.Promise}
+    @public
   */
-  asyncHelper("visit", visit);
+  asyncHelper('visit', visit);
 
   /**
-  * Clicks an element and triggers any actions triggered by the element's `click`
-  * event.
-  *
-  * Example:
-  *
-  * ```javascript
-  * click('.some-jQuery-selector').then(function() {
-  *   // assert something
-  * });
-  * ```
-  *
-  * @method click
-  * @param {String} selector jQuery selector for finding element on the DOM
-  * @return {RSVP.Promise}
+    Clicks an element and triggers any actions triggered by the element's `click`
+    event.
+  
+    Example:
+  
+    ```javascript
+    click('.some-jQuery-selector').then(function() {
+      // assert something
+    });
+    ```
+  
+    @method click
+    @param {String} selector jQuery selector for finding element on the DOM
+    @return {RSVP.Promise}
+    @public
   */
-  asyncHelper("click", click);
+  asyncHelper('click', click);
 
     /**
-  * Simulates a key event, e.g. `keypress`, `keydown`, `keyup` with the desired keyCode
-  *
-  * Example:
-  *
-  * ```javascript
-  * keyEvent('.some-jQuery-selector', 'keypress', 13).then(function() {
-  *  // assert something
-  * });
-  * ```
-  *
-  * @method keyEvent
-  * @param {String} selector jQuery selector for finding element on the DOM
-  * @param {String} type the type of key event, e.g. `keypress`, `keydown`, `keyup`
-  * @param {Number} keyCode the keyCode of the simulated key event
-  * @return {RSVP.Promise}
-  * @since 1.5.0
+    Simulates a key event, e.g. `keypress`, `keydown`, `keyup` with the desired keyCode
+  
+    Example:
+  
+    ```javascript
+    keyEvent('.some-jQuery-selector', 'keypress', 13).then(function() {
+     // assert something
+    });
+    ```
+  
+    @method keyEvent
+    @param {String} selector jQuery selector for finding element on the DOM
+    @param {String} type the type of key event, e.g. `keypress`, `keydown`, `keyup`
+    @param {Number} keyCode the keyCode of the simulated key event
+    @return {RSVP.Promise}
+    @since 1.5.0
+    @public
   */
-  asyncHelper("keyEvent", keyEvent);
+  asyncHelper('keyEvent', keyEvent);
 
   /**
-  * Fills in an input element with some text.
-  *
-  * Example:
-  *
-  * ```javascript
-  * fillIn('#email', 'you@example.com').then(function() {
-  *   // assert something
-  * });
-  * ```
-  *
-  * @method fillIn
-  * @param {String} selector jQuery selector finding an input element on the DOM
-  * to fill text with
-  * @param {String} text text to place inside the input element
-  * @return {RSVP.Promise}
+    Fills in an input element with some text.
+  
+    Example:
+  
+    ```javascript
+    fillIn('#email', 'you@example.com').then(function() {
+      // assert something
+    });
+    ```
+  
+    @method fillIn
+    @param {String} selector jQuery selector finding an input element on the DOM
+    to fill text with
+    @param {String} text text to place inside the input element
+    @return {RSVP.Promise}
+    @public
   */
-  asyncHelper("fillIn", fillIn);
+  asyncHelper('fillIn', fillIn);
 
   /**
-  * Finds an element in the context of the app's container element. A simple alias
-  * for `app.$(selector)`.
-  *
-  * Example:
-  *
-  * ```javascript
-  * var $el = find('.my-selector');
-  * ```
-  *
-  * @method find
-  * @param {String} selector jQuery string selector for element lookup
-  * @return {Object} jQuery object representing the results of the query
+    Finds an element in the context of the app's container element. A simple alias
+    for `app.$(selector)`.
+  
+    Example:
+  
+    ```javascript
+    var $el = find('.my-selector');
+    ```
+  
+    @method find
+    @param {String} selector jQuery string selector for element lookup
+    @return {Object} jQuery object representing the results of the query
+    @public
   */
-  helper("find", find);
+  helper('find', find);
 
   /**
-  * Like `find`, but throws an error if the element selector returns no results.
-  *
-  * Example:
-  *
-  * ```javascript
-  * var $el = findWithAssert('.doesnt-exist'); // throws error
-  * ```
-  *
-  * @method findWithAssert
-  * @param {String} selector jQuery selector string for finding an element within
-  * the DOM
-  * @return {Object} jQuery object representing the results of the query
-  * @throws {Error} throws error if jQuery object returned has a length of 0
+    Like `find`, but throws an error if the element selector returns no results.
+  
+    Example:
+  
+    ```javascript
+    var $el = findWithAssert('.doesnt-exist'); // throws error
+    ```
+  
+    @method findWithAssert
+    @param {String} selector jQuery selector string for finding an element within
+    the DOM
+    @return {Object} jQuery object representing the results of the query
+    @throws {Error} throws error if jQuery object returned has a length of 0
+    @public
   */
-  helper("findWithAssert", findWithAssert);
+  helper('findWithAssert', findWithAssert);
 
   /**
     Causes the run loop to process any pending events. This is used to ensure that
     any async operations from other helpers (or your assertions) have been processed.
-
+  
     This is most often used as the return value for the helper functions (see 'click',
     'fillIn','visit',etc).
-
+  
     Example:
-
+  
     ```javascript
     Ember.Test.registerAsyncHelper('loginUser', function(app, username, password) {
       visit('secured/path/here')
       .fillIn('#username', username)
       .fillIn('#password', password)
       .click('.submit')
-
+  
       return app.testHelpers.wait();
     });
-
+  
     @method wait
     @param {Object} value The value to be returned.
     @return {RSVP.Promise}
+    @public
   */
-  asyncHelper("wait", wait);
-  asyncHelper("andThen", andThen);
+  asyncHelper('wait', wait);
+  asyncHelper('andThen', andThen);
 
   /**
     Returns the currently active route name.
-
+  
   Example:
-
+  
   ```javascript
   function validateRouteName() {
     equal(currentRouteName(), 'some.path', "correct route was transitioned into.");
   }
-
+  
   visit('/some/path').then(validateRouteName)
   ```
-
+  
   @method currentRouteName
   @return {Object} The name of the currently active route.
   @since 1.5.0
+  @public
   */
-  helper("currentRouteName", currentRouteName);
+  helper('currentRouteName', currentRouteName);
 
   /**
     Returns the current path.
-
+  
   Example:
-
+  
   ```javascript
   function validateURL() {
     equal(currentPath(), 'some.path.index', "correct path was transitioned into.");
   }
-
+  
   click('#some-link-id').then(validateURL);
   ```
-
+  
   @method currentPath
   @return {Object} The currently active path.
   @since 1.5.0
+  @public
   */
-  helper("currentPath", currentPath);
+  helper('currentPath', currentPath);
 
   /**
     Returns the current URL.
-
+  
   Example:
-
+  
   ```javascript
   function validateURL() {
     equal(currentURL(), '/some/path', "correct URL was transitioned into.");
   }
-
+  
   click('#some-link-id').then(validateURL);
   ```
-
+  
   @method currentURL
   @return {Object} The currently active URL.
   @since 1.5.0
+  @public
   */
-  helper("currentURL", currentURL);
+  helper('currentURL', currentURL);
 
   /**
    Pauses the current test - this is useful for debugging while testing or for test-driving.
    It allows you to inspect the state of your application at any point.
-
+  
    Example (The test will pause before clicking the button):
-
+  
    ```javascript
    visit('/')
    return pauseTest();
-
+  
    click('.btn');
    ```
-
+  
    @since 1.9.0
    @method pauseTest
    @return {Object} A promise that will never resolve
-   */
-  helper("pauseTest", pauseTest);
+   @public
+  */
+  helper('pauseTest', pauseTest);
 
   /**
     Triggers the given DOM event on the element identified by the provided selector.
-
+  
     Example:
-
+  
     ```javascript
     triggerEvent('#some-elem-id', 'blur');
     ```
-
+  
     This is actually used internally by the `keyEvent` helper like so:
-
+  
     ```javascript
     triggerEvent('#some-elem-id', 'keypress', { keyCode: 13 });
     ```
-
+  
    @method triggerEvent
    @param {String} selector jQuery selector for finding element on the DOM
    @param {String} [context] jQuery selector that will limit the selector
@@ -896,17 +1057,16 @@ enifed('ember-testing/helpers', ['ember-metal/core', 'ember-metal/property_get',
    @param {Object} [options] The options to be passed to jQuery.Event.
    @return {RSVP.Promise}
    @since 1.5.0
+   @public
   */
-  asyncHelper("triggerEvent", triggerEvent);
-
+  asyncHelper('triggerEvent', triggerEvent);
 });
-enifed('ember-testing/initializers', ['ember-runtime/system/lazy_load'], function (lazy_load) {
-
+enifed('ember-testing/initializers', ['exports', 'ember-runtime/system/lazy_load'], function (exports, _emberRuntimeSystemLazy_load) {
   'use strict';
 
   var name = 'deferReadiness in `testing` mode';
 
-  lazy_load.onLoad('Ember.Application', function (Application) {
+  _emberRuntimeSystemLazy_load.onLoad('Ember.Application', function (Application) {
     if (!Application.initializers[name]) {
       Application.initializer({
         name: name,
@@ -919,26 +1079,12 @@ enifed('ember-testing/initializers', ['ember-runtime/system/lazy_load'], functio
       });
     }
   });
-
 });
-enifed('ember-testing/setup_for_testing', ['exports', 'ember-metal/core', 'ember-testing/adapters/qunit', 'ember-views/system/jquery'], function (exports, Ember, QUnitAdapter, jQuery) {
+enifed("ember-testing/setup_for_testing", ["exports", "ember-metal/core", "ember-testing/adapters/qunit", "ember-views/system/jquery"], function (exports, _emberMetalCore, _emberTestingAdaptersQunit, _emberViewsSystemJquery) {
+  "use strict";
 
-  'use strict';
+  exports["default"] = setupForTesting;
 
-
-
-  /**
-    Sets Ember up for testing. This is useful to perform
-    basic setup steps in order to unit test.
-
-    Use `App.setupForTesting` to perform integration tests (full
-    application testing).
-
-    @method setupForTesting
-    @namespace Ember
-    @since 1.5.0
-  */
-  exports['default'] = setupForTesting;
   var Test, requests;
 
   function incrementAjaxPendingRequests(_, xhr) {
@@ -954,47 +1100,66 @@ enifed('ember-testing/setup_for_testing', ['exports', 'ember-metal/core', 'ember
     }
     Test.pendingAjaxRequests = requests.length;
   }
+
+  /**
+    Sets Ember up for testing. This is useful to perform
+    basic setup steps in order to unit test.
+  
+    Use `App.setupForTesting` to perform integration tests (full
+    application testing).
+  
+    @method setupForTesting
+    @namespace Ember
+    @since 1.5.0
+    @private
+  */
+
   function setupForTesting() {
     if (!Test) {
-      Test = requireModule("ember-testing/test")["default"];
+      Test = requireModule('ember-testing/test')['default'];
     }
 
-    Ember['default'].testing = true;
+    _emberMetalCore["default"].testing = true;
 
     // if adapter is not manually set default to QUnit
     if (!Test.adapter) {
-      Test.adapter = QUnitAdapter['default'].create();
+      Test.adapter = _emberTestingAdaptersQunit["default"].create();
     }
 
     requests = [];
     Test.pendingAjaxRequests = requests.length;
 
-    jQuery['default'](document).off("ajaxSend", incrementAjaxPendingRequests);
-    jQuery['default'](document).off("ajaxComplete", decrementAjaxPendingRequests);
-    jQuery['default'](document).on("ajaxSend", incrementAjaxPendingRequests);
-    jQuery['default'](document).on("ajaxComplete", decrementAjaxPendingRequests);
+    _emberViewsSystemJquery["default"](document).off('ajaxSend', incrementAjaxPendingRequests);
+    _emberViewsSystemJquery["default"](document).off('ajaxComplete', decrementAjaxPendingRequests);
+    _emberViewsSystemJquery["default"](document).on('ajaxSend', incrementAjaxPendingRequests);
+    _emberViewsSystemJquery["default"](document).on('ajaxComplete', decrementAjaxPendingRequests);
   }
-
 });
-enifed('ember-testing/support', ['ember-metal/core', 'ember-views/system/jquery', 'ember-metal/environment'], function (Ember, jQuery, environment) {
 
-  'use strict';
+// import Test from "ember-testing/test";  // ES6TODO: fix when cycles are supported
+enifed("ember-testing/support", ["exports", "ember-metal/core", "ember-views/system/jquery", "ember-metal/environment"], function (exports, _emberMetalCore, _emberViewsSystemJquery, _emberMetalEnvironment) {
+  "use strict";
 
-  var $ = jQuery['default'];
+  /**
+    @module ember
+    @submodule ember-testing
+  */
+
+  var $ = _emberViewsSystemJquery["default"];
 
   /**
     This method creates a checkbox and triggers the click event to fire the
     passed in handler. It is used to correct for a bug in older versions
     of jQuery (e.g 1.8.3).
-
+  
     @private
     @method testCheckboxClick
   */
   function testCheckboxClick(handler) {
-    $("<input type=\"checkbox\">").css({ position: "absolute", left: "-1000px", top: "-1000px" }).appendTo("body").on("click", handler).trigger("click").remove();
+    $('<input type="checkbox">').css({ position: 'absolute', left: '-1000px', top: '-1000px' }).appendTo('body').on('click', handler).trigger('click').remove();
   }
 
-  if (environment['default'].hasDOM) {
+  if (_emberMetalEnvironment["default"].hasDOM) {
     $(function () {
       /*
         Determine whether a checkbox checked using jQuery's "click" method will have
@@ -1019,29 +1184,32 @@ enifed('ember-testing/support', ['ember-metal/core', 'ember-views/system/jquery'
 
       // Try again to verify that the patch took effect or blow up.
       testCheckboxClick(function () {
-        Ember['default'].warn("clicked checkboxes should be checked! the jQuery patch didn't work", this.checked);
+        _emberMetalCore["default"].warn("clicked checkboxes should be checked! the jQuery patch didn't work", this.checked);
       });
     });
   }
-
 });
-enifed('ember-testing/test', ['exports', 'ember-metal/core', 'ember-metal/run_loop', 'ember-metal/platform/create', 'ember-runtime/ext/rsvp', 'ember-testing/setup_for_testing', 'ember-application/system/application'], function (exports, Ember, emberRun, create, RSVP, setupForTesting, EmberApplication) {
+enifed("ember-testing/test", ["exports", "ember-metal/core", "ember-metal/run_loop", "ember-metal/platform/create", "ember-runtime/ext/rsvp", "ember-testing/setup_for_testing", "ember-application/system/application"], function (exports, _emberMetalCore, _emberMetalRun_loop, _emberMetalPlatformCreate, _emberRuntimeExtRsvp, _emberTestingSetup_for_testing, _emberApplicationSystemApplication) {
+  "use strict";
 
-  'use strict';
-
+  /**
+    @module ember
+    @submodule ember-testing
+  */
   var helpers = {};
   var injectHelpersCallbacks = [];
 
   /**
     This is a container for an assortment of testing related functionality:
-
+  
     * Choose your default test adapter (for your framework of choice).
     * Register/Unregister additional test helpers.
     * Setup callbacks to be fired when the test helpers are injected into
       your application.
-
+  
     @class Test
     @namespace Ember
+    @public
   */
   var Test = {
     /**
@@ -1167,9 +1335,11 @@ enifed('ember-testing/test', ['exports', 'ember-metal/core', 'ember-metal/run_lo
        @public
       @method promise
       @param {Function} resolver The function used to resolve the promise.
+      @param {String} label An optional string for identifying the promise.
     */
-    promise: function (resolver) {
-      return new Test.Promise(resolver);
+    promise: function (resolver, label) {
+      var fullLabel = "Ember.Test.promise: " + (label || "<Unknown Promise>");
+      return new Test.Promise(resolver, fullLabel);
     },
 
     /**
@@ -1231,7 +1401,7 @@ enifed('ember-testing/test', ['exports', 'ember-metal/core', 'ember-metal/run_lo
         context = null;
       }
       if (!this.waiters) {
-        this.waiters = Ember['default'].A();
+        this.waiters = _emberMetalCore["default"].A();
       }
       this.waiters.push([context, callback]);
     },
@@ -1252,7 +1422,7 @@ enifed('ember-testing/test', ['exports', 'ember-metal/core', 'ember-metal/run_lo
         callback = context;
         context = null;
       }
-      this.waiters = Ember['default'].A(this.waiters.filter(function (elt) {
+      this.waiters = _emberMetalCore["default"].A(this.waiters.filter(function (elt) {
         return !(elt[0] === context && elt[1] === callback);
       }));
     }
@@ -1296,14 +1466,14 @@ enifed('ember-testing/test', ['exports', 'ember-metal/core', 'ember-metal/run_lo
   }
 
   function run(fn) {
-    if (!emberRun['default'].currentRunLoop) {
-      return emberRun['default'](fn);
+    if (!_emberMetalRun_loop["default"].currentRunLoop) {
+      return _emberMetalRun_loop["default"](fn);
     } else {
       return fn();
     }
   }
 
-  EmberApplication['default'].reopen({
+  _emberApplicationSystemApplication["default"].reopen({
     /**
      This property contains the testing helpers for the current application. These
      are created once you call `injectTestHelpers` on your `Ember.Application`
@@ -1312,6 +1482,7 @@ enifed('ember-testing/test', ['exports', 'ember-metal/core', 'ember-metal/run_lo
        @property testHelpers
       @type {Object}
       @default {}
+      @public
     */
     testHelpers: {},
 
@@ -1336,28 +1507,30 @@ enifed('ember-testing/test', ['exports', 'ember-metal/core', 'ember-metal/run_lo
     @type {Boolean}
     @default false
     @since 1.3.0
+    @public
     */
     testing: false,
 
     /**
-     This hook defers the readiness of the application, so that you can start
-     the app when your tests are ready to run. It also sets the router's
-     location to 'none', so that the window's location will not be modified
-     (preventing both accidental leaking of state between tests and interference
-     with your testing framework).
-      Example:
-     ```
-    App.setupForTesting();
-    ```
+      This hook defers the readiness of the application, so that you can start
+      the app when your tests are ready to run. It also sets the router's
+      location to 'none', so that the window's location will not be modified
+      (preventing both accidental leaking of state between tests and interference
+      with your testing framework).
+       Example:
+       ```
+      App.setupForTesting();
+      ```
        @method setupForTesting
+      @public
     */
     setupForTesting: function () {
-      setupForTesting['default']();
+      _emberTestingSetup_for_testing["default"]();
 
       this.testing = true;
 
       this.Router.reopen({
-        location: "none"
+        location: 'none'
       });
     },
 
@@ -1368,6 +1541,7 @@ enifed('ember-testing/test', ['exports', 'ember-metal/core', 'ember-metal/run_lo
       @type {Object} The object to be used for test helpers.
       @default window
       @since 1.2.0
+      @private
     */
     helperContainer: null,
 
@@ -1377,13 +1551,14 @@ enifed('ember-testing/test', ['exports', 'ember-metal/core', 'ember-metal/run_lo
       to `window`. If a function of the same name has already been defined it will be cached
       (so that it can be reset if the helper is removed with `unregisterHelper` or
       `removeTestHelpers`).
-      Any callbacks registered with `onInjectHelpers` will be called once the
-     helpers have been injected.
-     Example:
-    ```
-    App.injectTestHelpers();
-    ```
+       Any callbacks registered with `onInjectHelpers` will be called once the
+      helpers have been injected.
+       Example:
+      ```
+      App.injectTestHelpers();
+      ```
        @method injectTestHelpers
+      @public
     */
     injectTestHelpers: function (helperContainer) {
       if (helperContainer) {
@@ -1391,6 +1566,13 @@ enifed('ember-testing/test', ['exports', 'ember-metal/core', 'ember-metal/run_lo
       } else {
         this.helperContainer = window;
       }
+
+      this.reopen({
+        willDestroy: function () {
+          this._super.apply(this, arguments);
+          this.removeTestHelpers();
+        }
+      });
 
       this.testHelpers = {};
       for (var name in helpers) {
@@ -1421,6 +1603,7 @@ enifed('ember-testing/test', ['exports', 'ember-metal/core', 'ember-metal/run_lo
 
       for (var name in helpers) {
         this.helperContainer[name] = this.originalMethods[name];
+        delete Test.Promise.prototype[name];
         delete this.testHelpers[name];
         delete this.originalMethods[name];
       }
@@ -1447,17 +1630,17 @@ enifed('ember-testing/test', ['exports', 'ember-metal/core', 'ember-metal/run_lo
   }
 
   Test.Promise = function () {
-    RSVP['default'].Promise.apply(this, arguments);
+    _emberRuntimeExtRsvp["default"].Promise.apply(this, arguments);
     Test.lastPromise = this;
   };
 
-  Test.Promise.prototype = create['default'](RSVP['default'].Promise.prototype);
+  Test.Promise.prototype = _emberMetalPlatformCreate["default"](_emberRuntimeExtRsvp["default"].Promise.prototype);
   Test.Promise.prototype.constructor = Test.Promise;
   Test.Promise.resolve = Test.resolve;
 
   // Patch `then` to isolate async methods
   // specifically `Ember.Test.lastPromise`
-  var originalThen = RSVP['default'].Promise.prototype.then;
+  var originalThen = _emberRuntimeExtRsvp["default"].Promise.prototype.then;
   Test.Promise.prototype.then = function (onSuccess, onFailure) {
     return originalThen.call(this, function (val) {
       return isolate(onSuccess, val);
@@ -1495,8 +1678,7 @@ enifed('ember-testing/test', ['exports', 'ember-metal/core', 'ember-metal/run_lo
     }
   }
 
-  exports['default'] = Test;
-
+  exports["default"] = Test;
 });
 requireModule("ember-testing");
 
@@ -1646,13 +1828,12 @@ define('ember-qunit/test', ['exports', 'ember', 'ember-test-helpers', 'qunit'], 
   exports['default'] = test;
 
 });
-define('ember-test-helpers', ['exports', 'ember', 'ember-test-helpers/isolated-container', 'ember-test-helpers/test-module', 'ember-test-helpers/test-module-for-component', 'ember-test-helpers/test-module-for-model', 'ember-test-helpers/test-context', 'ember-test-helpers/test-resolver'], function (exports, Ember, isolated_container, TestModule, TestModuleForComponent, TestModuleForModel, test_context, test_resolver) {
+define('ember-test-helpers', ['exports', 'ember', 'ember-test-helpers/test-module', 'ember-test-helpers/test-module-for-component', 'ember-test-helpers/test-module-for-model', 'ember-test-helpers/test-context', 'ember-test-helpers/test-resolver'], function (exports, Ember, TestModule, TestModuleForComponent, TestModuleForModel, test_context, test_resolver) {
 
   'use strict';
 
   Ember['default'].testing = true;
 
-  exports.isolatedContainer = isolated_container.isolatedContainer;
   exports.TestModule = TestModule['default'];
   exports.TestModuleForComponent = TestModuleForComponent['default'];
   exports.TestModuleForModel = TestModuleForModel['default'];
@@ -1661,12 +1842,9 @@ define('ember-test-helpers', ['exports', 'ember', 'ember-test-helpers/isolated-c
   exports.setResolver = test_resolver.setResolver;
 
 });
-define('ember-test-helpers/isolated-container', ['exports', 'ember-test-helpers/test-resolver', 'ember'], function (exports, test_resolver, Ember) {
+define('ember-test-helpers/build-registry', ['exports'], function (exports) {
 
   'use strict';
-
-  exports.isolatedRegistry = isolatedRegistry;
-  exports.isolatedContainer = isolatedContainer;
 
   function exposeRegistryMethodsWithoutDeprecations(container) {
     var methods = [
@@ -1684,9 +1862,11 @@ define('ember-test-helpers/isolated-container', ['exports', 'ember-test-helpers/
     ];
 
     function exposeRegistryMethod(container, method) {
-      container[method] = function() {
-        return container._registry[method].apply(container._registry, arguments);
-      };
+      if (method in container) {
+        container[method] = function() {
+          return container._registry[method].apply(container._registry, arguments);
+        };
+      }
     }
 
     for (var i = 0, l = methods.length; i < l; i++) {
@@ -1694,86 +1874,73 @@ define('ember-test-helpers/isolated-container', ['exports', 'ember-test-helpers/
     }
   }
 
-  function isolatedRegistry(fullNames) {
-    var resolver = test_resolver.getResolver();
-    var container;
-    var registry;
+  exports['default'] = function(resolver) {
+    var registry, container;
+    var namespace = Ember.Object.create({
+      Resolver: { create: function() { return resolver; } }
+    });
 
-    var normalize = function(fullName) {
-      return resolver.normalize(fullName);
-    };
+    function register(name, factory) {
+      var thingToRegisterWith = registry || container;
 
-    if (Ember['default'].Registry) {
-      registry = new Ember['default'].Registry();
-      registry.normalizeFullName = normalize;
-
-      container = registry.container();
-      exposeRegistryMethodsWithoutDeprecations(container);
-
-    } else {
-      container = new Ember['default'].Container();
-
-      //normalizeFullName only exists since Ember 1.9
-      if (Ember['default'].typeOf(container.normalizeFullName) === 'function') {
-        container.normalizeFullName = normalize;
-      } else {
-        container.normalize = normalize;
+      if (!container.lookupFactory(name)) {
+        thingToRegisterWith.register(name, factory);
       }
     }
 
-    container.optionsForType('component', { singleton: false });
-    container.optionsForType('view', { singleton: false });
-    container.optionsForType('template', { instantiate: false });
-    container.optionsForType('helper', { instantiate: false });
-    container.register('component-lookup:main', Ember['default'].ComponentLookup);
-    container.register('controller:basic', Ember['default'].Controller, { instantiate: false });
-    container.register('controller:object', Ember['default'].ObjectController, { instantiate: false });
-    container.register('controller:array', Ember['default'].ArrayController, { instantiate: false });
-    container.register('view:default', Ember['default']._MetamorphView);
-    container.register('view:toplevel', Ember['default'].View.extend());
-    container.register('view:select', Ember['default'].Select);
-    container.register('route:basic', Ember['default'].Route, { instantiate: false });
+    if (Ember.Application.buildRegistry) {
+      registry = Ember.Application.buildRegistry(namespace);
+      registry.register('component-lookup:main', Ember.ComponentLookup);
 
-    // added in Glimmer
-    container.register('component:-link-to', Ember['default'].LinkView);
-    container.register('component:-text-field', Ember['default'].TextField);
-    container.register('component:-text-area', Ember['default'].TextArea);
-    container.register('component:-checkbox', Ember['default'].Checkbox);
+      registry = registry;
+      container = registry.container();
+      exposeRegistryMethodsWithoutDeprecations(container);
+    } else {
+      container = Ember.Application.buildContainer(namespace);
+      container.register('component-lookup:main', Ember.ComponentLookup);
+    }
 
-    if (Ember['default']._LegacyEachView) {
-      container.register('view:-legacy-each', Ember['default']._LegacyEachView);
+    // Ember 1.10.0 did not properly add `view:toplevel` or `view:default`
+    // to the registry in Ember.Application.buildRegistry :(
+    //
+    // Ember 2.0.0 removed Ember.View as public API, so only do this when
+    // Ember.View is present
+    if (Ember.View) {
+      register('view:toplevel', Ember.View.extend());
+    }
+
+    // Ember 2.0.0 removed Ember._MetamorphView from the Ember global, so only
+    // do this when present
+    if (Ember._MetamorphView) {
+      register('view:default', Ember._MetamorphView);
     }
 
     var globalContext = typeof global === 'object' && global || self;
     if (globalContext.DS) {
       var DS = globalContext.DS;
       if (DS._setupContainer) {
-        DS._setupContainer(container);
+        DS._setupContainer(registry || container);
       } else {
-        container.register('transform:boolean', DS.BooleanTransform);
-        container.register('transform:date', DS.DateTransform);
-        container.register('transform:number', DS.NumberTransform);
-        container.register('transform:string', DS.StringTransform);
-        container.register('serializer:-default', DS.JSONSerializer);
-        container.register('serializer:-rest', DS.RESTSerializer);
-        container.register('adapter:-rest', DS.RESTAdapter);
+        register('transform:boolean', DS.BooleanTransform);
+        register('transform:date', DS.DateTransform);
+        register('transform:number', DS.NumberTransform);
+        register('transform:string', DS.StringTransform);
+        register('serializer:-default', DS.JSONSerializer);
+        register('serializer:-rest', DS.RESTSerializer);
+        register('adapter:-rest', DS.RESTAdapter);
       }
     }
 
-    for (var i = fullNames.length; i > 0; i--) {
-      var fullName = fullNames[i - 1];
-      var normalizedFullName = resolver.normalize(fullName);
-      container.register(fullName, resolver.resolve(normalizedFullName));
-    }
     return {
-      container: container,
-      registry: registry
+      registry: registry,
+      container: container
     };
   }
 
-  function isolatedContainer(fullNames) {
-    return isolatedRegistry(fullNames).container;
-  }
+});
+define('ember-test-helpers/isolated-container', function () {
+
+	'use strict';
 
 });
 define('ember-test-helpers/test-context', ['exports'], function (exports) {
@@ -1782,6 +1949,7 @@ define('ember-test-helpers/test-context', ['exports'], function (exports) {
 
   exports.setContext = setContext;
   exports.getContext = getContext;
+  exports.unsetContext = unsetContext;
 
   var __test_context__;
 
@@ -1791,6 +1959,10 @@ define('ember-test-helpers/test-context', ['exports'], function (exports) {
 
   function getContext() {
     return __test_context__;
+  }
+
+  function unsetContext() {
+    __test_context__ = undefined;
   }
 
 });
@@ -1804,7 +1976,7 @@ define('ember-test-helpers/test-module-for-component', ['exports', 'ember-test-h
       if (!callbacks && typeof description === 'object') {
         callbacks = description;
         description = null;
-      } else if (!callbacks && !description) {
+      } else if (!callbacks) {
         callbacks = {};
       }
 
@@ -1838,37 +2010,55 @@ define('ember-test-helpers/test-module-for-component', ['exports', 'ember-test-h
         this.setupSteps.push(this.setupComponentIntegrationTest);
         this.teardownSteps.push(this.teardownComponent);
       }
+
+      if (Ember['default'].View && Ember['default'].View.views) {
+        this.setupSteps.push(this._aliasViewRegistry);
+        this.teardownSteps.push(this._resetViewRegistry);
+      }
+    },
+
+    _aliasViewRegistry: function() {
+      this._originalGlobalViewRegistry = Ember['default'].View.views;
+      var viewRegistry = this.container.lookup('-view-registry:main');
+
+      if (viewRegistry) {
+        Ember['default'].View.views = viewRegistry;
+      }
+    },
+
+    _resetViewRegistry: function() {
+      Ember['default'].View.views = this._originalGlobalViewRegistry;
     },
 
     setupComponentUnitTest: function() {
       var _this = this;
       var resolver = test_resolver.getResolver();
-      var container = this.container;
       var context = this.context;
 
       var layoutName = 'template:components/' + this.componentName;
 
       var layout = resolver.resolve(layoutName);
 
+      var thingToRegisterWith = this.registry || this.container;
       if (layout) {
-        container.register(layoutName, layout);
-        container.injection(this.subjectName, 'layout', layoutName);
+        thingToRegisterWith.register(layoutName, layout);
+        thingToRegisterWith.injection(this.subjectName, 'layout', layoutName);
       }
 
-      context.dispatcher = Ember['default'].EventDispatcher.create();
+      context.dispatcher = this.container.lookup('event_dispatcher:main') || Ember['default'].EventDispatcher.create();
       context.dispatcher.setup({}, '#ember-testing');
 
       this.callbacks.render = function() {
-        var containerView = Ember['default'].ContainerView.create({container: container});
+        var subject;
+
         Ember['default'].run(function(){
-          var subject = context.subject();
-          containerView.pushObject(subject);
-          containerView.appendTo('#ember-testing');
+          subject = context.subject();
+          subject.appendTo('#ember-testing');
         });
 
         _this.teardownSteps.unshift(function() {
           Ember['default'].run(function() {
-            Ember['default'].tryInvoke(containerView, 'destroy');
+            Ember['default'].tryInvoke(subject, 'destroy');
           });
         });
       };
@@ -1887,11 +2077,16 @@ define('ember-test-helpers/test-module-for-component', ['exports', 'ember-test-h
     },
 
     setupComponentIntegrationTest: function() {
-      var self = this;
+      var module = this;
       var context = this.context;
-      context.dispatcher = Ember['default'].EventDispatcher.create();
-      context.dispatcher.setup({}, '#ember-testing');
+
       this.actionHooks = {};
+
+      context.dispatcher = this.container.lookup('event_dispatcher:main') || Ember['default'].EventDispatcher.create();
+      context.dispatcher.setup({}, '#ember-testing');
+      context.actions = module.actionHooks;
+
+      (this.registry || this.container).register('component:-test-holder', Ember['default'].Component.extend());
 
       context.render = function(template) {
         if (!template) {
@@ -1903,19 +2098,20 @@ define('ember-test-helpers/test-module-for-component', ['exports', 'ember-test-h
         if (typeof template === 'string') {
           template = Ember['default'].Handlebars.compile(template);
         }
-        self.component = Ember['default'].View.create({
-          context: context,
-          controller: self,
-          template: template,
-          container: self.container
+        module.component = module.container.lookupFactory('component:-test-holder').create({
+          layout: template
         });
+
+        module.component.set('context' ,context);
+        module.component.set('controller', module);
+
         Ember['default'].run(function() {
-          self.component.appendTo('#ember-testing');
+          module.component.appendTo('#ember-testing');
         });
       };
 
       context.$ = function() {
-        return self.component.$.apply(self.component, arguments);
+        return module.component.$.apply(module.component, arguments);
       };
 
       context.set = function(key, value) {
@@ -1924,23 +2120,40 @@ define('ember-test-helpers/test-module-for-component', ['exports', 'ember-test-h
         });
       };
 
+      context.setProperties = function(hash) {
+        Ember['default'].run(function() {
+          Ember['default'].setProperties(context, hash);
+        });
+      };
+
       context.get = function(key) {
         return Ember['default'].get(context, key);
       };
 
+      context.getProperties = function() {
+        var args = Array.prototype.slice.call(arguments);
+        return Ember['default'].getProperties(context, args);
+      };
+
       context.on = function(actionName, handler) {
-        self.actionHooks[actionName] = handler;
+        module.actionHooks[actionName] = handler;
       };
 
     },
 
     setupContext: function() {
       this._super.call(this);
+
+      // only setup the injection if we are running against a version
+      // of Ember that has `-view-registry:main` (Ember >= 1.12)
+      if (this.container.lookupFactory('-view-registry:main')) {
+        (this.registry || this.container).injection('component', '_viewRegistry', '-view-registry:main');
+      }
+
       if (!this.isUnitTest) {
         this.context.factory = function() {};
       }
     },
-
 
     send: function(actionName) {
       var hook = this.actionHooks[actionName];
@@ -1958,8 +2171,6 @@ define('ember-test-helpers/test-module-for-component', ['exports', 'ember-test-h
         });
       }
     }
-
-
   });
 
 });
@@ -1984,13 +2195,16 @@ define('ember-test-helpers/test-module-for-model', ['exports', 'ember-test-helpe
 
       var adapterFactory = container.lookupFactory('adapter:application');
       if (!adapterFactory) {
-        container.register('adapter:application', DS.FixtureAdapter);
+        adapterFactory = DS.JSONAPIAdapter || DS.FixtureAdapter;
+
+        var thingToRegisterWith = this.registry || this.container;
+        thingToRegisterWith.register('adapter:application', adapterFactory);
       }
 
       callbacks.store = function(){
         var container = this.container;
-
-        return container.lookup('store:main');
+        var store = container.lookup('service:store') || container.lookup('store:main');
+        return store;
       };
 
       if (callbacks.subject === defaultSubject) {
@@ -1998,7 +2212,8 @@ define('ember-test-helpers/test-module-for-model', ['exports', 'ember-test-helpe
           var container = this.container;
 
           return Ember['default'].run(function() {
-            return container.lookup('store:main').createRecord(modelName, options);
+            var store = container.lookup('service:store') || container.lookup('store:main');
+            return store.createRecord(modelName, options);
           });
         };
       }
@@ -2006,7 +2221,7 @@ define('ember-test-helpers/test-module-for-model', ['exports', 'ember-test-helpe
   });
 
 });
-define('ember-test-helpers/test-module', ['exports', 'ember', 'ember-test-helpers/isolated-container', 'ember-test-helpers/test-context', 'klassy', 'ember-test-helpers/test-resolver'], function (exports, Ember, isolated_container, test_context, klassy, test_resolver) {
+define('ember-test-helpers/test-module', ['exports', 'ember', 'ember-test-helpers/test-context', 'klassy', 'ember-test-helpers/test-resolver', 'ember-test-helpers/build-registry'], function (exports, Ember, test_context, klassy, test_resolver, buildRegistry) {
 
   'use strict';
 
@@ -2025,7 +2240,7 @@ define('ember-test-helpers/test-module', ['exports', 'ember', 'ember-test-helper
       this.callbacks = callbacks || {};
 
       if (this.callbacks.integration) {
-        this.isIntegration = callbacks.integration;      
+        this.isIntegration = callbacks.integration;
         delete callbacks.integration;
       }
 
@@ -2042,7 +2257,7 @@ define('ember-test-helpers/test-module', ['exports', 'ember', 'ember-test-helper
     initNeeds: function() {
       this.needs = [this.subjectName];
       if (this.callbacks.needs) {
-        this.needs = this.needs.concat(this.callbacks.needs)
+        this.needs = this.needs.concat(this.callbacks.needs);
         delete this.callbacks.needs;
       }
     },
@@ -2113,7 +2328,10 @@ define('ember-test-helpers/test-module', ['exports', 'ember', 'ember-test-helper
       function nextStep() {
         var step = steps.shift();
         if (step) {
-          return Ember['default'].RSVP.resolve(step.call(context)).then(nextStep);
+          // guard against exceptions, for example missing components referenced from needs.
+          return new Ember['default'].RSVP.Promise(function(ok) {
+            ok(step.call(context));
+          }).then(nextStep);
         } else {
           return Ember['default'].RSVP.resolve();
         }
@@ -2172,7 +2390,10 @@ define('ember-test-helpers/test-module', ['exports', 'ember', 'ember-test-helper
 
     teardownContext: function() {
       var context = this.context;
-      if (context.dispatcher) {
+      this.context = undefined;
+      test_context.unsetContext();
+
+      if (context.dispatcher && !context.dispatcher.isDestroyed) {
         Ember['default'].run(function() {
           context.dispatcher.destroy();
         });
@@ -2181,7 +2402,12 @@ define('ember-test-helpers/test-module', ['exports', 'ember', 'ember-test-helper
 
     teardownTestElements: function() {
       Ember['default'].$('#ember-testing').empty();
-      Ember['default'].View.views = {};
+
+      // Ember 2.0.0 removed Ember.View as public API, so only do this when
+      // Ember.View is present
+      if (Ember['default'].View && Ember['default'].View.views) {
+        Ember['default'].View.views = {};
+      }
     },
 
     defaultSubject: function(options, factory) {
@@ -2198,7 +2424,7 @@ define('ember-test-helpers/test-module', ['exports', 'ember', 'ember-test-helper
       this.cache = this.cache || {};
       this.cachedCalls = this.cachedCalls || {};
 
-      var keys = Ember['default'].keys(callbacks);
+      var keys = (Object.keys || Ember['default'].keys)(callbacks);
 
       for (var i = 0, l = keys.length; i < l; i++) {
         (function(key) {
@@ -2218,29 +2444,37 @@ define('ember-test-helpers/test-module', ['exports', 'ember', 'ember-test-helper
       }
     },
 
+    _setupContainer: function() {
+      var resolver = test_resolver.getResolver();
+      var items = buildRegistry['default'](resolver);
+
+      this.container = items.container;
+      this.registry = items.registry;
+
+
+      var thingToRegisterWith = this.registry || this.container;
+      var router = resolver.resolve('router:main');
+      router = router || Ember['default'].Router.extend();
+      thingToRegisterWith.register('router:main', router);
+    },
 
     _setupIsolatedContainer: function() {
-      var isolated = isolated_container.isolatedRegistry(this.needs);
-      this.container = isolated.container;
-      this.registry = isolated.registry;
+      var resolver = test_resolver.getResolver();
+      this._setupContainer();
+
+      var thingToRegisterWith = this.registry || this.container;
+
+      for (var i = this.needs.length; i > 0; i--) {
+        var fullName = this.needs[i - 1];
+        var normalizedFullName = resolver.normalize(fullName);
+        thingToRegisterWith.register(fullName, resolver.resolve(normalizedFullName));
+      }
+
+      thingToRegisterWith.resolver = function() { };
     },
 
     _setupIntegratedContainer: function() {
-      var resolver = test_resolver.getResolver();
-      var namespace = Ember['default'].Object.create({
-        Resolver: { create: function() { return resolver; } }
-      });
-
-      if (Ember['default'].Application.buildRegistry) {
-        var registry;
-        registry = Ember['default'].Application.buildRegistry(namespace);
-        registry.register('component-lookup:main', Ember['default'].ComponentLookup);
-        this.registry = registry;
-        this.container = registry.container();
-      } else {
-        this.container = Ember['default'].Application.buildContainer(namespace);
-        this.container.register('component-lookup:main', Ember['default'].ComponentLookup);
-      }
+      this._setupContainer();
     }
 
   });
@@ -2436,14 +2670,14 @@ define('qunit', ['exports'], function (exports) {
 
 });
 /*!
- * QUnit 1.17.1
+ * QUnit 1.18.0
  * http://qunitjs.com/
  *
  * Copyright jQuery Foundation and other contributors
  * Released under the MIT license
  * http://jquery.org/license
  *
- * Date: 2015-01-20T19:39Z
+ * Date: 2015-04-03T10:23Z
  */
 
 (function( window ) {
@@ -2553,6 +2787,9 @@ config = {
 	// when enabled, all tests must call expect()
 	requireExpects: false,
 
+	// depth up-to which object will be dumped
+	maxDepth: 5,
+
 	// add checkboxes that are persisted in the query-string
 	// when enabled, the id is set to `true` as a `QUnit.config` property
 	urlConfig: [
@@ -2622,11 +2859,17 @@ config.modules.push( config.currentModule );
 	// String search anywhere in moduleName+testName
 	config.filter = urlParams.filter;
 
+	if ( urlParams.maxDepth ) {
+		config.maxDepth = parseInt( urlParams.maxDepth, 10 ) === -1 ?
+			Number.POSITIVE_INFINITY :
+			urlParams.maxDepth;
+	}
+
 	config.testId = [];
 	if ( urlParams.testId ) {
 
 		// Ensure that urlParams.testId is an array
-		urlParams.testId = [].concat( urlParams.testId );
+		urlParams.testId = decodeURIComponent( urlParams.testId ).split( "," );
 		for ( i = 0; i < urlParams.testId.length; i++ ) {
 			config.testId.push( urlParams.testId[ i ] );
 		}
@@ -2634,6 +2877,9 @@ config.modules.push( config.currentModule );
 
 	// Figure out if we're running the tests from a server or not
 	QUnit.isLocal = location.protocol === "file:";
+
+	// Expose the current QUnit version
+	QUnit.version = "1.18.0";
 }());
 
 // Root QUnit object.
@@ -2921,20 +3167,14 @@ function done() {
 	});
 }
 
-// Doesn't support IE6 to IE9
+// Doesn't support IE6 to IE9, it will return undefined on these browsers
 // See also https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error/Stack
 function extractStacktrace( e, offset ) {
 	offset = offset === undefined ? 4 : offset;
 
 	var stack, include, i;
 
-	if ( e.stacktrace ) {
-
-		// Opera 12.x
-		return e.stacktrace.split( "\n" )[ offset + 3 ];
-	} else if ( e.stack ) {
-
-		// Firefox, Chrome, Safari 6+, IE10+, PhantomJS and Node
+	if ( e.stack ) {
 		stack = e.stack.split( "\n" );
 		if ( /^error$/i.test( stack[ 0 ] ) ) {
 			stack.shift();
@@ -2952,9 +3192,10 @@ function extractStacktrace( e, offset ) {
 			}
 		}
 		return stack[ offset ];
+
+	// Support: Safari <=6 only
 	} else if ( e.sourceURL ) {
 
-		// Safari < 6
 		// exclude useless self-reference for generated Error objects
 		if ( /qunit.js$/.test( e.sourceURL ) ) {
 			return;
@@ -2966,16 +3207,19 @@ function extractStacktrace( e, offset ) {
 }
 
 function sourceFromStacktrace( offset ) {
-	var e = new Error();
-	if ( !e.stack ) {
+	var error = new Error();
+
+	// Support: Safari <=7 only, IE <=10 - 11 only
+	// Not all browsers generate the `stack` property for `new Error()`, see also #636
+	if ( !error.stack ) {
 		try {
-			throw e;
+			throw error;
 		} catch ( err ) {
-			// This should already be true in most browsers
-			e = err;
+			error = err;
 		}
 	}
-	return extractStacktrace( e, offset );
+
+	return extractStacktrace( error, offset );
 }
 
 function synchronize( callback, last ) {
@@ -3560,7 +3804,7 @@ Test.prototype = {
 
 	valid: function() {
 		var include,
-			filter = config.filter,
+			filter = config.filter && config.filter.toLowerCase(),
 			module = QUnit.urlParams.module && QUnit.urlParams.module.toLowerCase(),
 			fullName = ( this.module.name + ": " + this.testName ).toLowerCase();
 
@@ -3583,7 +3827,7 @@ Test.prototype = {
 
 		include = filter.charAt( 0 ) !== "!";
 		if ( !include ) {
-			filter = filter.toLowerCase().slice( 1 );
+			filter = filter.slice( 1 );
 		}
 
 		// If the filter matches, we need to honour include
@@ -3721,87 +3965,52 @@ QUnit.assert = Assert.prototype = {
 		return assert.test.push.apply( assert.test, arguments );
 	},
 
-	/**
-	 * Asserts rough true-ish result.
-	 * @name ok
-	 * @function
-	 * @example ok( "asdfasdf".length > 5, "There must be at least 5 chars" );
-	 */
 	ok: function( result, message ) {
 		message = message || ( result ? "okay" : "failed, expected argument to be truthy, was: " +
 			QUnit.dump.parse( result ) );
 		this.push( !!result, result, true, message );
 	},
 
-	/**
-	 * Assert that the first two arguments are equal, with an optional message.
-	 * Prints out both actual and expected values.
-	 * @name equal
-	 * @function
-	 * @example equal( format( "{0} bytes.", 2), "2 bytes.", "replaces {0} with next argument" );
-	 */
+	notOk: function( result, message ) {
+		message = message || ( !result ? "okay" : "failed, expected argument to be falsy, was: " +
+			QUnit.dump.parse( result ) );
+		this.push( !result, result, false, message );
+	},
+
 	equal: function( actual, expected, message ) {
 		/*jshint eqeqeq:false */
 		this.push( expected == actual, actual, expected, message );
 	},
 
-	/**
-	 * @name notEqual
-	 * @function
-	 */
 	notEqual: function( actual, expected, message ) {
 		/*jshint eqeqeq:false */
 		this.push( expected != actual, actual, expected, message );
 	},
 
-	/**
-	 * @name propEqual
-	 * @function
-	 */
 	propEqual: function( actual, expected, message ) {
 		actual = objectValues( actual );
 		expected = objectValues( expected );
 		this.push( QUnit.equiv( actual, expected ), actual, expected, message );
 	},
 
-	/**
-	 * @name notPropEqual
-	 * @function
-	 */
 	notPropEqual: function( actual, expected, message ) {
 		actual = objectValues( actual );
 		expected = objectValues( expected );
 		this.push( !QUnit.equiv( actual, expected ), actual, expected, message );
 	},
 
-	/**
-	 * @name deepEqual
-	 * @function
-	 */
 	deepEqual: function( actual, expected, message ) {
 		this.push( QUnit.equiv( actual, expected ), actual, expected, message );
 	},
 
-	/**
-	 * @name notDeepEqual
-	 * @function
-	 */
 	notDeepEqual: function( actual, expected, message ) {
 		this.push( !QUnit.equiv( actual, expected ), actual, expected, message );
 	},
 
-	/**
-	 * @name strictEqual
-	 * @function
-	 */
 	strictEqual: function( actual, expected, message ) {
 		this.push( expected === actual, actual, expected, message );
 	},
 
-	/**
-	 * @name notStrictEqual
-	 * @function
-	 */
 	notStrictEqual: function( actual, expected, message ) {
 		this.push( expected !== actual, actual, expected, message );
 	},
@@ -3809,7 +4018,8 @@ QUnit.assert = Assert.prototype = {
 	"throws": function( block, expected, message ) {
 		var actual, expectedType,
 			expectedOutput = expected,
-			ok = false;
+			ok = false,
+			currentTest = ( this instanceof Assert && this.test ) || QUnit.config.current;
 
 		// 'expected' is optional unless doing string comparison
 		if ( message == null && typeof expected === "string" ) {
@@ -3817,13 +4027,13 @@ QUnit.assert = Assert.prototype = {
 			expected = null;
 		}
 
-		this.test.ignoreGlobalErrors = true;
+		currentTest.ignoreGlobalErrors = true;
 		try {
-			block.call( this.test.testEnvironment );
+			block.call( currentTest.testEnvironment );
 		} catch (e) {
 			actual = e;
 		}
-		this.test.ignoreGlobalErrors = false;
+		currentTest.ignoreGlobalErrors = false;
 
 		if ( actual ) {
 			expectedType = QUnit.objectType( expected );
@@ -3856,11 +4066,9 @@ QUnit.assert = Assert.prototype = {
 				expectedOutput = null;
 				ok = true;
 			}
-
-			this.push( ok, actual, expectedOutput, message );
-		} else {
-			this.test.pushFailure( message, null, "No exception was thrown." );
 		}
+
+		currentTest.assert.push( ok, actual, expectedOutput, message );
 	}
 };
 
@@ -4220,7 +4428,7 @@ QUnit.dump = (function() {
 			join: join,
 			//
 			depth: 1,
-			maxDepth: 5,
+			maxDepth: QUnit.config.maxDepth,
 
 			// This is the list of parsers, to modify them, use dump.setParser
 			parsers: {
@@ -4267,7 +4475,7 @@ QUnit.dump = (function() {
 					nonEnumerableProperties = [ "message", "name" ];
 					for ( i in nonEnumerableProperties ) {
 						key = nonEnumerableProperties[ i ];
-						if ( key in map && !( key in keys ) ) {
+						if ( key in map && inArray( key, keys ) < 0 ) {
 							keys.push( key );
 						}
 					}
@@ -4386,6 +4594,7 @@ if ( typeof window !== "undefined" ) {
 				"start",
 				"stop",
 				"ok",
+				"notOk",
 				"equal",
 				"notEqual",
 				"propEqual",
@@ -4418,6 +4627,13 @@ if ( typeof exports !== "undefined" && exports ) {
 	exports.QUnit = QUnit;
 }
 
+if ( typeof define === "function" && define.amd ) {
+	define( function() {
+		return QUnit;
+	} );
+	QUnit.config.autostart = false;
+}
+
 // Get a reference to the global object, like window in browsers
 }( (function() {
 	return this;
@@ -4426,150 +4642,1088 @@ if ( typeof exports !== "undefined" && exports ) {
 /*istanbul ignore next */
 // jscs:disable maximumLineLength
 /*
- * Javascript Diff Algorithm
- *  By John Resig (http://ejohn.org/)
- *  Modified by Chu Alan "sprite"
+ * This file is a modified version of google-diff-match-patch's JavaScript implementation
+ * (https://code.google.com/p/google-diff-match-patch/source/browse/trunk/javascript/diff_match_patch_uncompressed.js),
+ * modifications are licensed as more fully set forth in LICENSE.txt.
  *
- * Released under the MIT license.
+ * The original source of google-diff-match-patch is attributable and licensed as follows:
+ *
+ * Copyright 2006 Google Inc.
+ * http://code.google.com/p/google-diff-match-patch/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  * More Info:
- *  http://ejohn.org/projects/javascript-diff-algorithm/
+ *  https://code.google.com/p/google-diff-match-patch/
  *
  * Usage: QUnit.diff(expected, actual)
  *
- * QUnit.diff( "the quick brown fox jumped over", "the quick fox jumps over" ) == "the  quick <del>brown </del> fox <del>jumped </del><ins>jumps </ins> over"
+ * QUnit.diff( "the quick brown fox jumped over", "the quick fox jumps over" ) === "the  quick <del>brown </del> fox jump<ins>s</ins><del>ed</del over"
  */
 QUnit.diff = (function() {
-	var hasOwn = Object.prototype.hasOwnProperty;
 
-	/*jshint eqeqeq:false, eqnull:true */
-	function diff( o, n ) {
-		var i,
-			ns = {},
-			os = {};
+    function DiffMatchPatch() {
 
-		for ( i = 0; i < n.length; i++ ) {
-			if ( !hasOwn.call( ns, n[ i ] ) ) {
-				ns[ n[ i ] ] = {
-					rows: [],
-					o: null
-				};
-			}
-			ns[ n[ i ] ].rows.push( i );
-		}
+        // Defaults.
+        // Redefine these in your program to override the defaults.
 
-		for ( i = 0; i < o.length; i++ ) {
-			if ( !hasOwn.call( os, o[ i ] ) ) {
-				os[ o[ i ] ] = {
-					rows: [],
-					n: null
-				};
-			}
-			os[ o[ i ] ].rows.push( i );
-		}
+        // Number of seconds to map a diff before giving up (0 for infinity).
+        this.DiffTimeout = 1.0;
+        // Cost of an empty edit operation in terms of edit characters.
+        this.DiffEditCost = 4;
+    }
 
-		for ( i in ns ) {
-			if ( hasOwn.call( ns, i ) ) {
-				if ( ns[ i ].rows.length === 1 && hasOwn.call( os, i ) && os[ i ].rows.length === 1 ) {
-					n[ ns[ i ].rows[ 0 ] ] = {
-						text: n[ ns[ i ].rows[ 0 ] ],
-						row: os[ i ].rows[ 0 ]
-					};
-					o[ os[ i ].rows[ 0 ] ] = {
-						text: o[ os[ i ].rows[ 0 ] ],
-						row: ns[ i ].rows[ 0 ]
-					};
-				}
-			}
-		}
+    //  DIFF FUNCTIONS
 
-		for ( i = 0; i < n.length - 1; i++ ) {
-			if ( n[ i ].text != null && n[ i + 1 ].text == null && n[ i ].row + 1 < o.length && o[ n[ i ].row + 1 ].text == null &&
-				n[ i + 1 ] == o[ n[ i ].row + 1 ] ) {
+    /**
+     * The data structure representing a diff is an array of tuples:
+     * [[DIFF_DELETE, 'Hello'], [DIFF_INSERT, 'Goodbye'], [DIFF_EQUAL, ' world.']]
+     * which means: delete 'Hello', add 'Goodbye' and keep ' world.'
+     */
+    var DIFF_DELETE = -1,
+		DIFF_INSERT = 1,
+		DIFF_EQUAL = 0;
 
-				n[ i + 1 ] = {
-					text: n[ i + 1 ],
-					row: n[ i ].row + 1
-				};
-				o[ n[ i ].row + 1 ] = {
-					text: o[ n[ i ].row + 1 ],
-					row: i + 1
-				};
-			}
-		}
+    /**
+     * Find the differences between two texts.  Simplifies the problem by stripping
+     * any common prefix or suffix off the texts before diffing.
+     * @param {string} text1 Old string to be diffed.
+     * @param {string} text2 New string to be diffed.
+     * @param {boolean=} optChecklines Optional speedup flag. If present and false,
+     *     then don't run a line-level diff first to identify the changed areas.
+     *     Defaults to true, which does a faster, slightly less optimal diff.
+     * @param {number} optDeadline Optional time when the diff should be complete
+     *     by.  Used internally for recursive calls.  Users should set DiffTimeout
+     *     instead.
+     * @return {!Array.<!DiffMatchPatch.Diff>} Array of diff tuples.
+     */
+    DiffMatchPatch.prototype.DiffMain = function( text1, text2, optChecklines, optDeadline ) {
+        var deadline, checklines, commonlength,
+			commonprefix, commonsuffix, diffs;
+        // Set a deadline by which time the diff must be complete.
+        if ( typeof optDeadline === "undefined" ) {
+            if ( this.DiffTimeout <= 0 ) {
+                optDeadline = Number.MAX_VALUE;
+            } else {
+                optDeadline = ( new Date() ).getTime() + this.DiffTimeout * 1000;
+            }
+        }
+        deadline = optDeadline;
 
-		for ( i = n.length - 1; i > 0; i-- ) {
-			if ( n[ i ].text != null && n[ i - 1 ].text == null && n[ i ].row > 0 && o[ n[ i ].row - 1 ].text == null &&
-				n[ i - 1 ] == o[ n[ i ].row - 1 ] ) {
+        // Check for null inputs.
+        if ( text1 === null || text2 === null ) {
+            throw new Error( "Null input. (DiffMain)" );
+        }
 
-				n[ i - 1 ] = {
-					text: n[ i - 1 ],
-					row: n[ i ].row - 1
-				};
-				o[ n[ i ].row - 1 ] = {
-					text: o[ n[ i ].row - 1 ],
-					row: i - 1
-				};
-			}
-		}
+        // Check for equality (speedup).
+        if ( text1 === text2 ) {
+            if ( text1 ) {
+                return [
+                    [ DIFF_EQUAL, text1 ]
+                ];
+            }
+            return [];
+        }
 
-		return {
-			o: o,
-			n: n
-		};
-	}
+        if ( typeof optChecklines === "undefined" ) {
+            optChecklines = true;
+        }
 
-	return function( o, n ) {
-		o = o.replace( /\s+$/, "" );
-		n = n.replace( /\s+$/, "" );
+        checklines = optChecklines;
 
-		var i, pre,
-			str = "",
-			out = diff( o === "" ? [] : o.split( /\s+/ ), n === "" ? [] : n.split( /\s+/ ) ),
-			oSpace = o.match( /\s+/g ),
-			nSpace = n.match( /\s+/g );
+        // Trim off common prefix (speedup).
+        commonlength = this.diffCommonPrefix( text1, text2 );
+        commonprefix = text1.substring( 0, commonlength );
+        text1 = text1.substring( commonlength );
+        text2 = text2.substring( commonlength );
 
-		if ( oSpace == null ) {
-			oSpace = [ " " ];
-		} else {
-			oSpace.push( " " );
-		}
+        // Trim off common suffix (speedup).
+        /////////
+        commonlength = this.diffCommonSuffix( text1, text2 );
+        commonsuffix = text1.substring( text1.length - commonlength );
+        text1 = text1.substring( 0, text1.length - commonlength );
+        text2 = text2.substring( 0, text2.length - commonlength );
 
-		if ( nSpace == null ) {
-			nSpace = [ " " ];
-		} else {
-			nSpace.push( " " );
-		}
+        // Compute the diff on the middle block.
+        diffs = this.diffCompute( text1, text2, checklines, deadline );
 
-		if ( out.n.length === 0 ) {
-			for ( i = 0; i < out.o.length; i++ ) {
-				str += "<del>" + out.o[ i ] + oSpace[ i ] + "</del>";
-			}
-		} else {
-			if ( out.n[ 0 ].text == null ) {
-				for ( n = 0; n < out.o.length && out.o[ n ].text == null; n++ ) {
-					str += "<del>" + out.o[ n ] + oSpace[ n ] + "</del>";
-				}
-			}
+        // Restore the prefix and suffix.
+        if ( commonprefix ) {
+            diffs.unshift( [ DIFF_EQUAL, commonprefix ] );
+        }
+        if ( commonsuffix ) {
+            diffs.push( [ DIFF_EQUAL, commonsuffix ] );
+        }
+        this.diffCleanupMerge( diffs );
+        return diffs;
+    };
 
-			for ( i = 0; i < out.n.length; i++ ) {
-				if ( out.n[ i ].text == null ) {
-					str += "<ins>" + out.n[ i ] + nSpace[ i ] + "</ins>";
-				} else {
+    /**
+     * Reduce the number of edits by eliminating operationally trivial equalities.
+     * @param {!Array.<!DiffMatchPatch.Diff>} diffs Array of diff tuples.
+     */
+    DiffMatchPatch.prototype.diffCleanupEfficiency = function( diffs ) {
+        var changes, equalities, equalitiesLength, lastequality,
+			pointer, preIns, preDel, postIns, postDel;
+        changes = false;
+        equalities = []; // Stack of indices where equalities are found.
+        equalitiesLength = 0; // Keeping our own length var is faster in JS.
+        /** @type {?string} */
+        lastequality = null;
+        // Always equal to diffs[equalities[equalitiesLength - 1]][1]
+        pointer = 0; // Index of current position.
+        // Is there an insertion operation before the last equality.
+        preIns = false;
+        // Is there a deletion operation before the last equality.
+        preDel = false;
+        // Is there an insertion operation after the last equality.
+        postIns = false;
+        // Is there a deletion operation after the last equality.
+        postDel = false;
+        while ( pointer < diffs.length ) {
+            if ( diffs[ pointer ][ 0 ] === DIFF_EQUAL ) { // Equality found.
+                if ( diffs[ pointer ][ 1 ].length < this.DiffEditCost && ( postIns || postDel ) ) {
+                    // Candidate found.
+                    equalities[ equalitiesLength++ ] = pointer;
+                    preIns = postIns;
+                    preDel = postDel;
+                    lastequality = diffs[ pointer ][ 1 ];
+                } else {
+                    // Not a candidate, and can never become one.
+                    equalitiesLength = 0;
+                    lastequality = null;
+                }
+                postIns = postDel = false;
+            } else { // An insertion or deletion.
+                if ( diffs[ pointer ][ 0 ] === DIFF_DELETE ) {
+                    postDel = true;
+                } else {
+                    postIns = true;
+                }
+                /*
+                 * Five types to be split:
+                 * <ins>A</ins><del>B</del>XY<ins>C</ins><del>D</del>
+                 * <ins>A</ins>X<ins>C</ins><del>D</del>
+                 * <ins>A</ins><del>B</del>X<ins>C</ins>
+                 * <ins>A</del>X<ins>C</ins><del>D</del>
+                 * <ins>A</ins><del>B</del>X<del>C</del>
+                 */
+                if ( lastequality && ( ( preIns && preDel && postIns && postDel ) ||
+                        ( ( lastequality.length < this.DiffEditCost / 2 ) &&
+                            ( preIns + preDel + postIns + postDel ) === 3 ) ) ) {
+                    // Duplicate record.
+                    diffs.splice( equalities[equalitiesLength - 1], 0, [ DIFF_DELETE, lastequality ] );
+                    // Change second copy to insert.
+                    diffs[ equalities[ equalitiesLength - 1 ] + 1 ][ 0 ] = DIFF_INSERT;
+                    equalitiesLength--; // Throw away the equality we just deleted;
+                    lastequality = null;
+                    if (preIns && preDel) {
+                        // No changes made which could affect previous entry, keep going.
+                        postIns = postDel = true;
+                        equalitiesLength = 0;
+                    } else {
+                        equalitiesLength--; // Throw away the previous equality.
+                        pointer = equalitiesLength > 0 ? equalities[ equalitiesLength - 1 ] : -1;
+                        postIns = postDel = false;
+                    }
+                    changes = true;
+                }
+            }
+            pointer++;
+        }
 
-					// `pre` initialized at top of scope
-					pre = "";
+        if ( changes ) {
+            this.diffCleanupMerge( diffs );
+        }
+    };
 
-					for ( n = out.n[ i ].row + 1; n < out.o.length && out.o[ n ].text == null; n++ ) {
-						pre += "<del>" + out.o[ n ] + oSpace[ n ] + "</del>";
-					}
-					str += " " + out.n[ i ].text + nSpace[ i ] + pre;
-				}
-			}
-		}
+    /**
+     * Convert a diff array into a pretty HTML report.
+     * @param {!Array.<!DiffMatchPatch.Diff>} diffs Array of diff tuples.
+     * @param {integer} string to be beautified.
+     * @return {string} HTML representation.
+     */
+    DiffMatchPatch.prototype.diffPrettyHtml = function( diffs ) {
+        var op, data, x, html = [];
+        for ( x = 0; x < diffs.length; x++ ) {
+            op = diffs[x][0]; // Operation (insert, delete, equal)
+            data = diffs[x][1]; // Text of change.
+            switch ( op ) {
+                case DIFF_INSERT:
+                    html[x] = "<ins>" + data + "</ins>";
+                    break;
+                case DIFF_DELETE:
+                    html[x] = "<del>" + data + "</del>";
+                    break;
+                case DIFF_EQUAL:
+                    html[x] = "<span>" + data + "</span>";
+                    break;
+            }
+        }
+        return html.join("");
+    };
 
-		return str;
-	};
+    /**
+     * Determine the common prefix of two strings.
+     * @param {string} text1 First string.
+     * @param {string} text2 Second string.
+     * @return {number} The number of characters common to the start of each
+     *     string.
+     */
+    DiffMatchPatch.prototype.diffCommonPrefix = function( text1, text2 ) {
+        var pointermid, pointermax, pointermin, pointerstart;
+        // Quick check for common null cases.
+        if ( !text1 || !text2 || text1.charAt(0) !== text2.charAt(0) ) {
+            return 0;
+        }
+        // Binary search.
+        // Performance analysis: http://neil.fraser.name/news/2007/10/09/
+        pointermin = 0;
+        pointermax = Math.min( text1.length, text2.length );
+        pointermid = pointermax;
+        pointerstart = 0;
+        while ( pointermin < pointermid ) {
+            if ( text1.substring( pointerstart, pointermid ) === text2.substring( pointerstart, pointermid ) ) {
+                pointermin = pointermid;
+                pointerstart = pointermin;
+            } else {
+                pointermax = pointermid;
+            }
+            pointermid = Math.floor( ( pointermax - pointermin ) / 2 + pointermin );
+        }
+        return pointermid;
+    };
+
+    /**
+     * Determine the common suffix of two strings.
+     * @param {string} text1 First string.
+     * @param {string} text2 Second string.
+     * @return {number} The number of characters common to the end of each string.
+     */
+    DiffMatchPatch.prototype.diffCommonSuffix = function( text1, text2 ) {
+        var pointermid, pointermax, pointermin, pointerend;
+        // Quick check for common null cases.
+        if (!text1 || !text2 || text1.charAt(text1.length - 1) !== text2.charAt(text2.length - 1)) {
+            return 0;
+        }
+        // Binary search.
+        // Performance analysis: http://neil.fraser.name/news/2007/10/09/
+        pointermin = 0;
+        pointermax = Math.min(text1.length, text2.length);
+        pointermid = pointermax;
+        pointerend = 0;
+        while ( pointermin < pointermid ) {
+            if (text1.substring( text1.length - pointermid, text1.length - pointerend ) ===
+                text2.substring( text2.length - pointermid, text2.length - pointerend ) ) {
+                pointermin = pointermid;
+                pointerend = pointermin;
+            } else {
+                pointermax = pointermid;
+            }
+            pointermid = Math.floor( ( pointermax - pointermin ) / 2 + pointermin );
+        }
+        return pointermid;
+    };
+
+    /**
+     * Find the differences between two texts.  Assumes that the texts do not
+     * have any common prefix or suffix.
+     * @param {string} text1 Old string to be diffed.
+     * @param {string} text2 New string to be diffed.
+     * @param {boolean} checklines Speedup flag.  If false, then don't run a
+     *     line-level diff first to identify the changed areas.
+     *     If true, then run a faster, slightly less optimal diff.
+     * @param {number} deadline Time when the diff should be complete by.
+     * @return {!Array.<!DiffMatchPatch.Diff>} Array of diff tuples.
+     * @private
+     */
+    DiffMatchPatch.prototype.diffCompute = function( text1, text2, checklines, deadline ) {
+        var diffs, longtext, shorttext, i, hm,
+			text1A, text2A, text1B, text2B,
+			midCommon, diffsA, diffsB;
+
+        if ( !text1 ) {
+            // Just add some text (speedup).
+            return [
+                [ DIFF_INSERT, text2 ]
+            ];
+        }
+
+        if (!text2) {
+            // Just delete some text (speedup).
+            return [
+                [ DIFF_DELETE, text1 ]
+            ];
+        }
+
+        longtext = text1.length > text2.length ? text1 : text2;
+        shorttext = text1.length > text2.length ? text2 : text1;
+        i = longtext.indexOf( shorttext );
+        if ( i !== -1 ) {
+            // Shorter text is inside the longer text (speedup).
+            diffs = [
+                [ DIFF_INSERT, longtext.substring( 0, i ) ],
+                [ DIFF_EQUAL, shorttext ],
+                [ DIFF_INSERT, longtext.substring( i + shorttext.length ) ]
+            ];
+            // Swap insertions for deletions if diff is reversed.
+            if ( text1.length > text2.length ) {
+                diffs[0][0] = diffs[2][0] = DIFF_DELETE;
+            }
+            return diffs;
+        }
+
+        if ( shorttext.length === 1 ) {
+            // Single character string.
+            // After the previous speedup, the character can't be an equality.
+            return [
+                [ DIFF_DELETE, text1 ],
+                [ DIFF_INSERT, text2 ]
+            ];
+        }
+
+        // Check to see if the problem can be split in two.
+        hm = this.diffHalfMatch(text1, text2);
+        if (hm) {
+            // A half-match was found, sort out the return data.
+            text1A = hm[0];
+            text1B = hm[1];
+            text2A = hm[2];
+            text2B = hm[3];
+            midCommon = hm[4];
+            // Send both pairs off for separate processing.
+            diffsA = this.DiffMain(text1A, text2A, checklines, deadline);
+            diffsB = this.DiffMain(text1B, text2B, checklines, deadline);
+            // Merge the results.
+            return diffsA.concat([
+                [ DIFF_EQUAL, midCommon ]
+            ], diffsB);
+        }
+
+        if (checklines && text1.length > 100 && text2.length > 100) {
+            return this.diffLineMode(text1, text2, deadline);
+        }
+
+        return this.diffBisect(text1, text2, deadline);
+    };
+
+    /**
+     * Do the two texts share a substring which is at least half the length of the
+     * longer text?
+     * This speedup can produce non-minimal diffs.
+     * @param {string} text1 First string.
+     * @param {string} text2 Second string.
+     * @return {Array.<string>} Five element Array, containing the prefix of
+     *     text1, the suffix of text1, the prefix of text2, the suffix of
+     *     text2 and the common middle.  Or null if there was no match.
+     * @private
+     */
+    DiffMatchPatch.prototype.diffHalfMatch = function(text1, text2) {
+        var longtext, shorttext, dmp,
+			text1A, text2B, text2A, text1B, midCommon,
+			hm1, hm2, hm;
+        if (this.DiffTimeout <= 0) {
+            // Don't risk returning a non-optimal diff if we have unlimited time.
+            return null;
+        }
+        longtext = text1.length > text2.length ? text1 : text2;
+        shorttext = text1.length > text2.length ? text2 : text1;
+        if (longtext.length < 4 || shorttext.length * 2 < longtext.length) {
+            return null; // Pointless.
+        }
+        dmp = this; // 'this' becomes 'window' in a closure.
+
+        /**
+         * Does a substring of shorttext exist within longtext such that the substring
+         * is at least half the length of longtext?
+         * Closure, but does not reference any external variables.
+         * @param {string} longtext Longer string.
+         * @param {string} shorttext Shorter string.
+         * @param {number} i Start index of quarter length substring within longtext.
+         * @return {Array.<string>} Five element Array, containing the prefix of
+         *     longtext, the suffix of longtext, the prefix of shorttext, the suffix
+         *     of shorttext and the common middle.  Or null if there was no match.
+         * @private
+         */
+        function diffHalfMatchI(longtext, shorttext, i) {
+            var seed, j, bestCommon, prefixLength, suffixLength,
+				bestLongtextA, bestLongtextB, bestShorttextA, bestShorttextB;
+            // Start with a 1/4 length substring at position i as a seed.
+            seed = longtext.substring(i, i + Math.floor(longtext.length / 4));
+            j = -1;
+            bestCommon = "";
+            while ((j = shorttext.indexOf(seed, j + 1)) !== -1) {
+                prefixLength = dmp.diffCommonPrefix(longtext.substring(i),
+                    shorttext.substring(j));
+                suffixLength = dmp.diffCommonSuffix(longtext.substring(0, i),
+                    shorttext.substring(0, j));
+                if (bestCommon.length < suffixLength + prefixLength) {
+                    bestCommon = shorttext.substring(j - suffixLength, j) +
+                        shorttext.substring(j, j + prefixLength);
+                    bestLongtextA = longtext.substring(0, i - suffixLength);
+                    bestLongtextB = longtext.substring(i + prefixLength);
+                    bestShorttextA = shorttext.substring(0, j - suffixLength);
+                    bestShorttextB = shorttext.substring(j + prefixLength);
+                }
+            }
+            if (bestCommon.length * 2 >= longtext.length) {
+                return [ bestLongtextA, bestLongtextB,
+                    bestShorttextA, bestShorttextB, bestCommon
+                ];
+            } else {
+                return null;
+            }
+        }
+
+        // First check if the second quarter is the seed for a half-match.
+        hm1 = diffHalfMatchI(longtext, shorttext,
+            Math.ceil(longtext.length / 4));
+        // Check again based on the third quarter.
+        hm2 = diffHalfMatchI(longtext, shorttext,
+            Math.ceil(longtext.length / 2));
+        if (!hm1 && !hm2) {
+            return null;
+        } else if (!hm2) {
+            hm = hm1;
+        } else if (!hm1) {
+            hm = hm2;
+        } else {
+            // Both matched.  Select the longest.
+            hm = hm1[4].length > hm2[4].length ? hm1 : hm2;
+        }
+
+        // A half-match was found, sort out the return data.
+        text1A, text1B, text2A, text2B;
+        if (text1.length > text2.length) {
+            text1A = hm[0];
+            text1B = hm[1];
+            text2A = hm[2];
+            text2B = hm[3];
+        } else {
+            text2A = hm[0];
+            text2B = hm[1];
+            text1A = hm[2];
+            text1B = hm[3];
+        }
+        midCommon = hm[4];
+        return [ text1A, text1B, text2A, text2B, midCommon ];
+    };
+
+    /**
+     * Do a quick line-level diff on both strings, then rediff the parts for
+     * greater accuracy.
+     * This speedup can produce non-minimal diffs.
+     * @param {string} text1 Old string to be diffed.
+     * @param {string} text2 New string to be diffed.
+     * @param {number} deadline Time when the diff should be complete by.
+     * @return {!Array.<!DiffMatchPatch.Diff>} Array of diff tuples.
+     * @private
+     */
+    DiffMatchPatch.prototype.diffLineMode = function(text1, text2, deadline) {
+        var a, diffs, linearray, pointer, countInsert,
+			countDelete, textInsert, textDelete, j;
+        // Scan the text on a line-by-line basis first.
+        a = this.diffLinesToChars(text1, text2);
+        text1 = a.chars1;
+        text2 = a.chars2;
+        linearray = a.lineArray;
+
+        diffs = this.DiffMain(text1, text2, false, deadline);
+
+        // Convert the diff back to original text.
+        this.diffCharsToLines(diffs, linearray);
+        // Eliminate freak matches (e.g. blank lines)
+        this.diffCleanupSemantic(diffs);
+
+        // Rediff any replacement blocks, this time character-by-character.
+        // Add a dummy entry at the end.
+        diffs.push( [ DIFF_EQUAL, "" ] );
+        pointer = 0;
+        countDelete = 0;
+        countInsert = 0;
+        textDelete = "";
+        textInsert = "";
+        while (pointer < diffs.length) {
+            switch ( diffs[pointer][0] ) {
+                case DIFF_INSERT:
+                    countInsert++;
+                    textInsert += diffs[pointer][1];
+                    break;
+                case DIFF_DELETE:
+                    countDelete++;
+                    textDelete += diffs[pointer][1];
+                    break;
+                case DIFF_EQUAL:
+                    // Upon reaching an equality, check for prior redundancies.
+                    if (countDelete >= 1 && countInsert >= 1) {
+                        // Delete the offending records and add the merged ones.
+                        diffs.splice(pointer - countDelete - countInsert,
+                            countDelete + countInsert);
+                        pointer = pointer - countDelete - countInsert;
+                        a = this.DiffMain(textDelete, textInsert, false, deadline);
+                        for (j = a.length - 1; j >= 0; j--) {
+                            diffs.splice( pointer, 0, a[j] );
+                        }
+                        pointer = pointer + a.length;
+                    }
+                    countInsert = 0;
+                    countDelete = 0;
+                    textDelete = "";
+                    textInsert = "";
+                    break;
+            }
+            pointer++;
+        }
+        diffs.pop(); // Remove the dummy entry at the end.
+
+        return diffs;
+    };
+
+    /**
+     * Find the 'middle snake' of a diff, split the problem in two
+     * and return the recursively constructed diff.
+     * See Myers 1986 paper: An O(ND) Difference Algorithm and Its Variations.
+     * @param {string} text1 Old string to be diffed.
+     * @param {string} text2 New string to be diffed.
+     * @param {number} deadline Time at which to bail if not yet complete.
+     * @return {!Array.<!DiffMatchPatch.Diff>} Array of diff tuples.
+     * @private
+     */
+    DiffMatchPatch.prototype.diffBisect = function(text1, text2, deadline) {
+        var text1Length, text2Length, maxD, vOffset, vLength,
+			v1, v2, x, delta, front, k1start, k1end, k2start,
+			k2end, k2Offset, k1Offset, x1, x2, y1, y2, d, k1, k2;
+        // Cache the text lengths to prevent multiple calls.
+        text1Length = text1.length;
+        text2Length = text2.length;
+        maxD = Math.ceil((text1Length + text2Length) / 2);
+        vOffset = maxD;
+        vLength = 2 * maxD;
+        v1 = new Array(vLength);
+        v2 = new Array(vLength);
+        // Setting all elements to -1 is faster in Chrome & Firefox than mixing
+        // integers and undefined.
+        for (x = 0; x < vLength; x++) {
+            v1[x] = -1;
+            v2[x] = -1;
+        }
+        v1[vOffset + 1] = 0;
+        v2[vOffset + 1] = 0;
+        delta = text1Length - text2Length;
+        // If the total number of characters is odd, then the front path will collide
+        // with the reverse path.
+        front = (delta % 2 !== 0);
+        // Offsets for start and end of k loop.
+        // Prevents mapping of space beyond the grid.
+        k1start = 0;
+        k1end = 0;
+        k2start = 0;
+        k2end = 0;
+        for (d = 0; d < maxD; d++) {
+            // Bail out if deadline is reached.
+            if ((new Date()).getTime() > deadline) {
+                break;
+            }
+
+            // Walk the front path one step.
+            for (k1 = -d + k1start; k1 <= d - k1end; k1 += 2) {
+                k1Offset = vOffset + k1;
+                if ( k1 === -d || ( k1 !== d && v1[ k1Offset - 1 ] < v1[ k1Offset + 1 ] ) ) {
+                    x1 = v1[k1Offset + 1];
+                } else {
+                    x1 = v1[k1Offset - 1] + 1;
+                }
+                y1 = x1 - k1;
+                while (x1 < text1Length && y1 < text2Length &&
+                    text1.charAt(x1) === text2.charAt(y1)) {
+                    x1++;
+                    y1++;
+                }
+                v1[k1Offset] = x1;
+                if (x1 > text1Length) {
+                    // Ran off the right of the graph.
+                    k1end += 2;
+                } else if (y1 > text2Length) {
+                    // Ran off the bottom of the graph.
+                    k1start += 2;
+                } else if (front) {
+                    k2Offset = vOffset + delta - k1;
+                    if (k2Offset >= 0 && k2Offset < vLength && v2[k2Offset] !== -1) {
+                        // Mirror x2 onto top-left coordinate system.
+                        x2 = text1Length - v2[k2Offset];
+                        if (x1 >= x2) {
+                            // Overlap detected.
+                            return this.diffBisectSplit(text1, text2, x1, y1, deadline);
+                        }
+                    }
+                }
+            }
+
+            // Walk the reverse path one step.
+            for (k2 = -d + k2start; k2 <= d - k2end; k2 += 2) {
+                k2Offset = vOffset + k2;
+                if ( k2 === -d || (k2 !== d && v2[ k2Offset - 1 ] < v2[ k2Offset + 1 ] ) ) {
+                    x2 = v2[k2Offset + 1];
+                } else {
+                    x2 = v2[k2Offset - 1] + 1;
+                }
+                y2 = x2 - k2;
+                while (x2 < text1Length && y2 < text2Length &&
+                    text1.charAt(text1Length - x2 - 1) ===
+                    text2.charAt(text2Length - y2 - 1)) {
+                    x2++;
+                    y2++;
+                }
+                v2[k2Offset] = x2;
+                if (x2 > text1Length) {
+                    // Ran off the left of the graph.
+                    k2end += 2;
+                } else if (y2 > text2Length) {
+                    // Ran off the top of the graph.
+                    k2start += 2;
+                } else if (!front) {
+                    k1Offset = vOffset + delta - k2;
+                    if (k1Offset >= 0 && k1Offset < vLength && v1[k1Offset] !== -1) {
+                        x1 = v1[k1Offset];
+                        y1 = vOffset + x1 - k1Offset;
+                        // Mirror x2 onto top-left coordinate system.
+                        x2 = text1Length - x2;
+                        if (x1 >= x2) {
+                            // Overlap detected.
+                            return this.diffBisectSplit(text1, text2, x1, y1, deadline);
+                        }
+                    }
+                }
+            }
+        }
+        // Diff took too long and hit the deadline or
+        // number of diffs equals number of characters, no commonality at all.
+        return [
+            [ DIFF_DELETE, text1 ],
+            [ DIFF_INSERT, text2 ]
+        ];
+    };
+
+    /**
+     * Given the location of the 'middle snake', split the diff in two parts
+     * and recurse.
+     * @param {string} text1 Old string to be diffed.
+     * @param {string} text2 New string to be diffed.
+     * @param {number} x Index of split point in text1.
+     * @param {number} y Index of split point in text2.
+     * @param {number} deadline Time at which to bail if not yet complete.
+     * @return {!Array.<!DiffMatchPatch.Diff>} Array of diff tuples.
+     * @private
+     */
+    DiffMatchPatch.prototype.diffBisectSplit = function( text1, text2, x, y, deadline ) {
+        var text1a, text1b, text2a, text2b, diffs, diffsb;
+        text1a = text1.substring(0, x);
+        text2a = text2.substring(0, y);
+        text1b = text1.substring(x);
+        text2b = text2.substring(y);
+
+        // Compute both diffs serially.
+        diffs = this.DiffMain(text1a, text2a, false, deadline);
+        diffsb = this.DiffMain(text1b, text2b, false, deadline);
+
+        return diffs.concat(diffsb);
+    };
+
+    /**
+     * Reduce the number of edits by eliminating semantically trivial equalities.
+     * @param {!Array.<!DiffMatchPatch.Diff>} diffs Array of diff tuples.
+     */
+    DiffMatchPatch.prototype.diffCleanupSemantic = function(diffs) {
+        var changes, equalities, equalitiesLength, lastequality,
+			pointer, lengthInsertions2, lengthDeletions2, lengthInsertions1,
+			lengthDeletions1, deletion, insertion, overlapLength1, overlapLength2;
+        changes = false;
+        equalities = []; // Stack of indices where equalities are found.
+        equalitiesLength = 0; // Keeping our own length var is faster in JS.
+        /** @type {?string} */
+        lastequality = null;
+        // Always equal to diffs[equalities[equalitiesLength - 1]][1]
+        pointer = 0; // Index of current position.
+        // Number of characters that changed prior to the equality.
+        lengthInsertions1 = 0;
+        lengthDeletions1 = 0;
+        // Number of characters that changed after the equality.
+        lengthInsertions2 = 0;
+        lengthDeletions2 = 0;
+        while (pointer < diffs.length) {
+            if (diffs[pointer][0] === DIFF_EQUAL) { // Equality found.
+                equalities[equalitiesLength++] = pointer;
+                lengthInsertions1 = lengthInsertions2;
+                lengthDeletions1 = lengthDeletions2;
+                lengthInsertions2 = 0;
+                lengthDeletions2 = 0;
+                lastequality = diffs[pointer][1];
+            } else { // An insertion or deletion.
+                if (diffs[pointer][0] === DIFF_INSERT) {
+                    lengthInsertions2 += diffs[pointer][1].length;
+                } else {
+                    lengthDeletions2 += diffs[pointer][1].length;
+                }
+                // Eliminate an equality that is smaller or equal to the edits on both
+                // sides of it.
+                if (lastequality && (lastequality.length <=
+                        Math.max(lengthInsertions1, lengthDeletions1)) &&
+                    (lastequality.length <= Math.max(lengthInsertions2,
+                        lengthDeletions2))) {
+                    // Duplicate record.
+                    diffs.splice( equalities[ equalitiesLength - 1 ], 0, [ DIFF_DELETE, lastequality ] );
+                    // Change second copy to insert.
+                    diffs[equalities[equalitiesLength - 1] + 1][0] = DIFF_INSERT;
+                    // Throw away the equality we just deleted.
+                    equalitiesLength--;
+                    // Throw away the previous equality (it needs to be reevaluated).
+                    equalitiesLength--;
+                    pointer = equalitiesLength > 0 ? equalities[equalitiesLength - 1] : -1;
+                    lengthInsertions1 = 0; // Reset the counters.
+                    lengthDeletions1 = 0;
+                    lengthInsertions2 = 0;
+                    lengthDeletions2 = 0;
+                    lastequality = null;
+                    changes = true;
+                }
+            }
+            pointer++;
+        }
+
+        // Normalize the diff.
+        if (changes) {
+            this.diffCleanupMerge(diffs);
+        }
+
+        // Find any overlaps between deletions and insertions.
+        // e.g: <del>abcxxx</del><ins>xxxdef</ins>
+        //   -> <del>abc</del>xxx<ins>def</ins>
+        // e.g: <del>xxxabc</del><ins>defxxx</ins>
+        //   -> <ins>def</ins>xxx<del>abc</del>
+        // Only extract an overlap if it is as big as the edit ahead or behind it.
+        pointer = 1;
+        while (pointer < diffs.length) {
+            if (diffs[pointer - 1][0] === DIFF_DELETE &&
+                diffs[pointer][0] === DIFF_INSERT) {
+                deletion = diffs[pointer - 1][1];
+                insertion = diffs[pointer][1];
+                overlapLength1 = this.diffCommonOverlap(deletion, insertion);
+                overlapLength2 = this.diffCommonOverlap(insertion, deletion);
+                if (overlapLength1 >= overlapLength2) {
+                    if (overlapLength1 >= deletion.length / 2 ||
+                        overlapLength1 >= insertion.length / 2) {
+                        // Overlap found.  Insert an equality and trim the surrounding edits.
+                        diffs.splice( pointer, 0, [ DIFF_EQUAL, insertion.substring( 0, overlapLength1 ) ] );
+                        diffs[pointer - 1][1] =
+                            deletion.substring(0, deletion.length - overlapLength1);
+                        diffs[pointer + 1][1] = insertion.substring(overlapLength1);
+                        pointer++;
+                    }
+                } else {
+                    if (overlapLength2 >= deletion.length / 2 ||
+                        overlapLength2 >= insertion.length / 2) {
+                        // Reverse overlap found.
+                        // Insert an equality and swap and trim the surrounding edits.
+                        diffs.splice( pointer, 0, [ DIFF_EQUAL, deletion.substring( 0, overlapLength2 ) ] );
+                        diffs[pointer - 1][0] = DIFF_INSERT;
+                        diffs[pointer - 1][1] =
+                            insertion.substring(0, insertion.length - overlapLength2);
+                        diffs[pointer + 1][0] = DIFF_DELETE;
+                        diffs[pointer + 1][1] =
+                            deletion.substring(overlapLength2);
+                        pointer++;
+                    }
+                }
+                pointer++;
+            }
+            pointer++;
+        }
+    };
+
+    /**
+     * Determine if the suffix of one string is the prefix of another.
+     * @param {string} text1 First string.
+     * @param {string} text2 Second string.
+     * @return {number} The number of characters common to the end of the first
+     *     string and the start of the second string.
+     * @private
+     */
+    DiffMatchPatch.prototype.diffCommonOverlap = function(text1, text2) {
+        var text1Length, text2Length, textLength,
+			best, length, pattern, found;
+        // Cache the text lengths to prevent multiple calls.
+        text1Length = text1.length;
+        text2Length = text2.length;
+        // Eliminate the null case.
+        if (text1Length === 0 || text2Length === 0) {
+            return 0;
+        }
+        // Truncate the longer string.
+        if (text1Length > text2Length) {
+            text1 = text1.substring(text1Length - text2Length);
+        } else if (text1Length < text2Length) {
+            text2 = text2.substring(0, text1Length);
+        }
+        textLength = Math.min(text1Length, text2Length);
+        // Quick check for the worst case.
+        if (text1 === text2) {
+            return textLength;
+        }
+
+        // Start by looking for a single character match
+        // and increase length until no match is found.
+        // Performance analysis: http://neil.fraser.name/news/2010/11/04/
+        best = 0;
+        length = 1;
+        while (true) {
+            pattern = text1.substring(textLength - length);
+            found = text2.indexOf(pattern);
+            if (found === -1) {
+                return best;
+            }
+            length += found;
+            if (found === 0 || text1.substring(textLength - length) ===
+                text2.substring(0, length)) {
+                best = length;
+                length++;
+            }
+        }
+    };
+
+    /**
+     * Split two texts into an array of strings.  Reduce the texts to a string of
+     * hashes where each Unicode character represents one line.
+     * @param {string} text1 First string.
+     * @param {string} text2 Second string.
+     * @return {{chars1: string, chars2: string, lineArray: !Array.<string>}}
+     *     An object containing the encoded text1, the encoded text2 and
+     *     the array of unique strings.
+     *     The zeroth element of the array of unique strings is intentionally blank.
+     * @private
+     */
+    DiffMatchPatch.prototype.diffLinesToChars = function(text1, text2) {
+        var lineArray, lineHash, chars1, chars2;
+        lineArray = []; // e.g. lineArray[4] === 'Hello\n'
+        lineHash = {}; // e.g. lineHash['Hello\n'] === 4
+
+        // '\x00' is a valid character, but various debuggers don't like it.
+        // So we'll insert a junk entry to avoid generating a null character.
+        lineArray[0] = "";
+
+        /**
+         * Split a text into an array of strings.  Reduce the texts to a string of
+         * hashes where each Unicode character represents one line.
+         * Modifies linearray and linehash through being a closure.
+         * @param {string} text String to encode.
+         * @return {string} Encoded string.
+         * @private
+         */
+        function diffLinesToCharsMunge(text) {
+            var chars, lineStart, lineEnd, lineArrayLength, line;
+            chars = "";
+            // Walk the text, pulling out a substring for each line.
+            // text.split('\n') would would temporarily double our memory footprint.
+            // Modifying text would create many large strings to garbage collect.
+            lineStart = 0;
+            lineEnd = -1;
+            // Keeping our own length variable is faster than looking it up.
+            lineArrayLength = lineArray.length;
+            while (lineEnd < text.length - 1) {
+                lineEnd = text.indexOf("\n", lineStart);
+                if (lineEnd === -1) {
+                    lineEnd = text.length - 1;
+                }
+                line = text.substring(lineStart, lineEnd + 1);
+                lineStart = lineEnd + 1;
+
+                if (lineHash.hasOwnProperty ? lineHash.hasOwnProperty(line) :
+                    (lineHash[line] !== undefined)) {
+                    chars += String.fromCharCode( lineHash[ line ] );
+                } else {
+                    chars += String.fromCharCode(lineArrayLength);
+                    lineHash[line] = lineArrayLength;
+                    lineArray[lineArrayLength++] = line;
+                }
+            }
+            return chars;
+        }
+
+        chars1 = diffLinesToCharsMunge(text1);
+        chars2 = diffLinesToCharsMunge(text2);
+        return {
+            chars1: chars1,
+            chars2: chars2,
+            lineArray: lineArray
+        };
+    };
+
+    /**
+     * Rehydrate the text in a diff from a string of line hashes to real lines of
+     * text.
+     * @param {!Array.<!DiffMatchPatch.Diff>} diffs Array of diff tuples.
+     * @param {!Array.<string>} lineArray Array of unique strings.
+     * @private
+     */
+    DiffMatchPatch.prototype.diffCharsToLines = function( diffs, lineArray ) {
+        var x, chars, text, y;
+        for ( x = 0; x < diffs.length; x++ ) {
+            chars = diffs[x][1];
+            text = [];
+            for ( y = 0; y < chars.length; y++ ) {
+                text[y] = lineArray[chars.charCodeAt(y)];
+            }
+            diffs[x][1] = text.join("");
+        }
+    };
+
+    /**
+     * Reorder and merge like edit sections.  Merge equalities.
+     * Any edit section can move as long as it doesn't cross an equality.
+     * @param {!Array.<!DiffMatchPatch.Diff>} diffs Array of diff tuples.
+     */
+    DiffMatchPatch.prototype.diffCleanupMerge = function(diffs) {
+        var pointer, countDelete, countInsert, textInsert, textDelete,
+			commonlength, changes;
+        diffs.push( [ DIFF_EQUAL, "" ] ); // Add a dummy entry at the end.
+        pointer = 0;
+        countDelete = 0;
+        countInsert = 0;
+        textDelete = "";
+        textInsert = "";
+        commonlength;
+        while (pointer < diffs.length) {
+            switch ( diffs[ pointer ][ 0 ] ) {
+                case DIFF_INSERT:
+                    countInsert++;
+                    textInsert += diffs[pointer][1];
+                    pointer++;
+                    break;
+                case DIFF_DELETE:
+                    countDelete++;
+                    textDelete += diffs[pointer][1];
+                    pointer++;
+                    break;
+                case DIFF_EQUAL:
+                    // Upon reaching an equality, check for prior redundancies.
+                    if (countDelete + countInsert > 1) {
+                        if (countDelete !== 0 && countInsert !== 0) {
+                            // Factor out any common prefixies.
+                            commonlength = this.diffCommonPrefix(textInsert, textDelete);
+                            if (commonlength !== 0) {
+                                if ((pointer - countDelete - countInsert) > 0 &&
+                                    diffs[pointer - countDelete - countInsert - 1][0] ===
+                                    DIFF_EQUAL) {
+                                    diffs[pointer - countDelete - countInsert - 1][1] +=
+                                        textInsert.substring(0, commonlength);
+                                } else {
+                                    diffs.splice( 0, 0, [ DIFF_EQUAL,
+                                        textInsert.substring( 0, commonlength )
+                                     ] );
+                                    pointer++;
+                                }
+                                textInsert = textInsert.substring(commonlength);
+                                textDelete = textDelete.substring(commonlength);
+                            }
+                            // Factor out any common suffixies.
+                            commonlength = this.diffCommonSuffix(textInsert, textDelete);
+                            if (commonlength !== 0) {
+                                diffs[pointer][1] = textInsert.substring(textInsert.length -
+                                    commonlength) + diffs[pointer][1];
+                                textInsert = textInsert.substring(0, textInsert.length -
+                                    commonlength);
+                                textDelete = textDelete.substring(0, textDelete.length -
+                                    commonlength);
+                            }
+                        }
+                        // Delete the offending records and add the merged ones.
+                        if (countDelete === 0) {
+                            diffs.splice( pointer - countInsert,
+                                countDelete + countInsert, [ DIFF_INSERT, textInsert ] );
+                        } else if (countInsert === 0) {
+                            diffs.splice( pointer - countDelete,
+                                countDelete + countInsert, [ DIFF_DELETE, textDelete ] );
+                        } else {
+                            diffs.splice( pointer - countDelete - countInsert,
+                                countDelete + countInsert, [ DIFF_DELETE, textDelete ], [ DIFF_INSERT, textInsert ] );
+                        }
+                        pointer = pointer - countDelete - countInsert +
+                            (countDelete ? 1 : 0) + (countInsert ? 1 : 0) + 1;
+                    } else if (pointer !== 0 && diffs[pointer - 1][0] === DIFF_EQUAL) {
+                        // Merge this equality with the previous one.
+                        diffs[pointer - 1][1] += diffs[pointer][1];
+                        diffs.splice(pointer, 1);
+                    } else {
+                        pointer++;
+                    }
+                    countInsert = 0;
+                    countDelete = 0;
+                    textDelete = "";
+                    textInsert = "";
+                    break;
+            }
+        }
+        if (diffs[diffs.length - 1][1] === "") {
+            diffs.pop(); // Remove the dummy entry at the end.
+        }
+
+        // Second pass: look for single edits surrounded on both sides by equalities
+        // which can be shifted sideways to eliminate an equality.
+        // e.g: A<ins>BA</ins>C -> <ins>AB</ins>AC
+        changes = false;
+        pointer = 1;
+        // Intentionally ignore the first and last element (don't need checking).
+        while (pointer < diffs.length - 1) {
+            if (diffs[pointer - 1][0] === DIFF_EQUAL &&
+                diffs[pointer + 1][0] === DIFF_EQUAL) {
+                // This is a single edit surrounded by equalities.
+                if ( diffs[ pointer ][ 1 ].substring( diffs[ pointer ][ 1 ].length -
+                        diffs[ pointer - 1 ][ 1 ].length ) === diffs[ pointer - 1 ][ 1 ] ) {
+                    // Shift the edit over the previous equality.
+                    diffs[pointer][1] = diffs[pointer - 1][1] +
+                        diffs[pointer][1].substring(0, diffs[pointer][1].length -
+                            diffs[pointer - 1][1].length);
+                    diffs[pointer + 1][1] = diffs[pointer - 1][1] + diffs[pointer + 1][1];
+                    diffs.splice(pointer - 1, 1);
+                    changes = true;
+                } else if ( diffs[ pointer ][ 1 ].substring( 0, diffs[ pointer + 1 ][ 1 ].length ) ===
+                    diffs[ pointer + 1 ][ 1 ] ) {
+                    // Shift the edit over the next equality.
+                    diffs[pointer - 1][1] += diffs[pointer + 1][1];
+                    diffs[pointer][1] =
+                        diffs[pointer][1].substring(diffs[pointer + 1][1].length) +
+                        diffs[pointer + 1][1];
+                    diffs.splice(pointer + 1, 1);
+                    changes = true;
+                }
+            }
+            pointer++;
+        }
+        // If shifts were made, the diff needs reordering and another shift sweep.
+        if (changes) {
+            this.diffCleanupMerge(diffs);
+        }
+    };
+
+    return function(o, n) {
+		var diff, output, text;
+        diff = new DiffMatchPatch();
+        output = diff.DiffMain(o, n);
+        //console.log(output);
+        diff.diffCleanupEfficiency(output);
+        text = diff.diffPrettyHtml(output);
+
+        return text;
+    };
 }());
 // jscs:enable
 
@@ -4693,7 +5847,14 @@ function addEvent( elem, type, fn ) {
 	} else if ( elem.attachEvent ) {
 
 		// support: IE <9
-		elem.attachEvent( "on" + type, fn );
+		elem.attachEvent( "on" + type, function() {
+			var event = window.event;
+			if ( !event.target ) {
+				event.target = event.srcElement || document;
+			}
+
+			fn.call( elem, event );
+		});
 	}
 }
 
@@ -4864,12 +6025,16 @@ function setUrl( params ) {
 }
 
 function applyUrlParams() {
-	var selectBox = id( "qunit-modulefilter" ),
-		selection = decodeURIComponent( selectBox.options[ selectBox.selectedIndex ].value ),
+	var selectedModule,
+		modulesList = id( "qunit-modulefilter" ),
 		filter = id( "qunit-filter-input" ).value;
 
+	selectedModule = modulesList ?
+		decodeURIComponent( modulesList.options[ modulesList.selectedIndex ].value ) :
+		undefined;
+
 	window.location = setUrl({
-		module: ( selection === "" ) ? undefined : selection,
+		module: ( selectedModule === "" ) ? undefined : selectedModule,
 		filter: ( filter === "" ) ? undefined : filter,
 
 		// Remove testId filter
@@ -5025,9 +6190,14 @@ function storeFixture() {
 
 function appendUserAgent() {
 	var userAgent = id( "qunit-userAgent" );
+
 	if ( userAgent ) {
 		userAgent.innerHTML = "";
-		userAgent.appendChild( document.createTextNode( navigator.userAgent ) );
+		userAgent.appendChild(
+			document.createTextNode(
+				"QUnit " + QUnit.version  + "; " + navigator.userAgent
+			)
+		);
 	}
 }
 
@@ -5170,7 +6340,7 @@ function getNameHtml( name, module ) {
 }
 
 QUnit.testStart(function( details ) {
-	var running, testBlock;
+	var running, testBlock, bad;
 
 	testBlock = id( "qunit-test-output-" + details.testId );
 	if ( testBlock ) {
@@ -5183,7 +6353,13 @@ QUnit.testStart(function( details ) {
 
 	running = id( "qunit-testresult" );
 	if ( running ) {
-		running.innerHTML = "Running: <br />" + getNameHtml( details.name, details.module );
+		bad = QUnit.config.reorder && defined.sessionStorage &&
+			+sessionStorage.getItem( "qunit-test-" + details.module + "-" + details.name );
+
+		running.innerHTML = ( bad ?
+			"Rerunning previously failed test: <br />" :
+			"Running: <br />" ) +
+			getNameHtml( details.name, details.module );
 	}
 
 });
@@ -5216,6 +6392,15 @@ QUnit.log(function( details ) {
 				actual + "</pre></td></tr>" +
 				"<tr class='test-diff'><th>Diff: </th><td><pre>" +
 				QUnit.diff( expected, actual ) + "</pre></td></tr>";
+		} else {
+			if ( expected.indexOf( "[object Array]" ) !== -1 ||
+					expected.indexOf( "[object Object]" ) !== -1 ) {
+				message += "<tr class='test-message'><th>Message: </th><td>" +
+					"Diff suppressed as the depth of object is more than current max depth (" +
+					QUnit.config.maxDepth + ").<p>Hint: Use <code>QUnit.dump.maxDepth</code> to " +
+					" run with a higher max depth or <a href='" + setUrl({ maxDepth: -1 }) + "'>" +
+					"Rerun</a> without max depth.</p></td></tr>";
+			}
 		}
 
 		if ( details.source ) {
@@ -5300,120 +6485,18 @@ QUnit.testDone(function( details ) {
 	}
 });
 
-if ( !defined.document || document.readyState === "complete" ) {
+if ( defined.document ) {
+	if ( document.readyState === "complete" ) {
+		QUnit.load();
+	} else {
+		addEvent( window, "load", QUnit.load );
+	}
+} else {
 	config.pageLoaded = true;
 	config.autorun = true;
 }
 
-if ( defined.document ) {
-	addEvent( window, "load", QUnit.load );
-}
-
 })();
-
-QUnit.notifications = function(options) {
-  "use strict";
-
-  options         = options         || {};
-  options.icons   = options.icons   || {};
-  options.timeout = options.timeout || 4000;
-  options.titles  = options.titles  || { passed: "Passed!", failed: "Failed!" };
-  options.bodies  = options.bodies  || {
-    passed: "{{passed}} of {{total}} passed",
-    failed: "{{passed}} passed. {{failed}} failed."
-  };
-
-  var renderBody = function(body, details) {
-    [ "passed", "failed", "total", "runtime" ].forEach(function(type) {
-      body = body.replace("{{" + type + "}}", details[ type ]);
-    });
-
-    return body;
-  };
-
-  function generateQueryString(params) {
-    var key,
-      querystring = "?";
-
-    params = QUnit.extend(QUnit.extend({}, QUnit.urlParams), params);
-
-    for (key in params) {
-      if (params.hasOwnProperty(key)) {
-        if (params[ key ] === undefined) {
-          continue;
-        }
-        querystring += encodeURIComponent(key);
-        if (params[ key ] !== true) {
-          querystring += "=" + encodeURIComponent(params[ key ]);
-        }
-        querystring += "&";
-      }
-    }
-    return location.protocol + "//" + location.host +
-      location.pathname + querystring.slice(0, -1);
-  }
-
-  if (window.Notification) {
-    QUnit.done(function(details) {
-      var title,
-          _options = {},
-          notification;
-
-      if (window.Notification && QUnit.urlParams.notifications) {
-        if (details.failed === 0) {
-          title = options.titles.passed;
-          _options.body = renderBody(options.bodies.passed, details);
-
-          if (options.icons.passed) {
-            _options.icon = options.icons.passed;
-          }
-        } else {
-          title = options.titles.failed;
-          _options.body = renderBody(options.bodies.failed, details);
-
-          if (options.icons.failed) {
-            _options.icon = options.icons.failed;
-          }
-        }
-
-        notification = new window.Notification(title, _options);
-
-        setTimeout(function() {
-          notification.close();
-        }, options.timeout);
-      }
-    });
-
-    QUnit.begin(function() {
-      var toolbar      = document.getElementById( "qunit-testrunner-toolbar" ),
-          notification = document.createElement( "input" ),
-          label        = document.createElement("label");
-
-      notification.type = "checkbox";
-      notification.id   = "qunit-notifications";
-
-      if (QUnit.urlParams.notifications) {
-        notification.checked = true;
-      }
-
-      notification.addEventListener("click", function(event) {
-        if (event.target.checked) {
-          window.Notification.requestPermission(function() {
-            window.location = generateQueryString({ notifications: true });
-          });
-        } else {
-          window.location = generateQueryString({ notifications: undefined });
-        }
-      }, false);
-      toolbar.appendChild(notification);
-
-      label.innerHTML = "Notifications";
-      label.setAttribute( "for", "qunit-notifications" );
-      label.setAttribute( "title", "Show notifications." );
-      toolbar.appendChild(label);
-    });
-  }
-};
 
 /* globals jQuery,QUnit */
 
@@ -5432,19 +6515,31 @@ if (QUnit.notifications) {
 }
 
 jQuery(document).ready(function() {
+  var testContainer = document.getElementById('ember-testing-container');
+  if (!testContainer) { return; }
+
   var containerVisibility = QUnit.urlParams.nocontainer ? 'hidden' : 'visible';
   var containerPosition = QUnit.urlParams.dockcontainer ? 'absolute' : 'relative';
-  document.getElementById('ember-testing-container').style.visibility = containerVisibility;
-  document.getElementById('ember-testing-container').style.position = containerPosition;
+  testContainer.style.visibility = containerVisibility;
+  testContainer.style.position = containerPosition;
 });
 
 /* globals jQuery,QUnit */
 
 jQuery(document).ready(function() {
-  var TestLoader = require('ember-cli/test-loader')['default'];
-  TestLoader.prototype.shouldLoadModule = function(moduleName) {
+  var TestLoaderModule = require('ember-cli/test-loader');
+  var TestLoader = TestLoaderModule['default'];
+  var addModuleIncludeMatcher = TestLoaderModule['addModuleIncludeMatcher'];
+
+  function moduleMatcher(moduleName) {
     return moduleName.match(/\/.*[-_]test$/) || (!QUnit.urlParams.nojshint && moduleName.match(/\.jshint$/));
-  };
+  }
+
+  if (addModuleIncludeMatcher) {
+    addModuleIncludeMatcher(moduleMatcher);
+  } else {
+    TestLoader.prototype.shouldLoadModule = moduleMatcher;
+  }
 
   TestLoader.prototype.moduleLoadFailure = function(moduleName, error) {
     QUnit.module('TestLoader Failures');

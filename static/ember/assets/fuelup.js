@@ -1,13 +1,27 @@
+"use strict";
 /* jshint ignore:start */
 
 /* jshint ignore:end */
 
-define('fuelup/adapters/application', ['exports', 'ember-data'], function (exports, DS) {
+define('fuelup/adapters/application', ['exports', 'fuelup/adapters/drf'], function (exports, DRFAdapter) {
+
+	'use strict';
+
+	exports['default'] = DRFAdapter['default'].extend({});
+
+});
+define('fuelup/adapters/drf', ['exports', 'ember', 'ember-django-adapter/adapters/drf', 'fuelup/config/environment'], function (exports, Ember, DRFAdapter, ENV) {
 
   'use strict';
 
-  exports['default'] = DS['default'].FixtureAdapter.extend({
-    /*	namespace: 'api'*/
+  exports['default'] = DRFAdapter['default'].extend({
+    host: Ember['default'].computed(function () {
+      return ENV['default'].APP.API_HOST;
+    }),
+
+    namespace: Ember['default'].computed(function () {
+      return ENV['default'].APP.API_NAMESPACE;
+    })
   });
 
 });
@@ -28,6 +42,20 @@ define('fuelup/app', ['exports', 'ember', 'ember/resolver', 'ember/load-initiali
   loadInitializers['default'](App, config['default'].modulePrefix);
 
   exports['default'] = App;
+
+});
+define('fuelup/components/app-version', ['exports', 'ember-cli-app-version/components/app-version', 'fuelup/config/environment'], function (exports, AppVersionComponent, config) {
+
+  'use strict';
+
+  var _config$APP = config['default'].APP;
+  var name = _config$APP.name;
+  var version = _config$APP.version;
+
+  exports['default'] = AppVersionComponent['default'].extend({
+    version: version,
+    name: name
+  });
 
 });
 define('fuelup/components/bs-accordion-item', ['exports', 'ember', 'ember-bootstrap/components/bs-accordion-item'], function (exports, Ember, component) {
@@ -422,7 +450,7 @@ define('fuelup/helpers/is-equal', ['exports', 'ember-bootstrap/helpers/is-equal'
 
 
 
-	exports.default = is_equal.default;
+	exports['default'] = is_equal['default'];
 	exports.isEqual = is_equal.isEqual;
 
 });
@@ -432,7 +460,7 @@ define('fuelup/helpers/is-not', ['exports', 'ember-bootstrap/helpers/is-not'], f
 
 
 
-	exports.default = is_not.default;
+	exports['default'] = is_not['default'];
 	exports.isNot = is_not.isNot;
 
 });
@@ -442,26 +470,21 @@ define('fuelup/helpers/read-path', ['exports', 'ember-bootstrap/helpers/read-pat
 
 
 
-	exports.default = read_path.default;
+	exports['default'] = read_path['default'];
 	exports.readPath = read_path.readPath;
 
 });
-define('fuelup/initializers/app-version', ['exports', 'fuelup/config/environment', 'ember'], function (exports, config, Ember) {
+define('fuelup/initializers/app-version', ['exports', 'ember-cli-app-version/initializer-factory', 'fuelup/config/environment'], function (exports, initializerFactory, config) {
 
   'use strict';
 
-  var classify = Ember['default'].String.classify;
-  var registered = false;
+  var _config$APP = config['default'].APP;
+  var name = _config$APP.name;
+  var version = _config$APP.version;
 
   exports['default'] = {
     name: 'App Version',
-    initialize: function initialize(container, application) {
-      if (!registered) {
-        var appName = classify(application.toString());
-        Ember['default'].libraries.register(appName, config['default'].APP.version);
-        registered = true;
-      }
-    }
+    initialize: initializerFactory['default'](name, version)
   };
 
 });
@@ -789,18 +812,45 @@ define('fuelup/routes/register', ['exports', 'ember'], function (exports, Ember)
 	exports['default'] = Ember['default'].Route.extend({});
 
 });
+define('fuelup/serializers/application', ['exports', 'fuelup/serializers/drf'], function (exports, DRFSerializer) {
+
+	'use strict';
+
+	exports['default'] = DRFSerializer['default'];
+
+});
+define('fuelup/serializers/drf', ['exports', 'ember-django-adapter/serializers/drf'], function (exports, DRFSerializer) {
+
+	'use strict';
+
+	exports['default'] = DRFSerializer['default'];
+
+});
 define('fuelup/templates/about', ['exports'], function (exports) {
 
   'use strict';
 
   exports['default'] = Ember.HTMLBars.template((function() {
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 7,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/about.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("h2");
         var el2 = dom.createTextNode("What's Fuel-Up?");
@@ -826,30 +876,16 @@ define('fuelup/templates/about', ['exports'], function (exports) {
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, content = hooks.content;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,6,6,contextualElement);
-        content(env, morph0, context, "outlet");
-        return fragment;
-      }
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(1);
+        morphs[0] = dom.createMorphAt(fragment,6,6,contextualElement);
+        return morphs;
+      },
+      statements: [
+        ["content","outlet",["loc",[null,[6,0],[6,10]]]]
+      ],
+      locals: [],
+      templates: []
     };
   }()));
 
@@ -860,12 +896,25 @@ define('fuelup/templates/add-fill-up', ['exports'], function (exports) {
 
   exports['default'] = Ember.HTMLBars.template((function() {
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 32,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/add-fill-up.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("h2");
         var el2 = dom.createTextNode("Full tank?");
@@ -891,7 +940,9 @@ define('fuelup/templates/add-fill-up', ['exports'], function (exports) {
         var el3 = dom.createTextNode("\n			");
         dom.appendChild(el2, el3);
         dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n			");
+        var el2 = dom.createTextNode("\n");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("			");
         dom.appendChild(el1, el2);
         var el2 = dom.createElement("div");
         dom.setAttribute(el2,"class","form-group has-error");
@@ -954,42 +1005,29 @@ define('fuelup/templates/add-fill-up', ['exports'], function (exports) {
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, element = hooks.element, inline = hooks.inline, content = hooks.content;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var element0 = dom.childAt(fragment, [4]);
-        var morph0 = dom.createMorphAt(dom.childAt(element0, [1]),1,1);
-        var morph1 = dom.createMorphAt(dom.childAt(element0, [3]),1,1);
-        var morph2 = dom.createMorphAt(dom.childAt(element0, [5]),1,1);
-        var morph3 = dom.createMorphAt(dom.childAt(element0, [7]),1,1);
-        var morph4 = dom.createMorphAt(dom.childAt(element0, [9]),1,1);
-        var morph5 = dom.createMorphAt(fragment,6,6,contextualElement);
-        element(env, element0, context, "action", ["addFillUp", get(env, context, "identification")], {"on": "submit"});
-        inline(env, morph0, context, "input", [], {"class": "form-control", "value": get(env, context, "vehicle"), "placeholder": "Vehicle"});
-        inline(env, morph1, context, "input", [], {"class": "form-control", "value": get(env, context, "date"), "placeholder": "Date", "type": "date"});
-        inline(env, morph2, context, "input", [], {"class": "form-control", "value": get(env, context, "miles"), "placeholder": "Miles", "type": "number", "step": "any", "min": "0"});
-        inline(env, morph3, context, "input", [], {"class": "form-control", "value": get(env, context, "gallons"), "placeholder": "Gallons", "type": "number", "step": "any", "min": "0"});
-        inline(env, morph4, context, "input", [], {"class": "form-control", "value": get(env, context, "pricePerGallon"), "placeholder": "Price per Gallon", "type": "number", "step": "any", "min": "0"});
-        content(env, morph5, context, "outlet");
-        return fragment;
-      }
+        var morphs = new Array(7);
+        morphs[0] = dom.createElementMorph(element0);
+        morphs[1] = dom.createMorphAt(dom.childAt(element0, [1]),1,1);
+        morphs[2] = dom.createMorphAt(dom.childAt(element0, [4]),1,1);
+        morphs[3] = dom.createMorphAt(dom.childAt(element0, [6]),1,1);
+        morphs[4] = dom.createMorphAt(dom.childAt(element0, [8]),1,1);
+        morphs[5] = dom.createMorphAt(dom.childAt(element0, [10]),1,1);
+        morphs[6] = dom.createMorphAt(fragment,6,6,contextualElement);
+        return morphs;
+      },
+      statements: [
+        ["element","action",["addFillUp",["get","identification",["loc",[null,[3,27],[3,41]]]]],["on","submit"],["loc",[null,[3,6],[3,55]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","vehicle",["loc",[null,[5,39],[5,46]]]]],[],[]],"placeholder","Vehicle"],["loc",[null,[5,4],[5,70]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","date",["loc",[null,[18,39],[18,43]]]]],[],[]],"placeholder","Date","type","date"],["loc",[null,[18,4],[18,76]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","miles",["loc",[null,[21,39],[21,44]]]]],[],[]],"placeholder","Miles","type","number","step","any","min","0"],["loc",[null,[21,4],[21,101]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","gallons",["loc",[null,[24,39],[24,46]]]]],[],[]],"placeholder","Gallons","type","number","step","any","min","0"],["loc",[null,[24,4],[24,105]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","pricePerGallon",["loc",[null,[27,39],[27,53]]]]],[],[]],"placeholder","Price per Gallon","type","number","step","any","min","0"],["loc",[null,[27,4],[27,121]]]],
+        ["content","outlet",["loc",[null,[31,0],[31,10]]]]
+      ],
+      locals: [],
+      templates: []
     };
   }()));
 
@@ -1000,12 +1038,25 @@ define('fuelup/templates/add-vehicle', ['exports'], function (exports) {
 
   exports['default'] = Ember.HTMLBars.template((function() {
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 19,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/add-vehicle.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("h2");
         var el2 = dom.createTextNode("Adding a vehicle is easy");
@@ -1083,40 +1134,27 @@ define('fuelup/templates/add-vehicle', ['exports'], function (exports) {
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, element = hooks.element, inline = hooks.inline, content = hooks.content;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var element0 = dom.childAt(fragment, [4]);
-        var morph0 = dom.createMorphAt(dom.childAt(element0, [1]),1,1);
-        var morph1 = dom.createMorphAt(dom.childAt(element0, [3]),1,1);
-        var morph2 = dom.createMorphAt(dom.childAt(element0, [5]),1,1);
-        var morph3 = dom.createMorphAt(dom.childAt(element0, [7]),1,1);
-        var morph4 = dom.createMorphAt(fragment,6,6,contextualElement);
-        element(env, element0, context, "action", ["addCar", get(env, context, "identification")], {"on": "submit"});
-        inline(env, morph0, context, "input", [], {"class": "form-control", "value": get(env, context, "year"), "placeholder": "Year", "type": "number", "min": "1900", "max": "2016"});
-        inline(env, morph1, context, "input", [], {"class": "form-control", "value": get(env, context, "make"), "placeholder": "Make"});
-        inline(env, morph2, context, "input", [], {"class": "form-control", "value": get(env, context, "model"), "placeholder": "Model"});
-        inline(env, morph3, context, "input", [], {"class": "form-control", "value": get(env, context, "trim"), "placeholder": "Trim"});
-        content(env, morph4, context, "outlet");
-        return fragment;
-      }
+        var morphs = new Array(6);
+        morphs[0] = dom.createElementMorph(element0);
+        morphs[1] = dom.createMorphAt(dom.childAt(element0, [1]),1,1);
+        morphs[2] = dom.createMorphAt(dom.childAt(element0, [3]),1,1);
+        morphs[3] = dom.createMorphAt(dom.childAt(element0, [5]),1,1);
+        morphs[4] = dom.createMorphAt(dom.childAt(element0, [7]),1,1);
+        morphs[5] = dom.createMorphAt(fragment,6,6,contextualElement);
+        return morphs;
+      },
+      statements: [
+        ["element","action",["addCar",["get","identification",["loc",[null,[3,24],[3,38]]]]],["on","submit"],["loc",[null,[3,6],[3,52]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","year",["loc",[null,[5,39],[5,43]]]]],[],[]],"placeholder","Year","type","number","min","1900","max","2016"],["loc",[null,[5,4],[5,100]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","make",["loc",[null,[8,39],[8,43]]]]],[],[]],"placeholder","Make"],["loc",[null,[8,4],[8,65]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","model",["loc",[null,[11,39],[11,44]]]]],[],[]],"placeholder","Model"],["loc",[null,[11,4],[11,67]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","trim",["loc",[null,[14,39],[14,43]]]]],[],[]],"placeholder","Trim"],["loc",[null,[14,4],[14,65]]]],
+        ["content","outlet",["loc",[null,[18,0],[18,10]]]]
+      ],
+      locals: [],
+      templates: []
     };
   }()));
 
@@ -1127,12 +1165,25 @@ define('fuelup/templates/application', ['exports'], function (exports) {
 
   exports['default'] = Ember.HTMLBars.template((function() {
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 4,
+            "column": 6
+          }
+        },
+        "moduleName": "fuelup/templates/application.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
@@ -1149,33 +1200,19 @@ define('fuelup/templates/application', ['exports'], function (exports) {
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, inline = hooks.inline, content = hooks.content;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        var morph1 = dom.createMorphAt(dom.childAt(fragment, [2]),1,1);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(2);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
+        morphs[1] = dom.createMorphAt(dom.childAt(fragment, [2]),1,1);
         dom.insertBoundary(fragment, 0);
-        inline(env, morph0, context, "nav-bar", [], {"authControllerChild": get(env, context, "authController")});
-        content(env, morph1, context, "outlet");
-        return fragment;
-      }
+        return morphs;
+      },
+      statements: [
+        ["inline","nav-bar",[],["authControllerChild",["subexpr","@mut",[["get","authController",["loc",[null,[1,30],[1,44]]]]],[],[]]],["loc",[null,[1,0],[1,46]]]],
+        ["content","outlet",["loc",[null,[3,1],[3,11]]]]
+      ],
+      locals: [],
+      templates: []
     };
   }()));
 
@@ -1187,12 +1224,25 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 14,
+              "column": 6
+            },
+            "end": {
+              "line": 22,
+              "column": 8
+            }
+          },
+          "moduleName": "fuelup/templates/archive.hbs"
+        },
+        arity: 1,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("        ");
           dom.appendChild(el0, el1);
@@ -1250,56 +1300,55 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, content = hooks.content;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element0 = dom.childAt(fragment, [1]);
           var element1 = dom.childAt(element0, [9]);
-          var morph0 = dom.createMorphAt(dom.childAt(element0, [1]),0,0);
-          var morph1 = dom.createMorphAt(dom.childAt(element0, [3]),0,0);
-          var morph2 = dom.createMorphAt(dom.childAt(element0, [5]),0,0);
-          var morph3 = dom.createMorphAt(dom.childAt(element0, [7]),1,1);
-          var morph4 = dom.createMorphAt(element1,0,0);
-          var morph5 = dom.createMorphAt(element1,2,2);
-          var morph6 = dom.createMorphAt(element1,4,4);
-          var morph7 = dom.createMorphAt(element1,6,6);
-          content(env, morph0, context, "fillup.id");
-          content(env, morph1, context, "fillup.date");
-          content(env, morph2, context, "fillup.miles");
-          content(env, morph3, context, "fillup.pricePerGallon");
-          content(env, morph4, context, "fillup.vehicle.year");
-          content(env, morph5, context, "fillup.vehicle.make");
-          content(env, morph6, context, "fillup.vehicle.model");
-          content(env, morph7, context, "fillup.vehicle.trim");
-          return fragment;
-        }
+          var morphs = new Array(8);
+          morphs[0] = dom.createMorphAt(dom.childAt(element0, [1]),0,0);
+          morphs[1] = dom.createMorphAt(dom.childAt(element0, [3]),0,0);
+          morphs[2] = dom.createMorphAt(dom.childAt(element0, [5]),0,0);
+          morphs[3] = dom.createMorphAt(dom.childAt(element0, [7]),1,1);
+          morphs[4] = dom.createMorphAt(element1,0,0);
+          morphs[5] = dom.createMorphAt(element1,2,2);
+          morphs[6] = dom.createMorphAt(element1,4,4);
+          morphs[7] = dom.createMorphAt(element1,6,6);
+          return morphs;
+        },
+        statements: [
+          ["content","fillup.id",["loc",[null,[16,14],[16,27]]]],
+          ["content","fillup.date",["loc",[null,[17,14],[17,29]]]],
+          ["content","fillup.miles",["loc",[null,[18,14],[18,30]]]],
+          ["content","fillup.pricePerGallon",["loc",[null,[19,15],[19,40]]]],
+          ["content","fillup.vehicle.year",["loc",[null,[20,14],[20,37]]]],
+          ["content","fillup.vehicle.make",["loc",[null,[20,38],[20,61]]]],
+          ["content","fillup.vehicle.model",["loc",[null,[20,62],[20,86]]]],
+          ["content","fillup.vehicle.trim",["loc",[null,[20,87],[20,110]]]]
+        ],
+        locals: ["fillup"],
+        templates: []
       };
     }());
     var child1 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 22,
+              "column": 8
+            },
+            "end": {
+              "line": 24,
+              "column": 6
+            }
+          },
+          "moduleName": "fuelup/templates/archive.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("  		");
           dom.appendChild(el0, el1);
@@ -1311,36 +1360,34 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes() { return []; },
+        statements: [
+
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 27,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/archive.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("h2");
         var el2 = dom.createTextNode("Here's what we remember...");
@@ -1409,30 +1456,16 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(dom.childAt(fragment, [2, 3]),1,1);
-        block(env, morph0, context, "each", [get(env, context, "fillup")], {"keyword": "fillup"}, child0, child1);
-        return fragment;
-      }
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(1);
+        morphs[0] = dom.createMorphAt(dom.childAt(fragment, [2, 3]),1,1);
+        return morphs;
+      },
+      statements: [
+        ["block","each",[["get","fillup",["loc",[null,[14,24],[14,30]]]]],[],0,1,["loc",[null,[14,6],[24,15]]]]
+      ],
+      locals: [],
+      templates: [child0, child1]
     };
   }()));
 
@@ -1444,14 +1477,29 @@ define('fuelup/templates/auth', ['exports'], function (exports) {
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 4,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/auth.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
-          var el1 = dom.createTextNode(" \n	Hello ");
+          var el1 = dom.createTextNode(" ");
+          dom.appendChild(el0, el1);
+          var el1 = dom.createTextNode("\n	Hello ");
           dom.appendChild(el0, el1);
           var el1 = dom.createComment("");
           dom.appendChild(el0, el1);
@@ -1467,43 +1515,43 @@ define('fuelup/templates/auth', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, content = hooks.content, element = hooks.element;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          var element5 = dom.childAt(fragment, [3]);
-          var morph0 = dom.createMorphAt(fragment,1,1,contextualElement);
-          content(env, morph0, context, "username");
-          element(env, element5, context, "action", ["logout"], {});
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var element5 = dom.childAt(fragment, [4]);
+          var morphs = new Array(2);
+          morphs[0] = dom.createMorphAt(fragment,2,2,contextualElement);
+          morphs[1] = dom.createElementMorph(element5);
+          return morphs;
+        },
+        statements: [
+          ["content","username",["loc",[null,[2,7],[2,19]]]],
+          ["element","action",["logout"],[],["loc",[null,[3,47],[3,66]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     var child1 = (function() {
       var child0 = (function() {
         return {
-          isHTMLBars: true,
-          revision: "Ember@1.12.0",
-          blockParams: 0,
+          meta: {
+            "revision": "Ember@1.13.7",
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 8,
+                "column": 1
+              },
+              "end": {
+                "line": 28,
+                "column": 1
+              }
+            },
+            "moduleName": "fuelup/templates/auth.hbs"
+          },
+          arity: 0,
           cachedFragment: null,
           hasRendered: false,
-          build: function build(dom) {
+          buildFragment: function buildFragment(dom) {
             var el0 = dom.createDocumentFragment();
             var el1 = dom.createTextNode("		\n		");
             dom.appendChild(el0, el1);
@@ -1562,57 +1610,61 @@ define('fuelup/templates/auth', ['exports'], function (exports) {
             var el3 = dom.createTextNode("Login");
             dom.appendChild(el2, el3);
             dom.appendChild(el1, el2);
-            var el2 = dom.createTextNode("\n\n\n		");
+            var el2 = dom.createTextNode("\n");
+            dom.appendChild(el1, el2);
+            var el2 = dom.createTextNode("\n");
+            dom.appendChild(el1, el2);
+            var el2 = dom.createTextNode("\n		");
             dom.appendChild(el1, el2);
             dom.appendChild(el0, el1);
             var el1 = dom.createTextNode("\n");
             dom.appendChild(el0, el1);
             return el0;
           },
-          render: function render(context, env, contextualElement) {
-            var dom = env.dom;
-            var hooks = env.hooks, content = hooks.content, get = hooks.get, inline = hooks.inline, element = hooks.element;
-            dom.detectNamespace(contextualElement);
-            var fragment;
-            if (env.useFragmentCache && dom.canClone) {
-              if (this.cachedFragment === null) {
-                fragment = this.build(dom);
-                if (this.hasRendered) {
-                  this.cachedFragment = fragment;
-                } else {
-                  this.hasRendered = true;
-                }
-              }
-              if (this.cachedFragment) {
-                fragment = dom.cloneNode(this.cachedFragment, true);
-              }
-            } else {
-              fragment = this.build(dom);
-            }
+          buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
             var element2 = dom.childAt(fragment, [1]);
             var element3 = dom.childAt(element2, [1]);
             var element4 = dom.childAt(element2, [7]);
-            var morph0 = dom.createMorphAt(dom.childAt(element3, [1, 0]),0,0);
-            var morph1 = dom.createMorphAt(element3,3,3);
-            var morph2 = dom.createMorphAt(dom.childAt(element2, [3]),1,1);
-            var morph3 = dom.createMorphAt(dom.childAt(element2, [5]),1,1);
-            content(env, morph0, context, "errorMsg");
-            inline(env, morph1, context, "input", [], {"class": "form-control", "value": get(env, context, "username"), "action": "login", "placeholder": "Username"});
-            inline(env, morph2, context, "input", [], {"class": "form-control", "value": get(env, context, "password"), "action": "login", "placeholder": "Password", "type": "password"});
-            inline(env, morph3, context, "input", [], {"type": "checkbox", "checked": get(env, context, "remember")});
-            element(env, element4, context, "action", ["login"], {});
-            return fragment;
-          }
+            var morphs = new Array(5);
+            morphs[0] = dom.createMorphAt(dom.childAt(element3, [1, 0]),0,0);
+            morphs[1] = dom.createMorphAt(element3,3,3);
+            morphs[2] = dom.createMorphAt(dom.childAt(element2, [3]),1,1);
+            morphs[3] = dom.createMorphAt(dom.childAt(element2, [5]),1,1);
+            morphs[4] = dom.createElementMorph(element4);
+            return morphs;
+          },
+          statements: [
+            ["content","errorMsg",["loc",[null,[13,120],[13,132]]]],
+            ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","username",["loc",[null,[14,39],[14,47]]]]],[],[]],"placeholder","Username","enter","login"],["loc",[null,[14,4],[14,87]]]],
+            ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","password",["loc",[null,[17,39],[17,47]]]]],[],[]],"placeholder","Password","type","password","enter","login"],["loc",[null,[17,4],[17,103]]]],
+            ["inline","input",[],["type","checkbox","checked",["subexpr","@mut",[["get","remember",["loc",[null,[20,37],[20,45]]]]],[],[]]],["loc",[null,[20,5],[20,47]]]],
+            ["element","action",["login"],[],["loc",[null,[22,49],[22,67]]]]
+          ],
+          locals: [],
+          templates: []
         };
       }());
       var child1 = (function() {
         return {
-          isHTMLBars: true,
-          revision: "Ember@1.12.0",
-          blockParams: 0,
+          meta: {
+            "revision": "Ember@1.13.7",
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 28,
+                "column": 1
+              },
+              "end": {
+                "line": 43,
+                "column": 1
+              }
+            },
+            "moduleName": "fuelup/templates/auth.hbs"
+          },
+          arity: 0,
           cachedFragment: null,
           hasRendered: false,
-          build: function build(dom) {
+          buildFragment: function buildFragment(dom) {
             var el0 = dom.createDocumentFragment();
             var el1 = dom.createTextNode("		");
             dom.appendChild(el0, el1);
@@ -1659,55 +1711,59 @@ define('fuelup/templates/auth', ['exports'], function (exports) {
             var el3 = dom.createTextNode("Login");
             dom.appendChild(el2, el3);
             dom.appendChild(el1, el2);
-            var el2 = dom.createTextNode("\n\n		");
+            var el2 = dom.createTextNode("\n");
+            dom.appendChild(el1, el2);
+            var el2 = dom.createTextNode("\n		");
             dom.appendChild(el1, el2);
             dom.appendChild(el0, el1);
             var el1 = dom.createTextNode("\n");
             dom.appendChild(el0, el1);
             return el0;
           },
-          render: function render(context, env, contextualElement) {
-            var dom = env.dom;
-            var hooks = env.hooks, get = hooks.get, inline = hooks.inline, element = hooks.element;
-            dom.detectNamespace(contextualElement);
-            var fragment;
-            if (env.useFragmentCache && dom.canClone) {
-              if (this.cachedFragment === null) {
-                fragment = this.build(dom);
-                if (this.hasRendered) {
-                  this.cachedFragment = fragment;
-                } else {
-                  this.hasRendered = true;
-                }
-              }
-              if (this.cachedFragment) {
-                fragment = dom.cloneNode(this.cachedFragment, true);
-              }
-            } else {
-              fragment = this.build(dom);
-            }
+          buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
             var element0 = dom.childAt(fragment, [1]);
             var element1 = dom.childAt(element0, [7]);
-            var morph0 = dom.createMorphAt(dom.childAt(element0, [1]),1,1);
-            var morph1 = dom.createMorphAt(dom.childAt(element0, [3]),1,1);
-            var morph2 = dom.createMorphAt(dom.childAt(element0, [5]),1,1);
-            inline(env, morph0, context, "input", [], {"class": "form-control", "value": get(env, context, "username"), "action": "login", "placeholder": "Username"});
-            inline(env, morph1, context, "input", [], {"class": "form-control", "value": get(env, context, "password"), "action": "login", "placeholder": "Password", "type": "password"});
-            inline(env, morph2, context, "input", [], {"type": "checkbox", "checked": get(env, context, "remember")});
-            element(env, element1, context, "action", ["login"], {});
-            return fragment;
-          }
+            var morphs = new Array(4);
+            morphs[0] = dom.createMorphAt(dom.childAt(element0, [1]),1,1);
+            morphs[1] = dom.createMorphAt(dom.childAt(element0, [3]),1,1);
+            morphs[2] = dom.createMorphAt(dom.childAt(element0, [5]),1,1);
+            morphs[3] = dom.createElementMorph(element1);
+            return morphs;
+          },
+          statements: [
+            ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","username",["loc",[null,[31,39],[31,47]]]]],[],[]],"placeholder","Username","enter","login"],["loc",[null,[31,4],[31,87]]]],
+            ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","password",["loc",[null,[34,39],[34,47]]]]],[],[]],"placeholder","Password","type","password","enter","login"],["loc",[null,[34,4],[34,103]]]],
+            ["inline","input",[],["type","checkbox","checked",["subexpr","@mut",[["get","remember",["loc",[null,[37,37],[37,45]]]]],[],[]]],["loc",[null,[37,5],[37,47]]]],
+            ["element","action",["login"],[],["loc",[null,[39,49],[39,67]]]]
+          ],
+          locals: [],
+          templates: []
         };
       }());
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 4,
+              "column": 0
+            },
+            "end": {
+              "line": 44,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/auth.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
-          var el1 = dom.createTextNode(" \n	");
+          var el1 = dom.createTextNode(" ");
+          dom.appendChild(el0, el1);
+          var el1 = dom.createTextNode("\n	");
           dom.appendChild(el0, el1);
           var el1 = dom.createElement("h2");
           var el2 = dom.createTextNode("Welcome to Fuel-Up");
@@ -1725,41 +1781,40 @@ define('fuelup/templates/auth', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, get = hooks.get, block = hooks.block;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          var morph0 = dom.createMorphAt(fragment,5,5,contextualElement);
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var morphs = new Array(1);
+          morphs[0] = dom.createMorphAt(fragment,6,6,contextualElement);
           dom.insertBoundary(fragment, null);
-          block(env, morph0, context, "if", [get(env, context, "errorMsg")], {}, child0, child1);
-          return fragment;
-        }
+          return morphs;
+        },
+        statements: [
+          ["block","if",[["get","errorMsg",["loc",[null,[8,7],[8,15]]]]],[],0,1,["loc",[null,[8,1],[43,8]]]]
+        ],
+        locals: [],
+        templates: [child0, child1]
       };
     }());
     var child2 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 46,
+              "column": 26
+            },
+            "end": {
+              "line": 46,
+              "column": 95
+            }
+          },
+          "moduleName": "fuelup/templates/auth.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createElement("a");
           dom.setAttribute(el1,"href","/register");
@@ -1768,36 +1823,34 @@ define('fuelup/templates/auth', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes() { return []; },
+        statements: [
+
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 46,
+            "column": 131
+          }
+        },
+        "moduleName": "fuelup/templates/auth.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
@@ -1813,33 +1866,19 @@ define('fuelup/templates/auth', ['exports'], function (exports) {
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        var morph1 = dom.createMorphAt(dom.childAt(fragment, [2]),1,1);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(2);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
+        morphs[1] = dom.createMorphAt(dom.childAt(fragment, [2]),1,1);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "if", [get(env, context, "isLoggedIn")], {}, child0, child1);
-        block(env, morph1, context, "link-to", ["register"], {"tagName": "li2"}, child2, null);
-        return fragment;
-      }
+        return morphs;
+      },
+      statements: [
+        ["block","if",[["get","isLoggedIn",["loc",[null,[1,6],[1,16]]]]],[],0,1,["loc",[null,[1,0],[44,7]]]],
+        ["block","link-to",["register"],["tagName","li2"],2,null,["loc",[null,[46,26],[46,107]]]]
+      ],
+      locals: [],
+      templates: [child0, child1, child2]
     };
   }()));
 
@@ -1850,12 +1889,25 @@ define('fuelup/templates/compare', ['exports'], function (exports) {
 
   exports['default'] = Ember.HTMLBars.template((function() {
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 27,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/compare.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("h2");
         var el2 = dom.createTextNode("Let's see how you're doing...");
@@ -1988,35 +2040,21 @@ define('fuelup/templates/compare', ['exports'], function (exports) {
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, content = hooks.content;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var element0 = dom.childAt(fragment, [2, 3, 1]);
-        var morph0 = dom.createMorphAt(dom.childAt(element0, [1]),1,1);
-        var morph1 = dom.createMorphAt(dom.childAt(element0, [3]),0,0);
-        var morph2 = dom.createMorphAt(fragment,4,4,contextualElement);
-        content(env, morph0, context, "allFillups.pricePerGallon");
-        content(env, morph1, context, "allFillups.miles");
-        content(env, morph2, context, "outlet");
-        return fragment;
-      }
+        var morphs = new Array(3);
+        morphs[0] = dom.createMorphAt(dom.childAt(element0, [1]),1,1);
+        morphs[1] = dom.createMorphAt(dom.childAt(element0, [3]),0,0);
+        morphs[2] = dom.createMorphAt(fragment,4,4,contextualElement);
+        return morphs;
+      },
+      statements: [
+        ["content","allFillups.pricePerGallon",["loc",[null,[16,15],[16,44]]]],
+        ["content","allFillups.miles",["loc",[null,[17,14],[17,34]]]],
+        ["content","outlet",["loc",[null,[26,0],[26,10]]]]
+      ],
+      locals: [],
+      templates: []
     };
   }()));
 
@@ -2028,12 +2066,25 @@ define('fuelup/templates/components/bs-accordion-item', ['exports'], function (e
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 8,
+              "column": 0
+            },
+            "end": {
+              "line": 12,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/bs-accordion-item.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -2050,39 +2101,38 @@ define('fuelup/templates/components/bs-accordion-item', ['exports'], function (e
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, content = hooks.content;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          var morph0 = dom.createMorphAt(dom.childAt(fragment, [1]),1,1);
-          content(env, morph0, context, "yield");
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var morphs = new Array(1);
+          morphs[0] = dom.createMorphAt(dom.childAt(fragment, [1]),1,1);
+          return morphs;
+        },
+        statements: [
+          ["content","yield",["loc",[null,[10,8],[10,17]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 12,
+            "column": 16
+          }
+        },
+        "moduleName": "fuelup/templates/components/bs-accordion-item.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("div");
         dom.setAttribute(el1,"role","tab");
@@ -2113,37 +2163,24 @@ define('fuelup/templates/components/bs-accordion-item', ['exports'], function (e
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, subexpr = hooks.subexpr, concat = hooks.concat, attribute = hooks.attribute, element = hooks.element, content = hooks.content, block = hooks.block;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var element0 = dom.childAt(fragment, [0]);
-        var attrMorph0 = dom.createAttrMorph(element0, 'class');
-        var morph0 = dom.createMorphAt(dom.childAt(element0, [1, 1]),1,1);
-        var morph1 = dom.createMorphAt(fragment,2,2,contextualElement);
+        var morphs = new Array(4);
+        morphs[0] = dom.createAttrMorph(element0, 'class');
+        morphs[1] = dom.createElementMorph(element0);
+        morphs[2] = dom.createMorphAt(dom.childAt(element0, [1, 1]),1,1);
+        morphs[3] = dom.createMorphAt(fragment,2,2,contextualElement);
         dom.insertBoundary(fragment, null);
-        attribute(env, attrMorph0, element0, "class", concat(env, ["panel-heading ", subexpr(env, context, "if", [get(env, context, "collapsed"), "collapsed"], {})]));
-        element(env, element0, context, "action", ["toggleActive"], {});
-        content(env, morph0, context, "title");
-        block(env, morph1, context, "bs-collapse", [], {"collapsed": get(env, context, "collapsed"), "class": "panel-collapse"}, child0, null);
-        return fragment;
-      }
+        return morphs;
+      },
+      statements: [
+        ["attribute","class",["concat",["panel-heading ",["subexpr","if",[["get","collapsed",["loc",[null,[1,68],[1,77]]]],"collapsed"],[],["loc",[null,[1,63],[1,91]]]]]]],
+        ["element","action",["toggleActive"],[],["loc",[null,[1,16],[1,41]]]],
+        ["content","title",["loc",[null,[4,12],[4,21]]]],
+        ["block","bs-collapse",[],["collapsed",["subexpr","@mut",[["get","collapsed",["loc",[null,[8,25],[8,34]]]]],[],[]],"class","panel-collapse"],0,null,["loc",[null,[8,0],[12,16]]]]
+      ],
+      locals: [],
+      templates: [child0]
     };
   }()));
 
@@ -2156,12 +2193,25 @@ define('fuelup/templates/components/bs-alert', ['exports'], function (exports) {
     var child0 = (function() {
       var child0 = (function() {
         return {
-          isHTMLBars: true,
-          revision: "Ember@1.12.0",
-          blockParams: 0,
+          meta: {
+            "revision": "Ember@1.13.7",
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 2,
+                "column": 0
+              },
+              "end": {
+                "line": 4,
+                "column": 0
+              }
+            },
+            "moduleName": "fuelup/templates/components/bs-alert.hbs"
+          },
+          arity: 0,
           cachedFragment: null,
           hasRendered: false,
-          build: function build(dom) {
+          buildFragment: function buildFragment(dom) {
             var el0 = dom.createDocumentFragment();
             var el1 = dom.createTextNode("    ");
             dom.appendChild(el0, el1);
@@ -2179,39 +2229,39 @@ define('fuelup/templates/components/bs-alert', ['exports'], function (exports) {
             dom.appendChild(el0, el1);
             return el0;
           },
-          render: function render(context, env, contextualElement) {
-            var dom = env.dom;
-            var hooks = env.hooks, element = hooks.element;
-            dom.detectNamespace(contextualElement);
-            var fragment;
-            if (env.useFragmentCache && dom.canClone) {
-              if (this.cachedFragment === null) {
-                fragment = this.build(dom);
-                if (this.hasRendered) {
-                  this.cachedFragment = fragment;
-                } else {
-                  this.hasRendered = true;
-                }
-              }
-              if (this.cachedFragment) {
-                fragment = dom.cloneNode(this.cachedFragment, true);
-              }
-            } else {
-              fragment = this.build(dom);
-            }
+          buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
             var element0 = dom.childAt(fragment, [1]);
-            element(env, element0, context, "action", ["dismiss"], {});
-            return fragment;
-          }
+            var morphs = new Array(1);
+            morphs[0] = dom.createElementMorph(element0);
+            return morphs;
+          },
+          statements: [
+            ["element","action",["dismiss"],[],["loc",[null,[3,59],[3,79]]]]
+          ],
+          locals: [],
+          templates: []
         };
       }());
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 6,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/bs-alert.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createComment("");
           dom.appendChild(el0, el1);
@@ -2221,73 +2271,58 @@ define('fuelup/templates/components/bs-alert', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, get = hooks.get, block = hooks.block, content = hooks.content;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-          var morph1 = dom.createMorphAt(fragment,1,1,contextualElement);
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var morphs = new Array(2);
+          morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
+          morphs[1] = dom.createMorphAt(fragment,1,1,contextualElement);
           dom.insertBoundary(fragment, 0);
-          block(env, morph0, context, "if", [get(env, context, "dismissible")], {}, child0, null);
-          content(env, morph1, context, "yield");
-          return fragment;
-        }
+          return morphs;
+        },
+        statements: [
+          ["block","if",[["get","dismissible",["loc",[null,[2,6],[2,17]]]]],[],0,null,["loc",[null,[2,0],[4,7]]]],
+          ["content","yield",["loc",[null,[5,0],[5,9]]]]
+        ],
+        locals: [],
+        templates: [child0]
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 7,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/components/bs-alert.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        dom.insertBoundary(fragment, null);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(1);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "unless", [get(env, context, "dismissed")], {}, child0, null);
-        return fragment;
-      }
+        dom.insertBoundary(fragment, null);
+        return morphs;
+      },
+      statements: [
+        ["block","unless",[["get","dismissed",["loc",[null,[1,10],[1,19]]]]],[],0,null,["loc",[null,[1,0],[6,11]]]]
+      ],
+      locals: [],
+      templates: [child0]
     };
   }()));
 
@@ -2299,12 +2334,25 @@ define('fuelup/templates/components/bs-button', ['exports'], function (exports) 
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 1,
+              "column": 37
+            }
+          },
+          "moduleName": "fuelup/templates/components/bs-button.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createElement("i");
           dom.appendChild(el0, el1);
@@ -2312,40 +2360,39 @@ define('fuelup/templates/components/bs-button', ['exports'], function (exports) 
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, get = hooks.get, concat = hooks.concat, attribute = hooks.attribute;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element0 = dom.childAt(fragment, [0]);
-          var attrMorph0 = dom.createAttrMorph(element0, 'class');
-          attribute(env, attrMorph0, element0, "class", concat(env, [get(env, context, "icon")]));
-          return fragment;
-        }
+          var morphs = new Array(1);
+          morphs[0] = dom.createAttrMorph(element0, 'class');
+          return morphs;
+        },
+        statements: [
+          ["attribute","class",["concat",[["get","icon",["loc",[null,[1,24],[1,28]]]]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 1,
+            "column": 61
+          }
+        },
+        "moduleName": "fuelup/templates/components/bs-button.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
@@ -2355,36 +2402,22 @@ define('fuelup/templates/components/bs-button', ['exports'], function (exports) 
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block, content = hooks.content;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        var morph1 = dom.createMorphAt(fragment,1,1,contextualElement);
-        var morph2 = dom.createMorphAt(fragment,2,2,contextualElement);
-        dom.insertBoundary(fragment, null);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(3);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
+        morphs[1] = dom.createMorphAt(fragment,1,1,contextualElement);
+        morphs[2] = dom.createMorphAt(fragment,2,2,contextualElement);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "if", [get(env, context, "icon")], {}, child0, null);
-        content(env, morph1, context, "text");
-        content(env, morph2, context, "yield");
-        return fragment;
-      }
+        dom.insertBoundary(fragment, null);
+        return morphs;
+      },
+      statements: [
+        ["block","if",[["get","icon",["loc",[null,[1,6],[1,10]]]]],[],0,null,["loc",[null,[1,0],[1,44]]]],
+        ["content","text",["loc",[null,[1,44],[1,52]]]],
+        ["content","yield",["loc",[null,[1,52],[1,61]]]]
+      ],
+      locals: [],
+      templates: [child0]
     };
   }()));
 
@@ -2396,12 +2429,25 @@ define('fuelup/templates/components/bs-form-group', ['exports'], function (expor
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 2,
+              "column": 0
+            },
+            "end": {
+              "line": 4,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/bs-form-group.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -2412,40 +2458,39 @@ define('fuelup/templates/components/bs-form-group', ['exports'], function (expor
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, get = hooks.get, concat = hooks.concat, attribute = hooks.attribute;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element0 = dom.childAt(fragment, [1]);
-          var attrMorph0 = dom.createAttrMorph(element0, 'class');
-          attribute(env, attrMorph0, element0, "class", concat(env, ["form-control-feedback ", get(env, context, "iconName")]));
-          return fragment;
-        }
+          var morphs = new Array(1);
+          morphs[0] = dom.createAttrMorph(element0, 'class');
+          return morphs;
+        },
+        statements: [
+          ["attribute","class",["concat",["form-control-feedback ",["get","iconName",["loc",[null,[3,41],[3,49]]]]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 4,
+            "column": 7
+          }
+        },
+        "moduleName": "fuelup/templates/components/bs-form-group.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
@@ -2455,34 +2500,20 @@ define('fuelup/templates/components/bs-form-group', ['exports'], function (expor
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, content = hooks.content, get = hooks.get, block = hooks.block;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        var morph1 = dom.createMorphAt(fragment,2,2,contextualElement);
-        dom.insertBoundary(fragment, null);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(2);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
+        morphs[1] = dom.createMorphAt(fragment,2,2,contextualElement);
         dom.insertBoundary(fragment, 0);
-        content(env, morph0, context, "yield");
-        block(env, morph1, context, "if", [get(env, context, "hasFeedback")], {}, child0, null);
-        return fragment;
-      }
+        dom.insertBoundary(fragment, null);
+        return morphs;
+      },
+      statements: [
+        ["content","yield",["loc",[null,[1,0],[1,9]]]],
+        ["block","if",[["get","hasFeedback",["loc",[null,[2,6],[2,17]]]]],[],0,null,["loc",[null,[2,0],[4,7]]]]
+      ],
+      locals: [],
+      templates: [child0]
     };
   }()));
 
@@ -2493,43 +2524,42 @@ define('fuelup/templates/components/bs-form', ['exports'], function (exports) {
 
   exports['default'] = Ember.HTMLBars.template((function() {
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 1,
+            "column": 9
+          }
+        },
+        "moduleName": "fuelup/templates/components/bs-form.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, content = hooks.content;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        dom.insertBoundary(fragment, null);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(1);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
         dom.insertBoundary(fragment, 0);
-        content(env, morph0, context, "yield");
-        return fragment;
-      }
+        dom.insertBoundary(fragment, null);
+        return morphs;
+      },
+      statements: [
+        ["content","yield",["loc",[null,[1,0],[1,9]]]]
+      ],
+      locals: [],
+      templates: []
     };
   }()));
 
@@ -2541,12 +2571,25 @@ define('fuelup/templates/components/bs-select', ['exports'], function (exports) 
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 5,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/bs-select.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -2563,43 +2606,42 @@ define('fuelup/templates/components/bs-select', ['exports'], function (exports) 
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, get = hooks.get, subexpr = hooks.subexpr, attribute = hooks.attribute, content = hooks.content;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element1 = dom.childAt(fragment, [1]);
-          var morph0 = dom.createMorphAt(element1,1,1);
-          var attrMorph0 = dom.createAttrMorph(element1, 'selected');
-          attribute(env, attrMorph0, element1, "selected", subexpr(env, context, "is-not", [get(env, context, "value")], {}));
-          content(env, morph0, context, "prompt");
-          return fragment;
-        }
+          var morphs = new Array(2);
+          morphs[0] = dom.createAttrMorph(element1, 'selected');
+          morphs[1] = dom.createMorphAt(element1,1,1);
+          return morphs;
+        },
+        statements: [
+          ["attribute","selected",["subexpr","is-not",[["get","value",["loc",[null,[2,39],[2,44]]]]],[],["loc",[null,[2,30],[2,46]]]]],
+          ["content","prompt",["loc",[null,[3,8],[3,18]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     var child1 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 1,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 7,
+              "column": 0
+            },
+            "end": {
+              "line": 12,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/bs-select.hbs"
+        },
+        arity: 1,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -2615,45 +2657,43 @@ define('fuelup/templates/components/bs-select', ['exports'], function (exports) 
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement, blockArguments) {
-          var dom = env.dom;
-          var hooks = env.hooks, set = hooks.set, get = hooks.get, subexpr = hooks.subexpr, concat = hooks.concat, attribute = hooks.attribute, inline = hooks.inline;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element0 = dom.childAt(fragment, [1]);
-          var morph0 = dom.createMorphAt(element0,1,1);
-          var attrMorph0 = dom.createAttrMorph(element0, 'value');
-          var attrMorph1 = dom.createAttrMorph(element0, 'selected');
-          set(env, context, "item", blockArguments[0]);
-          attribute(env, attrMorph0, element0, "value", concat(env, [subexpr(env, context, "read-path", [get(env, context, "item"), get(env, context, "optionValuePath")], {})]));
-          attribute(env, attrMorph1, element0, "selected", subexpr(env, context, "is-equal", [get(env, context, "item"), get(env, context, "value")], {}));
-          inline(env, morph0, context, "read-path", [get(env, context, "item"), get(env, context, "optionLabelPath")], {});
-          return fragment;
-        }
+          var morphs = new Array(3);
+          morphs[0] = dom.createAttrMorph(element0, 'value');
+          morphs[1] = dom.createAttrMorph(element0, 'selected');
+          morphs[2] = dom.createMorphAt(element0,1,1);
+          return morphs;
+        },
+        statements: [
+          ["attribute","value",["concat",[["subexpr","read-path",[["get","item",["loc",[null,[8,31],[8,35]]]],["get","optionValuePath",["loc",[null,[8,36],[8,51]]]]],[],["loc",[null,[8,19],[8,53]]]]]]],
+          ["attribute","selected",["subexpr","is-equal",[["get","item",["loc",[null,[9,32],[9,36]]]],["get","value",["loc",[null,[9,37],[9,42]]]]],[],["loc",[null,[9,21],[9,44]]]]],
+          ["inline","read-path",[["get","item",["loc",[null,[10,20],[10,24]]]],["get","optionLabelPath",["loc",[null,[10,25],[10,40]]]]],[],["loc",[null,[10,8],[10,42]]]]
+        ],
+        locals: ["item"],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 12,
+            "column": 9
+          }
+        },
+        "moduleName": "fuelup/templates/components/bs-select.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
@@ -2663,34 +2703,20 @@ define('fuelup/templates/components/bs-select', ['exports'], function (exports) 
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        var morph1 = dom.createMorphAt(fragment,2,2,contextualElement);
-        dom.insertBoundary(fragment, null);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(2);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
+        morphs[1] = dom.createMorphAt(fragment,2,2,contextualElement);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "if", [get(env, context, "prompt")], {}, child0, null);
-        block(env, morph1, context, "each", [get(env, context, "content")], {"key": "@identity"}, child1, null);
-        return fragment;
-      }
+        dom.insertBoundary(fragment, null);
+        return morphs;
+      },
+      statements: [
+        ["block","if",[["get","prompt",["loc",[null,[1,6],[1,12]]]]],[],0,null,["loc",[null,[1,0],[5,7]]]],
+        ["block","each",[["get","content",["loc",[null,[7,8],[7,15]]]]],["key","@identity"],1,null,["loc",[null,[7,0],[12,9]]]]
+      ],
+      locals: [],
+      templates: [child0, child1]
     };
   }()));
 
@@ -2702,12 +2728,25 @@ define('fuelup/templates/components/form-element/errors', ['exports'], function 
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 3,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/errors.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -2720,70 +2759,55 @@ define('fuelup/templates/components/form-element/errors', ['exports'], function 
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, content = hooks.content;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          var morph0 = dom.createMorphAt(dom.childAt(fragment, [1]),0,0);
-          content(env, morph0, context, "errors.firstObject");
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var morphs = new Array(1);
+          morphs[0] = dom.createMorphAt(dom.childAt(fragment, [1]),0,0);
+          return morphs;
+        },
+        statements: [
+          ["content","errors.firstObject",["loc",[null,[2,29],[2,51]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 3,
+            "column": 7
+          }
+        },
+        "moduleName": "fuelup/templates/components/form-element/errors.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        dom.insertBoundary(fragment, null);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(1);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "if", [get(env, context, "showErrors")], {}, child0, null);
-        return fragment;
-      }
+        dom.insertBoundary(fragment, null);
+        return morphs;
+      },
+      statements: [
+        ["block","if",[["get","showErrors",["loc",[null,[1,6],[1,16]]]]],[],0,null,["loc",[null,[1,0],[3,7]]]]
+      ],
+      locals: [],
+      templates: [child0]
     };
   }()));
 
@@ -2795,12 +2819,25 @@ define('fuelup/templates/components/form-element/feedback-icon', ['exports'], fu
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 3,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/feedback-icon.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -2811,71 +2848,56 @@ define('fuelup/templates/components/form-element/feedback-icon', ['exports'], fu
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, get = hooks.get, concat = hooks.concat, attribute = hooks.attribute;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element0 = dom.childAt(fragment, [1]);
-          var attrMorph0 = dom.createAttrMorph(element0, 'class');
-          attribute(env, attrMorph0, element0, "class", concat(env, ["form-control-feedback ", get(env, context, "iconName")]));
-          return fragment;
-        }
+          var morphs = new Array(1);
+          morphs[0] = dom.createAttrMorph(element0, 'class');
+          return morphs;
+        },
+        statements: [
+          ["attribute","class",["concat",["form-control-feedback ",["get","iconName",["loc",[null,[2,41],[2,49]]]]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 3,
+            "column": 7
+          }
+        },
+        "moduleName": "fuelup/templates/components/form-element/feedback-icon.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        dom.insertBoundary(fragment, null);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(1);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "if", [get(env, context, "hasFeedback")], {}, child0, null);
-        return fragment;
-      }
+        dom.insertBoundary(fragment, null);
+        return morphs;
+      },
+      statements: [
+        ["block","if",[["get","hasFeedback",["loc",[null,[1,6],[1,17]]]]],[],0,null,["loc",[null,[1,0],[3,7]]]]
+      ],
+      locals: [],
+      templates: [child0]
     };
   }()));
 
@@ -2886,12 +2908,25 @@ define('fuelup/templates/components/form-element/horizontal/checkbox', ['exports
 
   exports['default'] = Ember.HTMLBars.template((function() {
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 8,
+            "column": 6
+          }
+        },
+        "moduleName": "fuelup/templates/components/form-element/horizontal/checkbox.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("div");
         var el2 = dom.createTextNode("\n    ");
@@ -2924,38 +2959,24 @@ define('fuelup/templates/components/form-element/horizontal/checkbox', ['exports
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, concat = hooks.concat, attribute = hooks.attribute, inline = hooks.inline, content = hooks.content;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var element0 = dom.childAt(fragment, [0]);
         var element1 = dom.childAt(element0, [1, 1]);
-        var attrMorph0 = dom.createAttrMorph(element0, 'class');
-        var morph0 = dom.createMorphAt(element1,1,1);
-        var morph1 = dom.createMorphAt(element1,3,3);
-        var morph2 = dom.createMorphAt(element0,3,3);
-        attribute(env, attrMorph0, element0, "class", concat(env, [get(env, context, "horizontalInputGridClass"), " ", get(env, context, "horizontalInputOffsetGridClass")]));
-        inline(env, morph0, context, "input", [], {"name": get(env, context, "name"), "type": "checkbox", "checked": get(env, context, "value")});
-        content(env, morph1, context, "label");
-        inline(env, morph2, context, "partial", ["components/form-element/errors"], {});
-        return fragment;
-      }
+        var morphs = new Array(4);
+        morphs[0] = dom.createAttrMorph(element0, 'class');
+        morphs[1] = dom.createMorphAt(element1,1,1);
+        morphs[2] = dom.createMorphAt(element1,3,3);
+        morphs[3] = dom.createMorphAt(element0,3,3);
+        return morphs;
+      },
+      statements: [
+        ["attribute","class",["concat",[["get","horizontalInputGridClass",["loc",[null,[1,14],[1,38]]]]," ",["get","horizontalInputOffsetGridClass",["loc",[null,[1,43],[1,73]]]]]]],
+        ["inline","input",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[4,25],[4,29]]]]],[],[]],"type","checkbox","checked",["subexpr","@mut",[["get","value",["loc",[null,[4,54],[4,59]]]]],[],[]]],["loc",[null,[4,12],[4,61]]]],
+        ["content","label",["loc",[null,[4,62],[4,71]]]],
+        ["inline","partial",["components/form-element/errors"],[],["loc",[null,[7,4],[7,48]]]]
+      ],
+      locals: [],
+      templates: []
     };
   }()));
 
@@ -2967,12 +2988,25 @@ define('fuelup/templates/components/form-element/horizontal/default', ['exports'
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 8,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/horizontal/default.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -3002,52 +3036,51 @@ define('fuelup/templates/components/form-element/horizontal/default', ['exports'
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, get = hooks.get, concat = hooks.concat, attribute = hooks.attribute, content = hooks.content, inline = hooks.inline;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element1 = dom.childAt(fragment, [1]);
           var element2 = dom.childAt(fragment, [3]);
-          var morph0 = dom.createMorphAt(element1,0,0);
-          var attrMorph0 = dom.createAttrMorph(element1, 'class');
-          var morph1 = dom.createMorphAt(element2,1,1);
-          var morph2 = dom.createMorphAt(element2,3,3);
-          var morph3 = dom.createMorphAt(element2,5,5);
-          var attrMorph1 = dom.createAttrMorph(element2, 'class');
-          attribute(env, attrMorph0, element1, "class", concat(env, ["control-label ", get(env, context, "horizontalLabelGridClass")]));
-          content(env, morph0, context, "label");
-          attribute(env, attrMorph1, element2, "class", concat(env, [get(env, context, "horizontalInputGridClass")]));
-          inline(env, morph1, context, "bs-input", [], {"name": get(env, context, "name"), "type": get(env, context, "controlType"), "value": get(env, context, "value"), "placeholder": get(env, context, "placeholder")});
-          inline(env, morph2, context, "partial", ["components/form-element/feedback-icon"], {});
-          inline(env, morph3, context, "partial", ["components/form-element/errors"], {});
-          return fragment;
-        }
+          var morphs = new Array(6);
+          morphs[0] = dom.createAttrMorph(element1, 'class');
+          morphs[1] = dom.createMorphAt(element1,0,0);
+          morphs[2] = dom.createAttrMorph(element2, 'class');
+          morphs[3] = dom.createMorphAt(element2,1,1);
+          morphs[4] = dom.createMorphAt(element2,3,3);
+          morphs[5] = dom.createMorphAt(element2,5,5);
+          return morphs;
+        },
+        statements: [
+          ["attribute","class",["concat",["control-label ",["get","horizontalLabelGridClass",["loc",[null,[2,34],[2,58]]]]]]],
+          ["content","label",["loc",[null,[2,62],[2,71]]]],
+          ["attribute","class",["concat",[["get","horizontalInputGridClass",["loc",[null,[3,18],[3,42]]]]]]],
+          ["inline","bs-input",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[4,24],[4,28]]]]],[],[]],"type",["subexpr","@mut",[["get","controlType",["loc",[null,[4,34],[4,45]]]]],[],[]],"value",["subexpr","@mut",[["get","value",["loc",[null,[4,52],[4,57]]]]],[],[]],"placeholder",["subexpr","@mut",[["get","placeholder",["loc",[null,[4,70],[4,81]]]]],[],[]]],["loc",[null,[4,8],[4,83]]]],
+          ["inline","partial",["components/form-element/feedback-icon"],[],["loc",[null,[5,8],[5,59]]]],
+          ["inline","partial",["components/form-element/errors"],[],["loc",[null,[6,8],[6,52]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     var child1 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 8,
+              "column": 0
+            },
+            "end": {
+              "line": 14,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/horizontal/default.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -3071,77 +3104,62 @@ define('fuelup/templates/components/form-element/horizontal/default', ['exports'
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, get = hooks.get, concat = hooks.concat, attribute = hooks.attribute, inline = hooks.inline;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element0 = dom.childAt(fragment, [1]);
-          var morph0 = dom.createMorphAt(element0,1,1);
-          var morph1 = dom.createMorphAt(element0,3,3);
-          var morph2 = dom.createMorphAt(element0,5,5);
-          var attrMorph0 = dom.createAttrMorph(element0, 'class');
-          attribute(env, attrMorph0, element0, "class", concat(env, [get(env, context, "horizontalInputGridClass"), " ", get(env, context, "horizontalInputOffsetGridClass")]));
-          inline(env, morph0, context, "bs-input", [], {"name": get(env, context, "name"), "type": get(env, context, "controlType"), "value": get(env, context, "value"), "placeholder": get(env, context, "placeholder")});
-          inline(env, morph1, context, "partial", ["components/form-element/feedback-icon"], {});
-          inline(env, morph2, context, "partial", ["components/form-element/errors"], {});
-          return fragment;
-        }
+          var morphs = new Array(4);
+          morphs[0] = dom.createAttrMorph(element0, 'class');
+          morphs[1] = dom.createMorphAt(element0,1,1);
+          morphs[2] = dom.createMorphAt(element0,3,3);
+          morphs[3] = dom.createMorphAt(element0,5,5);
+          return morphs;
+        },
+        statements: [
+          ["attribute","class",["concat",[["get","horizontalInputGridClass",["loc",[null,[9,18],[9,42]]]]," ",["get","horizontalInputOffsetGridClass",["loc",[null,[9,47],[9,77]]]]]]],
+          ["inline","bs-input",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[10,24],[10,28]]]]],[],[]],"type",["subexpr","@mut",[["get","controlType",["loc",[null,[10,34],[10,45]]]]],[],[]],"value",["subexpr","@mut",[["get","value",["loc",[null,[10,52],[10,57]]]]],[],[]],"placeholder",["subexpr","@mut",[["get","placeholder",["loc",[null,[10,70],[10,81]]]]],[],[]]],["loc",[null,[10,8],[10,83]]]],
+          ["inline","partial",["components/form-element/feedback-icon"],[],["loc",[null,[11,8],[11,59]]]],
+          ["inline","partial",["components/form-element/errors"],[],["loc",[null,[12,8],[12,52]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 15,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/components/form-element/horizontal/default.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        dom.insertBoundary(fragment, null);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(1);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "if", [get(env, context, "hasLabel")], {}, child0, child1);
-        return fragment;
-      }
+        dom.insertBoundary(fragment, null);
+        return morphs;
+      },
+      statements: [
+        ["block","if",[["get","hasLabel",["loc",[null,[1,6],[1,14]]]]],[],0,1,["loc",[null,[1,0],[14,7]]]]
+      ],
+      locals: [],
+      templates: [child0, child1]
     };
   }()));
 
@@ -3153,12 +3171,25 @@ define('fuelup/templates/components/form-element/horizontal/select', ['exports']
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 8,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/horizontal/select.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -3188,52 +3219,51 @@ define('fuelup/templates/components/form-element/horizontal/select', ['exports']
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, get = hooks.get, concat = hooks.concat, attribute = hooks.attribute, content = hooks.content, inline = hooks.inline;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element1 = dom.childAt(fragment, [1]);
           var element2 = dom.childAt(fragment, [3]);
-          var morph0 = dom.createMorphAt(element1,0,0);
-          var attrMorph0 = dom.createAttrMorph(element1, 'class');
-          var morph1 = dom.createMorphAt(element2,1,1);
-          var morph2 = dom.createMorphAt(element2,3,3);
-          var morph3 = dom.createMorphAt(element2,5,5);
-          var attrMorph1 = dom.createAttrMorph(element2, 'class');
-          attribute(env, attrMorph0, element1, "class", concat(env, ["control-label ", get(env, context, "horizontalLabelGridClass")]));
-          content(env, morph0, context, "label");
-          attribute(env, attrMorph1, element2, "class", concat(env, [get(env, context, "horizontalInputGridClass")]));
-          inline(env, morph1, context, "bs-select", [], {"name": get(env, context, "name"), "content": get(env, context, "choices"), "optionValuePath": get(env, context, "selectValueProperty"), "optionLabelPath": get(env, context, "selectLabelProperty"), "value": get(env, context, "value")});
-          inline(env, morph2, context, "partial", ["components/form-element/feedback-icon"], {});
-          inline(env, morph3, context, "partial", ["components/form-element/errors"], {});
-          return fragment;
-        }
+          var morphs = new Array(6);
+          morphs[0] = dom.createAttrMorph(element1, 'class');
+          morphs[1] = dom.createMorphAt(element1,0,0);
+          morphs[2] = dom.createAttrMorph(element2, 'class');
+          morphs[3] = dom.createMorphAt(element2,1,1);
+          morphs[4] = dom.createMorphAt(element2,3,3);
+          morphs[5] = dom.createMorphAt(element2,5,5);
+          return morphs;
+        },
+        statements: [
+          ["attribute","class",["concat",["control-label ",["get","horizontalLabelGridClass",["loc",[null,[2,34],[2,58]]]]]]],
+          ["content","label",["loc",[null,[2,62],[2,71]]]],
+          ["attribute","class",["concat",[["get","horizontalInputGridClass",["loc",[null,[3,18],[3,42]]]]]]],
+          ["inline","bs-select",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[4,25],[4,29]]]]],[],[]],"content",["subexpr","@mut",[["get","choices",["loc",[null,[4,38],[4,45]]]]],[],[]],"optionValuePath",["subexpr","@mut",[["get","selectValueProperty",["loc",[null,[4,62],[4,81]]]]],[],[]],"optionLabelPath",["subexpr","@mut",[["get","selectLabelProperty",["loc",[null,[4,98],[4,117]]]]],[],[]],"value",["subexpr","@mut",[["get","value",["loc",[null,[4,124],[4,129]]]]],[],[]]],["loc",[null,[4,8],[4,131]]]],
+          ["inline","partial",["components/form-element/feedback-icon"],[],["loc",[null,[5,8],[5,59]]]],
+          ["inline","partial",["components/form-element/errors"],[],["loc",[null,[6,8],[6,52]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     var child1 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 8,
+              "column": 0
+            },
+            "end": {
+              "line": 14,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/horizontal/select.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -3257,77 +3287,62 @@ define('fuelup/templates/components/form-element/horizontal/select', ['exports']
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, get = hooks.get, concat = hooks.concat, attribute = hooks.attribute, inline = hooks.inline;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element0 = dom.childAt(fragment, [1]);
-          var morph0 = dom.createMorphAt(element0,1,1);
-          var morph1 = dom.createMorphAt(element0,3,3);
-          var morph2 = dom.createMorphAt(element0,5,5);
-          var attrMorph0 = dom.createAttrMorph(element0, 'class');
-          attribute(env, attrMorph0, element0, "class", concat(env, [get(env, context, "horizontalInputGridClass"), " ", get(env, context, "horizontalInputOffsetGridClass")]));
-          inline(env, morph0, context, "bs-select", [], {"name": get(env, context, "name"), "content": get(env, context, "choices"), "optionValuePath": get(env, context, "selectValueProperty"), "optionLabelPath": get(env, context, "selectLabelProperty"), "value": get(env, context, "value")});
-          inline(env, morph1, context, "partial", ["components/form-element/feedback-icon"], {});
-          inline(env, morph2, context, "partial", ["components/form-element/errors"], {});
-          return fragment;
-        }
+          var morphs = new Array(4);
+          morphs[0] = dom.createAttrMorph(element0, 'class');
+          morphs[1] = dom.createMorphAt(element0,1,1);
+          morphs[2] = dom.createMorphAt(element0,3,3);
+          morphs[3] = dom.createMorphAt(element0,5,5);
+          return morphs;
+        },
+        statements: [
+          ["attribute","class",["concat",[["get","horizontalInputGridClass",["loc",[null,[9,18],[9,42]]]]," ",["get","horizontalInputOffsetGridClass",["loc",[null,[9,47],[9,77]]]]]]],
+          ["inline","bs-select",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[10,25],[10,29]]]]],[],[]],"content",["subexpr","@mut",[["get","choices",["loc",[null,[10,38],[10,45]]]]],[],[]],"optionValuePath",["subexpr","@mut",[["get","selectValueProperty",["loc",[null,[10,62],[10,81]]]]],[],[]],"optionLabelPath",["subexpr","@mut",[["get","selectLabelProperty",["loc",[null,[10,98],[10,117]]]]],[],[]],"value",["subexpr","@mut",[["get","value",["loc",[null,[10,124],[10,129]]]]],[],[]]],["loc",[null,[10,8],[10,131]]]],
+          ["inline","partial",["components/form-element/feedback-icon"],[],["loc",[null,[11,8],[11,59]]]],
+          ["inline","partial",["components/form-element/errors"],[],["loc",[null,[12,8],[12,52]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 15,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/components/form-element/horizontal/select.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        dom.insertBoundary(fragment, null);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(1);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "if", [get(env, context, "hasLabel")], {}, child0, child1);
-        return fragment;
-      }
+        dom.insertBoundary(fragment, null);
+        return morphs;
+      },
+      statements: [
+        ["block","if",[["get","hasLabel",["loc",[null,[1,6],[1,14]]]]],[],0,1,["loc",[null,[1,0],[14,7]]]]
+      ],
+      locals: [],
+      templates: [child0, child1]
     };
   }()));
 
@@ -3339,12 +3354,25 @@ define('fuelup/templates/components/form-element/horizontal/select2', ['exports'
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 8,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/horizontal/select2.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -3374,52 +3402,51 @@ define('fuelup/templates/components/form-element/horizontal/select2', ['exports'
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, get = hooks.get, concat = hooks.concat, attribute = hooks.attribute, content = hooks.content, inline = hooks.inline;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element1 = dom.childAt(fragment, [1]);
           var element2 = dom.childAt(fragment, [3]);
-          var morph0 = dom.createMorphAt(element1,0,0);
-          var attrMorph0 = dom.createAttrMorph(element1, 'class');
-          var morph1 = dom.createMorphAt(element2,1,1);
-          var morph2 = dom.createMorphAt(element2,3,3);
-          var morph3 = dom.createMorphAt(element2,5,5);
-          var attrMorph1 = dom.createAttrMorph(element2, 'class');
-          attribute(env, attrMorph0, element1, "class", concat(env, ["control-label ", get(env, context, "horizontalLabelGridClass")]));
-          content(env, morph0, context, "label");
-          attribute(env, attrMorph1, element2, "class", concat(env, [get(env, context, "horizontalInputGridClass")]));
-          inline(env, morph1, context, "select-2", [], {"name": get(env, context, "name"), "content": get(env, context, "choices"), "optionValuePath": get(env, context, "choiceValueProperty"), "optionLabelPath": get(env, context, "choiceLabelProperty"), "value": get(env, context, "value"), "searchEnabled": false});
-          inline(env, morph2, context, "partial", ["components/form-element/feedback-icon"], {});
-          inline(env, morph3, context, "partial", ["components/form-element/errors"], {});
-          return fragment;
-        }
+          var morphs = new Array(6);
+          morphs[0] = dom.createAttrMorph(element1, 'class');
+          morphs[1] = dom.createMorphAt(element1,0,0);
+          morphs[2] = dom.createAttrMorph(element2, 'class');
+          morphs[3] = dom.createMorphAt(element2,1,1);
+          morphs[4] = dom.createMorphAt(element2,3,3);
+          morphs[5] = dom.createMorphAt(element2,5,5);
+          return morphs;
+        },
+        statements: [
+          ["attribute","class",["concat",["control-label ",["get","horizontalLabelGridClass",["loc",[null,[2,34],[2,58]]]]]]],
+          ["content","label",["loc",[null,[2,62],[2,71]]]],
+          ["attribute","class",["concat",[["get","horizontalInputGridClass",["loc",[null,[3,18],[3,42]]]]]]],
+          ["inline","select-2",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[4,24],[4,28]]]]],[],[]],"content",["subexpr","@mut",[["get","choices",["loc",[null,[4,37],[4,44]]]]],[],[]],"optionValuePath",["subexpr","@mut",[["get","choiceValueProperty",["loc",[null,[4,61],[4,80]]]]],[],[]],"optionLabelPath",["subexpr","@mut",[["get","choiceLabelProperty",["loc",[null,[4,97],[4,116]]]]],[],[]],"value",["subexpr","@mut",[["get","value",["loc",[null,[4,123],[4,128]]]]],[],[]],"searchEnabled",false],["loc",[null,[4,8],[4,150]]]],
+          ["inline","partial",["components/form-element/feedback-icon"],[],["loc",[null,[5,8],[5,59]]]],
+          ["inline","partial",["components/form-element/errors"],[],["loc",[null,[6,8],[6,52]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     var child1 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 8,
+              "column": 0
+            },
+            "end": {
+              "line": 14,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/horizontal/select2.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -3443,77 +3470,62 @@ define('fuelup/templates/components/form-element/horizontal/select2', ['exports'
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, get = hooks.get, concat = hooks.concat, attribute = hooks.attribute, inline = hooks.inline;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element0 = dom.childAt(fragment, [1]);
-          var morph0 = dom.createMorphAt(element0,1,1);
-          var morph1 = dom.createMorphAt(element0,3,3);
-          var morph2 = dom.createMorphAt(element0,5,5);
-          var attrMorph0 = dom.createAttrMorph(element0, 'class');
-          attribute(env, attrMorph0, element0, "class", concat(env, [get(env, context, "horizontalInputGridClass"), " ", get(env, context, "horizontalInputOffsetGridClass")]));
-          inline(env, morph0, context, "select-2", [], {"name": get(env, context, "name"), "content": get(env, context, "choices"), "optionValuePath": get(env, context, "choiceValueProperty"), "optionLabelPath": get(env, context, "choiceLabelProperty"), "value": get(env, context, "value"), "searchEnabled": false});
-          inline(env, morph1, context, "partial", ["components/form-element/feedback-icon"], {});
-          inline(env, morph2, context, "partial", ["components/form-element/errors"], {});
-          return fragment;
-        }
+          var morphs = new Array(4);
+          morphs[0] = dom.createAttrMorph(element0, 'class');
+          morphs[1] = dom.createMorphAt(element0,1,1);
+          morphs[2] = dom.createMorphAt(element0,3,3);
+          morphs[3] = dom.createMorphAt(element0,5,5);
+          return morphs;
+        },
+        statements: [
+          ["attribute","class",["concat",[["get","horizontalInputGridClass",["loc",[null,[9,18],[9,42]]]]," ",["get","horizontalInputOffsetGridClass",["loc",[null,[9,47],[9,77]]]]]]],
+          ["inline","select-2",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[10,24],[10,28]]]]],[],[]],"content",["subexpr","@mut",[["get","choices",["loc",[null,[10,37],[10,44]]]]],[],[]],"optionValuePath",["subexpr","@mut",[["get","choiceValueProperty",["loc",[null,[10,61],[10,80]]]]],[],[]],"optionLabelPath",["subexpr","@mut",[["get","choiceLabelProperty",["loc",[null,[10,97],[10,116]]]]],[],[]],"value",["subexpr","@mut",[["get","value",["loc",[null,[10,123],[10,128]]]]],[],[]],"searchEnabled",false],["loc",[null,[10,8],[10,150]]]],
+          ["inline","partial",["components/form-element/feedback-icon"],[],["loc",[null,[11,8],[11,59]]]],
+          ["inline","partial",["components/form-element/errors"],[],["loc",[null,[12,8],[12,52]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 15,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/components/form-element/horizontal/select2.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        dom.insertBoundary(fragment, null);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(1);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "if", [get(env, context, "hasLabel")], {}, child0, child1);
-        return fragment;
-      }
+        dom.insertBoundary(fragment, null);
+        return morphs;
+      },
+      statements: [
+        ["block","if",[["get","hasLabel",["loc",[null,[1,6],[1,14]]]]],[],0,1,["loc",[null,[1,0],[14,7]]]]
+      ],
+      locals: [],
+      templates: [child0, child1]
     };
   }()));
 
@@ -3525,12 +3537,25 @@ define('fuelup/templates/components/form-element/horizontal/textarea', ['exports
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 8,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/horizontal/textarea.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -3560,52 +3585,51 @@ define('fuelup/templates/components/form-element/horizontal/textarea', ['exports
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, get = hooks.get, concat = hooks.concat, attribute = hooks.attribute, content = hooks.content, inline = hooks.inline;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element1 = dom.childAt(fragment, [1]);
           var element2 = dom.childAt(fragment, [3]);
-          var morph0 = dom.createMorphAt(element1,0,0);
-          var attrMorph0 = dom.createAttrMorph(element1, 'class');
-          var morph1 = dom.createMorphAt(element2,1,1);
-          var morph2 = dom.createMorphAt(element2,3,3);
-          var morph3 = dom.createMorphAt(element2,5,5);
-          var attrMorph1 = dom.createAttrMorph(element2, 'class');
-          attribute(env, attrMorph0, element1, "class", concat(env, ["control-label ", get(env, context, "horizontalLabelGridClass")]));
-          content(env, morph0, context, "label");
-          attribute(env, attrMorph1, element2, "class", concat(env, [get(env, context, "horizontalInputGridClass")]));
-          inline(env, morph1, context, "bs-textarea", [], {"name": get(env, context, "name"), "value": get(env, context, "value"), "placeholder": get(env, context, "placeholder"), "cols": get(env, context, "cols"), "rows": get(env, context, "rows")});
-          inline(env, morph2, context, "partial", ["components/form-element/feedback-icon"], {});
-          inline(env, morph3, context, "partial", ["components/form-element/errors"], {});
-          return fragment;
-        }
+          var morphs = new Array(6);
+          morphs[0] = dom.createAttrMorph(element1, 'class');
+          morphs[1] = dom.createMorphAt(element1,0,0);
+          morphs[2] = dom.createAttrMorph(element2, 'class');
+          morphs[3] = dom.createMorphAt(element2,1,1);
+          morphs[4] = dom.createMorphAt(element2,3,3);
+          morphs[5] = dom.createMorphAt(element2,5,5);
+          return morphs;
+        },
+        statements: [
+          ["attribute","class",["concat",["control-label ",["get","horizontalLabelGridClass",["loc",[null,[2,34],[2,58]]]]]]],
+          ["content","label",["loc",[null,[2,62],[2,71]]]],
+          ["attribute","class",["concat",[["get","horizontalInputGridClass",["loc",[null,[3,18],[3,42]]]]]]],
+          ["inline","bs-textarea",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[4,27],[4,31]]]]],[],[]],"value",["subexpr","@mut",[["get","value",["loc",[null,[4,38],[4,43]]]]],[],[]],"placeholder",["subexpr","@mut",[["get","placeholder",["loc",[null,[4,56],[4,67]]]]],[],[]],"cols",["subexpr","@mut",[["get","cols",["loc",[null,[4,73],[4,77]]]]],[],[]],"rows",["subexpr","@mut",[["get","rows",["loc",[null,[4,83],[4,87]]]]],[],[]]],["loc",[null,[4,8],[4,89]]]],
+          ["inline","partial",["components/form-element/feedback-icon"],[],["loc",[null,[5,8],[5,59]]]],
+          ["inline","partial",["components/form-element/errors"],[],["loc",[null,[6,8],[6,52]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     var child1 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 8,
+              "column": 0
+            },
+            "end": {
+              "line": 14,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/horizontal/textarea.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -3629,77 +3653,62 @@ define('fuelup/templates/components/form-element/horizontal/textarea', ['exports
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, get = hooks.get, concat = hooks.concat, attribute = hooks.attribute, inline = hooks.inline;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element0 = dom.childAt(fragment, [1]);
-          var morph0 = dom.createMorphAt(element0,1,1);
-          var morph1 = dom.createMorphAt(element0,3,3);
-          var morph2 = dom.createMorphAt(element0,5,5);
-          var attrMorph0 = dom.createAttrMorph(element0, 'class');
-          attribute(env, attrMorph0, element0, "class", concat(env, [get(env, context, "horizontalInputGridClass"), " ", get(env, context, "horizontalInputOffsetGridClass")]));
-          inline(env, morph0, context, "bs-textarea", [], {"name": get(env, context, "name"), "value": get(env, context, "value"), "placeholder": get(env, context, "placeholder"), "cols": get(env, context, "cols"), "rows": get(env, context, "rows")});
-          inline(env, morph1, context, "partial", ["components/form-element/feedback-icon"], {});
-          inline(env, morph2, context, "partial", ["components/form-element/errors"], {});
-          return fragment;
-        }
+          var morphs = new Array(4);
+          morphs[0] = dom.createAttrMorph(element0, 'class');
+          morphs[1] = dom.createMorphAt(element0,1,1);
+          morphs[2] = dom.createMorphAt(element0,3,3);
+          morphs[3] = dom.createMorphAt(element0,5,5);
+          return morphs;
+        },
+        statements: [
+          ["attribute","class",["concat",[["get","horizontalInputGridClass",["loc",[null,[9,18],[9,42]]]]," ",["get","horizontalInputOffsetGridClass",["loc",[null,[9,47],[9,77]]]]]]],
+          ["inline","bs-textarea",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[10,27],[10,31]]]]],[],[]],"value",["subexpr","@mut",[["get","value",["loc",[null,[10,38],[10,43]]]]],[],[]],"placeholder",["subexpr","@mut",[["get","placeholder",["loc",[null,[10,56],[10,67]]]]],[],[]],"cols",["subexpr","@mut",[["get","cols",["loc",[null,[10,73],[10,77]]]]],[],[]],"rows",["subexpr","@mut",[["get","rows",["loc",[null,[10,83],[10,87]]]]],[],[]]],["loc",[null,[10,8],[10,89]]]],
+          ["inline","partial",["components/form-element/feedback-icon"],[],["loc",[null,[11,8],[11,59]]]],
+          ["inline","partial",["components/form-element/errors"],[],["loc",[null,[12,8],[12,52]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 15,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/components/form-element/horizontal/textarea.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        dom.insertBoundary(fragment, null);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(1);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "if", [get(env, context, "hasLabel")], {}, child0, child1);
-        return fragment;
-      }
+        dom.insertBoundary(fragment, null);
+        return morphs;
+      },
+      statements: [
+        ["block","if",[["get","hasLabel",["loc",[null,[1,6],[1,14]]]]],[],0,1,["loc",[null,[1,0],[14,7]]]]
+      ],
+      locals: [],
+      templates: [child0, child1]
     };
   }()));
 
@@ -3710,12 +3719,25 @@ define('fuelup/templates/components/form-element/inline/checkbox', ['exports'], 
 
   exports['default'] = Ember.HTMLBars.template((function() {
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 5,
+            "column": 6
+          }
+        },
+        "moduleName": "fuelup/templates/components/form-element/inline/checkbox.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("div");
         dom.setAttribute(el1,"class","checkbox");
@@ -3738,33 +3760,19 @@ define('fuelup/templates/components/form-element/inline/checkbox', ['exports'], 
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, inline = hooks.inline, content = hooks.content;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var element0 = dom.childAt(fragment, [0, 1]);
-        var morph0 = dom.createMorphAt(element0,1,1);
-        var morph1 = dom.createMorphAt(element0,3,3);
-        inline(env, morph0, context, "input", [], {"name": get(env, context, "name"), "type": "checkbox", "checked": get(env, context, "value")});
-        content(env, morph1, context, "label");
-        return fragment;
-      }
+        var morphs = new Array(2);
+        morphs[0] = dom.createMorphAt(element0,1,1);
+        morphs[1] = dom.createMorphAt(element0,3,3);
+        return morphs;
+      },
+      statements: [
+        ["inline","input",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[3,21],[3,25]]]]],[],[]],"type","checkbox","checked",["subexpr","@mut",[["get","value",["loc",[null,[3,50],[3,55]]]]],[],[]]],["loc",[null,[3,8],[3,57]]]],
+        ["content","label",["loc",[null,[3,58],[3,67]]]]
+      ],
+      locals: [],
+      templates: []
     };
   }()));
 
@@ -3776,12 +3784,25 @@ define('fuelup/templates/components/form-element/inline/default', ['exports'], f
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 3,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/inline/default.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -3794,39 +3815,38 @@ define('fuelup/templates/components/form-element/inline/default', ['exports'], f
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, content = hooks.content;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          var morph0 = dom.createMorphAt(dom.childAt(fragment, [1]),0,0);
-          content(env, morph0, context, "label");
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var morphs = new Array(1);
+          morphs[0] = dom.createMorphAt(dom.childAt(fragment, [1]),0,0);
+          return morphs;
+        },
+        statements: [
+          ["content","label",["loc",[null,[2,33],[2,42]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 6,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/components/form-element/inline/default.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
@@ -3840,35 +3860,21 @@ define('fuelup/templates/components/form-element/inline/default', ['exports'], f
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block, inline = hooks.inline;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        var morph1 = dom.createMorphAt(fragment,1,1,contextualElement);
-        var morph2 = dom.createMorphAt(fragment,3,3,contextualElement);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(3);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
+        morphs[1] = dom.createMorphAt(fragment,1,1,contextualElement);
+        morphs[2] = dom.createMorphAt(fragment,3,3,contextualElement);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "if", [get(env, context, "hasLabel")], {}, child0, null);
-        inline(env, morph1, context, "bs-input", [], {"name": get(env, context, "name"), "type": get(env, context, "controlType"), "value": get(env, context, "value"), "placeholder": get(env, context, "placeholder")});
-        inline(env, morph2, context, "partial", ["components/form-element/feedback-icon"], {});
-        return fragment;
-      }
+        return morphs;
+      },
+      statements: [
+        ["block","if",[["get","hasLabel",["loc",[null,[1,6],[1,14]]]]],[],0,null,["loc",[null,[1,0],[3,7]]]],
+        ["inline","bs-input",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[4,16],[4,20]]]]],[],[]],"type",["subexpr","@mut",[["get","controlType",["loc",[null,[4,26],[4,37]]]]],[],[]],"value",["subexpr","@mut",[["get","value",["loc",[null,[4,44],[4,49]]]]],[],[]],"placeholder",["subexpr","@mut",[["get","placeholder",["loc",[null,[4,62],[4,73]]]]],[],[]]],["loc",[null,[4,0],[4,75]]]],
+        ["inline","partial",["components/form-element/feedback-icon"],[],["loc",[null,[5,0],[5,51]]]]
+      ],
+      locals: [],
+      templates: [child0]
     };
   }()));
 
@@ -3880,12 +3886,25 @@ define('fuelup/templates/components/form-element/inline/select', ['exports'], fu
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 3,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/inline/select.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -3898,39 +3917,38 @@ define('fuelup/templates/components/form-element/inline/select', ['exports'], fu
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, content = hooks.content;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          var morph0 = dom.createMorphAt(dom.childAt(fragment, [1]),0,0);
-          content(env, morph0, context, "label");
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var morphs = new Array(1);
+          morphs[0] = dom.createMorphAt(dom.childAt(fragment, [1]),0,0);
+          return morphs;
+        },
+        statements: [
+          ["content","label",["loc",[null,[2,33],[2,42]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 6,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/components/form-element/inline/select.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
@@ -3944,35 +3962,21 @@ define('fuelup/templates/components/form-element/inline/select', ['exports'], fu
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block, inline = hooks.inline;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        var morph1 = dom.createMorphAt(fragment,1,1,contextualElement);
-        var morph2 = dom.createMorphAt(fragment,3,3,contextualElement);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(3);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
+        morphs[1] = dom.createMorphAt(fragment,1,1,contextualElement);
+        morphs[2] = dom.createMorphAt(fragment,3,3,contextualElement);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "if", [get(env, context, "hasLabel")], {}, child0, null);
-        inline(env, morph1, context, "bs-select", [], {"name": get(env, context, "name"), "content": get(env, context, "choices"), "optionValuePath": get(env, context, "selectValueProperty"), "optionLabelPath": get(env, context, "selectLabelProperty"), "value": get(env, context, "value")});
-        inline(env, morph2, context, "partial", ["components/form-element/feedback-icon"], {});
-        return fragment;
-      }
+        return morphs;
+      },
+      statements: [
+        ["block","if",[["get","hasLabel",["loc",[null,[1,6],[1,14]]]]],[],0,null,["loc",[null,[1,0],[3,7]]]],
+        ["inline","bs-select",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[4,17],[4,21]]]]],[],[]],"content",["subexpr","@mut",[["get","choices",["loc",[null,[4,30],[4,37]]]]],[],[]],"optionValuePath",["subexpr","@mut",[["get","selectValueProperty",["loc",[null,[4,54],[4,73]]]]],[],[]],"optionLabelPath",["subexpr","@mut",[["get","selectLabelProperty",["loc",[null,[4,90],[4,109]]]]],[],[]],"value",["subexpr","@mut",[["get","value",["loc",[null,[4,116],[4,121]]]]],[],[]]],["loc",[null,[4,0],[4,123]]]],
+        ["inline","partial",["components/form-element/feedback-icon"],[],["loc",[null,[5,0],[5,51]]]]
+      ],
+      locals: [],
+      templates: [child0]
     };
   }()));
 
@@ -3984,12 +3988,25 @@ define('fuelup/templates/components/form-element/inline/textarea', ['exports'], 
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 3,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/inline/textarea.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -4002,39 +4019,38 @@ define('fuelup/templates/components/form-element/inline/textarea', ['exports'], 
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, content = hooks.content;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          var morph0 = dom.createMorphAt(dom.childAt(fragment, [1]),0,0);
-          content(env, morph0, context, "label");
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var morphs = new Array(1);
+          morphs[0] = dom.createMorphAt(dom.childAt(fragment, [1]),0,0);
+          return morphs;
+        },
+        statements: [
+          ["content","label",["loc",[null,[2,33],[2,42]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 6,
+            "column": 44
+          }
+        },
+        "moduleName": "fuelup/templates/components/form-element/inline/textarea.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
@@ -4050,38 +4066,24 @@ define('fuelup/templates/components/form-element/inline/textarea', ['exports'], 
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block, inline = hooks.inline;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        var morph1 = dom.createMorphAt(fragment,1,1,contextualElement);
-        var morph2 = dom.createMorphAt(fragment,3,3,contextualElement);
-        var morph3 = dom.createMorphAt(fragment,5,5,contextualElement);
-        dom.insertBoundary(fragment, null);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(4);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
+        morphs[1] = dom.createMorphAt(fragment,1,1,contextualElement);
+        morphs[2] = dom.createMorphAt(fragment,3,3,contextualElement);
+        morphs[3] = dom.createMorphAt(fragment,5,5,contextualElement);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "if", [get(env, context, "hasLabel")], {}, child0, null);
-        inline(env, morph1, context, "bs-textarea", [], {"name": get(env, context, "name"), "value": get(env, context, "value"), "placeholder": get(env, context, "placeholder"), "cols": get(env, context, "cols"), "rows": get(env, context, "rows")});
-        inline(env, morph2, context, "partial", ["components/form-element/feedback-icon"], {});
-        inline(env, morph3, context, "partial", ["components/form-element/errors"], {});
-        return fragment;
-      }
+        dom.insertBoundary(fragment, null);
+        return morphs;
+      },
+      statements: [
+        ["block","if",[["get","hasLabel",["loc",[null,[1,6],[1,14]]]]],[],0,null,["loc",[null,[1,0],[3,7]]]],
+        ["inline","bs-textarea",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[4,19],[4,23]]]]],[],[]],"value",["subexpr","@mut",[["get","value",["loc",[null,[4,30],[4,35]]]]],[],[]],"placeholder",["subexpr","@mut",[["get","placeholder",["loc",[null,[4,48],[4,59]]]]],[],[]],"cols",["subexpr","@mut",[["get","cols",["loc",[null,[4,65],[4,69]]]]],[],[]],"rows",["subexpr","@mut",[["get","rows",["loc",[null,[4,75],[4,79]]]]],[],[]]],["loc",[null,[4,0],[4,81]]]],
+        ["inline","partial",["components/form-element/feedback-icon"],[],["loc",[null,[5,0],[5,51]]]],
+        ["inline","partial",["components/form-element/errors"],[],["loc",[null,[6,0],[6,44]]]]
+      ],
+      locals: [],
+      templates: [child0]
     };
   }()));
 
@@ -4092,12 +4094,25 @@ define('fuelup/templates/components/form-element/vertical/checkbox', ['exports']
 
   exports['default'] = Ember.HTMLBars.template((function() {
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 6,
+            "column": 44
+          }
+        },
+        "moduleName": "fuelup/templates/components/form-element/vertical/checkbox.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("div");
         dom.setAttribute(el1,"class","checkbox");
@@ -4124,36 +4139,22 @@ define('fuelup/templates/components/form-element/vertical/checkbox', ['exports']
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, inline = hooks.inline, content = hooks.content;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var element0 = dom.childAt(fragment, [0, 1]);
-        var morph0 = dom.createMorphAt(element0,1,1);
-        var morph1 = dom.createMorphAt(element0,3,3);
-        var morph2 = dom.createMorphAt(fragment,2,2,contextualElement);
+        var morphs = new Array(3);
+        morphs[0] = dom.createMorphAt(element0,1,1);
+        morphs[1] = dom.createMorphAt(element0,3,3);
+        morphs[2] = dom.createMorphAt(fragment,2,2,contextualElement);
         dom.insertBoundary(fragment, null);
-        inline(env, morph0, context, "input", [], {"name": get(env, context, "name"), "type": "checkbox", "checked": get(env, context, "value")});
-        content(env, morph1, context, "label");
-        inline(env, morph2, context, "partial", ["components/form-element/errors"], {});
-        return fragment;
-      }
+        return morphs;
+      },
+      statements: [
+        ["inline","input",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[3,21],[3,25]]]]],[],[]],"type","checkbox","checked",["subexpr","@mut",[["get","value",["loc",[null,[3,50],[3,55]]]]],[],[]]],["loc",[null,[3,8],[3,57]]]],
+        ["content","label",["loc",[null,[3,58],[3,67]]]],
+        ["inline","partial",["components/form-element/errors"],[],["loc",[null,[6,0],[6,44]]]]
+      ],
+      locals: [],
+      templates: []
     };
   }()));
 
@@ -4165,12 +4166,25 @@ define('fuelup/templates/components/form-element/vertical/default', ['exports'],
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 3,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/vertical/default.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -4183,39 +4197,38 @@ define('fuelup/templates/components/form-element/vertical/default', ['exports'],
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, content = hooks.content;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          var morph0 = dom.createMorphAt(dom.childAt(fragment, [1]),0,0);
-          content(env, morph0, context, "label");
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var morphs = new Array(1);
+          morphs[0] = dom.createMorphAt(dom.childAt(fragment, [1]),0,0);
+          return morphs;
+        },
+        statements: [
+          ["content","label",["loc",[null,[2,33],[2,42]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 6,
+            "column": 44
+          }
+        },
+        "moduleName": "fuelup/templates/components/form-element/vertical/default.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
@@ -4231,38 +4244,24 @@ define('fuelup/templates/components/form-element/vertical/default', ['exports'],
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block, inline = hooks.inline;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        var morph1 = dom.createMorphAt(fragment,1,1,contextualElement);
-        var morph2 = dom.createMorphAt(fragment,3,3,contextualElement);
-        var morph3 = dom.createMorphAt(fragment,5,5,contextualElement);
-        dom.insertBoundary(fragment, null);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(4);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
+        morphs[1] = dom.createMorphAt(fragment,1,1,contextualElement);
+        morphs[2] = dom.createMorphAt(fragment,3,3,contextualElement);
+        morphs[3] = dom.createMorphAt(fragment,5,5,contextualElement);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "if", [get(env, context, "hasLabel")], {}, child0, null);
-        inline(env, morph1, context, "bs-input", [], {"name": get(env, context, "name"), "type": get(env, context, "controlType"), "value": get(env, context, "value"), "placeholder": get(env, context, "placeholder")});
-        inline(env, morph2, context, "partial", ["components/form-element/feedback-icon"], {});
-        inline(env, morph3, context, "partial", ["components/form-element/errors"], {});
-        return fragment;
-      }
+        dom.insertBoundary(fragment, null);
+        return morphs;
+      },
+      statements: [
+        ["block","if",[["get","hasLabel",["loc",[null,[1,6],[1,14]]]]],[],0,null,["loc",[null,[1,0],[3,7]]]],
+        ["inline","bs-input",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[4,16],[4,20]]]]],[],[]],"type",["subexpr","@mut",[["get","controlType",["loc",[null,[4,26],[4,37]]]]],[],[]],"value",["subexpr","@mut",[["get","value",["loc",[null,[4,44],[4,49]]]]],[],[]],"placeholder",["subexpr","@mut",[["get","placeholder",["loc",[null,[4,62],[4,73]]]]],[],[]]],["loc",[null,[4,0],[4,75]]]],
+        ["inline","partial",["components/form-element/feedback-icon"],[],["loc",[null,[5,0],[5,51]]]],
+        ["inline","partial",["components/form-element/errors"],[],["loc",[null,[6,0],[6,44]]]]
+      ],
+      locals: [],
+      templates: [child0]
     };
   }()));
 
@@ -4274,12 +4273,25 @@ define('fuelup/templates/components/form-element/vertical/select', ['exports'], 
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 3,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/vertical/select.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -4292,39 +4304,38 @@ define('fuelup/templates/components/form-element/vertical/select', ['exports'], 
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, content = hooks.content;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          var morph0 = dom.createMorphAt(dom.childAt(fragment, [1]),0,0);
-          content(env, morph0, context, "label");
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var morphs = new Array(1);
+          morphs[0] = dom.createMorphAt(dom.childAt(fragment, [1]),0,0);
+          return morphs;
+        },
+        statements: [
+          ["content","label",["loc",[null,[2,33],[2,42]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 6,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/components/form-element/vertical/select.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
@@ -4338,35 +4349,21 @@ define('fuelup/templates/components/form-element/vertical/select', ['exports'], 
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block, inline = hooks.inline;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        var morph1 = dom.createMorphAt(fragment,1,1,contextualElement);
-        var morph2 = dom.createMorphAt(fragment,3,3,contextualElement);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(3);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
+        morphs[1] = dom.createMorphAt(fragment,1,1,contextualElement);
+        morphs[2] = dom.createMorphAt(fragment,3,3,contextualElement);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "if", [get(env, context, "hasLabel")], {}, child0, null);
-        inline(env, morph1, context, "bs-select", [], {"name": get(env, context, "name"), "content": get(env, context, "choices"), "optionValuePath": get(env, context, "choiceValueProperty"), "optionLabelPath": get(env, context, "choiceLabelProperty"), "value": get(env, context, "value")});
-        inline(env, morph2, context, "partial", ["components/form-element/feedback-icon"], {});
-        return fragment;
-      }
+        return morphs;
+      },
+      statements: [
+        ["block","if",[["get","hasLabel",["loc",[null,[1,6],[1,14]]]]],[],0,null,["loc",[null,[1,0],[3,7]]]],
+        ["inline","bs-select",[],["name",["subexpr","@mut",[["get","name",["loc",[null,[4,17],[4,21]]]]],[],[]],"content",["subexpr","@mut",[["get","choices",["loc",[null,[4,30],[4,37]]]]],[],[]],"optionValuePath",["subexpr","@mut",[["get","choiceValueProperty",["loc",[null,[4,54],[4,73]]]]],[],[]],"optionLabelPath",["subexpr","@mut",[["get","choiceLabelProperty",["loc",[null,[4,90],[4,109]]]]],[],[]],"value",["subexpr","@mut",[["get","value",["loc",[null,[4,116],[4,121]]]]],[],[]]],["loc",[null,[4,0],[4,123]]]],
+        ["inline","partial",["components/form-element/feedback-icon"],[],["loc",[null,[5,0],[5,51]]]]
+      ],
+      locals: [],
+      templates: [child0]
     };
   }()));
 
@@ -4378,12 +4375,25 @@ define('fuelup/templates/components/form-element/vertical/textarea', ['exports']
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 3,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/components/form-element/vertical/textarea.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
@@ -4396,39 +4406,38 @@ define('fuelup/templates/components/form-element/vertical/textarea', ['exports']
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, content = hooks.content;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          var morph0 = dom.createMorphAt(dom.childAt(fragment, [1]),0,0);
-          content(env, morph0, context, "label");
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var morphs = new Array(1);
+          morphs[0] = dom.createMorphAt(dom.childAt(fragment, [1]),0,0);
+          return morphs;
+        },
+        statements: [
+          ["content","label",["loc",[null,[2,33],[2,42]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 6,
+            "column": 44
+          }
+        },
+        "moduleName": "fuelup/templates/components/form-element/vertical/textarea.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
@@ -4444,38 +4453,24 @@ define('fuelup/templates/components/form-element/vertical/textarea', ['exports']
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block, inline = hooks.inline;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
-        var morph0 = dom.createMorphAt(fragment,0,0,contextualElement);
-        var morph1 = dom.createMorphAt(fragment,1,1,contextualElement);
-        var morph2 = dom.createMorphAt(fragment,3,3,contextualElement);
-        var morph3 = dom.createMorphAt(fragment,5,5,contextualElement);
-        dom.insertBoundary(fragment, null);
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(4);
+        morphs[0] = dom.createMorphAt(fragment,0,0,contextualElement);
+        morphs[1] = dom.createMorphAt(fragment,1,1,contextualElement);
+        morphs[2] = dom.createMorphAt(fragment,3,3,contextualElement);
+        morphs[3] = dom.createMorphAt(fragment,5,5,contextualElement);
         dom.insertBoundary(fragment, 0);
-        block(env, morph0, context, "if", [get(env, context, "hasLabel")], {}, child0, null);
-        inline(env, morph1, context, "bs-textarea", [], {"value": get(env, context, "value"), "name": get(env, context, "name"), "placeholder": get(env, context, "placeholder"), "cols": get(env, context, "cols"), "rows": get(env, context, "rows")});
-        inline(env, morph2, context, "partial", ["components/form-element/feedback-icon"], {});
-        inline(env, morph3, context, "partial", ["components/form-element/errors"], {});
-        return fragment;
-      }
+        dom.insertBoundary(fragment, null);
+        return morphs;
+      },
+      statements: [
+        ["block","if",[["get","hasLabel",["loc",[null,[1,6],[1,14]]]]],[],0,null,["loc",[null,[1,0],[3,7]]]],
+        ["inline","bs-textarea",[],["value",["subexpr","@mut",[["get","value",["loc",[null,[4,20],[4,25]]]]],[],[]],"name",["subexpr","@mut",[["get","name",["loc",[null,[4,31],[4,35]]]]],[],[]],"placeholder",["subexpr","@mut",[["get","placeholder",["loc",[null,[4,48],[4,59]]]]],[],[]],"cols",["subexpr","@mut",[["get","cols",["loc",[null,[4,65],[4,69]]]]],[],[]],"rows",["subexpr","@mut",[["get","rows",["loc",[null,[4,75],[4,79]]]]],[],[]]],["loc",[null,[4,0],[4,81]]]],
+        ["inline","partial",["components/form-element/feedback-icon"],[],["loc",[null,[5,0],[5,51]]]],
+        ["inline","partial",["components/form-element/errors"],[],["loc",[null,[6,0],[6,44]]]]
+      ],
+      locals: [],
+      templates: [child0]
     };
   }()));
 
@@ -4487,12 +4482,25 @@ define('fuelup/templates/components/nav-bar', ['exports'], function (exports) {
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 16,
+              "column": 3
+            },
+            "end": {
+              "line": 18,
+              "column": 3
+            }
+          },
+          "moduleName": "fuelup/templates/components/nav-bar.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("				");
           dom.appendChild(el0, el1);
@@ -4505,37 +4513,35 @@ define('fuelup/templates/components/nav-bar', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes() { return []; },
+        statements: [
+
+        ],
+        locals: [],
+        templates: []
       };
     }());
     var child1 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 19,
+              "column": 3
+            },
+            "end": {
+              "line": 21,
+              "column": 3
+            }
+          },
+          "moduleName": "fuelup/templates/components/nav-bar.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("				");
           dom.appendChild(el0, el1);
@@ -4548,37 +4554,35 @@ define('fuelup/templates/components/nav-bar', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes() { return []; },
+        statements: [
+
+        ],
+        locals: [],
+        templates: []
       };
     }());
     var child2 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 22,
+              "column": 3
+            },
+            "end": {
+              "line": 24,
+              "column": 3
+            }
+          },
+          "moduleName": "fuelup/templates/components/nav-bar.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("				");
           dom.appendChild(el0, el1);
@@ -4591,37 +4595,35 @@ define('fuelup/templates/components/nav-bar', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes() { return []; },
+        statements: [
+
+        ],
+        locals: [],
+        templates: []
       };
     }());
     var child3 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 25,
+              "column": 3
+            },
+            "end": {
+              "line": 27,
+              "column": 3
+            }
+          },
+          "moduleName": "fuelup/templates/components/nav-bar.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("				");
           dom.appendChild(el0, el1);
@@ -4634,37 +4636,35 @@ define('fuelup/templates/components/nav-bar', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes() { return []; },
+        statements: [
+
+        ],
+        locals: [],
+        templates: []
       };
     }());
     var child4 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 28,
+              "column": 3
+            },
+            "end": {
+              "line": 30,
+              "column": 3
+            }
+          },
+          "moduleName": "fuelup/templates/components/nav-bar.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("				");
           dom.appendChild(el0, el1);
@@ -4677,37 +4677,35 @@ define('fuelup/templates/components/nav-bar', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes() { return []; },
+        statements: [
+
+        ],
+        locals: [],
+        templates: []
       };
     }());
     var child5 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 31,
+              "column": 3
+            },
+            "end": {
+              "line": 33,
+              "column": 3
+            }
+          },
+          "moduleName": "fuelup/templates/components/nav-bar.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("				");
           dom.appendChild(el0, el1);
@@ -4720,37 +4718,35 @@ define('fuelup/templates/components/nav-bar', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes() { return []; },
+        statements: [
+
+        ],
+        locals: [],
+        templates: []
       };
     }());
     var child6 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 34,
+              "column": 3
+            },
+            "end": {
+              "line": 36,
+              "column": 3
+            }
+          },
+          "moduleName": "fuelup/templates/components/nav-bar.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("				");
           dom.appendChild(el0, el1);
@@ -4763,37 +4759,35 @@ define('fuelup/templates/components/nav-bar', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes() { return []; },
+        statements: [
+
+        ],
+        locals: [],
+        templates: []
       };
     }());
     var child7 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 38,
+              "column": 2
+            },
+            "end": {
+              "line": 42,
+              "column": 2
+            }
+          },
+          "moduleName": "fuelup/templates/components/nav-bar.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("			");
           dom.appendChild(el0, el1);
@@ -4818,42 +4812,42 @@ define('fuelup/templates/components/nav-bar', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, content = hooks.content, element = hooks.element;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element0 = dom.childAt(fragment, [1]);
           var element1 = dom.childAt(element0, [3]);
-          var morph0 = dom.createMorphAt(element0,1,1);
-          content(env, morph0, context, "authControllerChild.username");
-          element(env, element1, context, "action", ["logout"], {});
-          return fragment;
-        }
+          var morphs = new Array(2);
+          morphs[0] = dom.createMorphAt(element0,1,1);
+          morphs[1] = dom.createElementMorph(element1);
+          return morphs;
+        },
+        statements: [
+          ["content","authControllerChild.username",["loc",[null,[39,54],[39,86]]]],
+          ["element","action",["logout"],[],["loc",[null,[40,49],[40,68]]]]
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 46,
+            "column": 6
+          }
+        },
+        "moduleName": "fuelup/templates/components/nav-bar.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("nav");
         dom.setAttribute(el1,"class","navbar navbar-default navbar-fixed-top");
@@ -4953,46 +4947,32 @@ define('fuelup/templates/components/nav-bar', ['exports'], function (exports) {
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, block = hooks.block, get = hooks.get;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var element2 = dom.childAt(fragment, [0, 1, 3]);
         var element3 = dom.childAt(element2, [1]);
-        var morph0 = dom.createMorphAt(element3,1,1);
-        var morph1 = dom.createMorphAt(element3,2,2);
-        var morph2 = dom.createMorphAt(element3,3,3);
-        var morph3 = dom.createMorphAt(element3,4,4);
-        var morph4 = dom.createMorphAt(element3,5,5);
-        var morph5 = dom.createMorphAt(element3,6,6);
-        var morph6 = dom.createMorphAt(element3,7,7);
-        var morph7 = dom.createMorphAt(element2,3,3);
-        block(env, morph0, context, "link-to", ["home"], {"tagName": "li"}, child0, null);
-        block(env, morph1, context, "link-to", ["add-fill-up"], {"tagName": "li"}, child1, null);
-        block(env, morph2, context, "link-to", ["add-vehicle"], {"tagName": "li"}, child2, null);
-        block(env, morph3, context, "link-to", ["compare"], {"tagName": "li"}, child3, null);
-        block(env, morph4, context, "link-to", ["archive"], {"tagName": "li"}, child4, null);
-        block(env, morph5, context, "link-to", ["about"], {"tagName": "li"}, child5, null);
-        block(env, morph6, context, "link-to", ["register"], {"tagName": "li"}, child6, null);
-        block(env, morph7, context, "if", [get(env, context, "authControllerChild.loggedIn")], {}, child7, null);
-        return fragment;
-      }
+        var morphs = new Array(8);
+        morphs[0] = dom.createMorphAt(element3,1,1);
+        morphs[1] = dom.createMorphAt(element3,2,2);
+        morphs[2] = dom.createMorphAt(element3,3,3);
+        morphs[3] = dom.createMorphAt(element3,4,4);
+        morphs[4] = dom.createMorphAt(element3,5,5);
+        morphs[5] = dom.createMorphAt(element3,6,6);
+        morphs[6] = dom.createMorphAt(element3,7,7);
+        morphs[7] = dom.createMorphAt(element2,3,3);
+        return morphs;
+      },
+      statements: [
+        ["block","link-to",["home"],["tagName","li"],0,null,["loc",[null,[16,3],[18,15]]]],
+        ["block","link-to",["add-fill-up"],["tagName","li"],1,null,["loc",[null,[19,3],[21,15]]]],
+        ["block","link-to",["add-vehicle"],["tagName","li"],2,null,["loc",[null,[22,3],[24,15]]]],
+        ["block","link-to",["compare"],["tagName","li"],3,null,["loc",[null,[25,3],[27,15]]]],
+        ["block","link-to",["archive"],["tagName","li"],4,null,["loc",[null,[28,3],[30,15]]]],
+        ["block","link-to",["about"],["tagName","li"],5,null,["loc",[null,[31,3],[33,15]]]],
+        ["block","link-to",["register"],["tagName","li"],6,null,["loc",[null,[34,3],[36,15]]]],
+        ["block","if",[["get","authControllerChild.loggedIn",["loc",[null,[38,8],[38,36]]]]],[],7,null,["loc",[null,[38,2],[42,9]]]]
+      ],
+      locals: [],
+      templates: [child0, child1, child2, child3, child4, child5, child6, child7]
     };
   }()));
 
@@ -5004,12 +4984,25 @@ define('fuelup/templates/home', ['exports'], function (exports) {
   exports['default'] = Ember.HTMLBars.template((function() {
     var child0 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 5,
+              "column": 0
+            },
+            "end": {
+              "line": 7,
+              "column": 2
+            }
+          },
+          "moduleName": "fuelup/templates/home.hbs"
+        },
+        arity: 1,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("		");
           dom.appendChild(el0, el1);
@@ -5033,47 +5026,46 @@ define('fuelup/templates/home', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          var hooks = env.hooks, content = hooks.content;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element0 = dom.childAt(fragment, [1]);
-          var morph0 = dom.createMorphAt(element0,0,0);
-          var morph1 = dom.createMorphAt(element0,2,2);
-          var morph2 = dom.createMorphAt(element0,4,4);
-          var morph3 = dom.createMorphAt(element0,6,6);
-          content(env, morph0, context, "vehicle.year");
-          content(env, morph1, context, "vehicle.make");
-          content(env, morph2, context, "vehicle.model");
-          content(env, morph3, context, "vehicle.trim");
-          return fragment;
-        }
+          var morphs = new Array(4);
+          morphs[0] = dom.createMorphAt(element0,0,0);
+          morphs[1] = dom.createMorphAt(element0,2,2);
+          morphs[2] = dom.createMorphAt(element0,4,4);
+          morphs[3] = dom.createMorphAt(element0,6,6);
+          return morphs;
+        },
+        statements: [
+          ["content","vehicle.year",["loc",[null,[6,6],[6,22]]]],
+          ["content","vehicle.make",["loc",[null,[6,23],[6,39]]]],
+          ["content","vehicle.model",["loc",[null,[6,40],[6,57]]]],
+          ["content","vehicle.trim",["loc",[null,[6,58],[6,74]]]]
+        ],
+        locals: ["vehicle"],
+        templates: []
       };
     }());
     var child1 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 7,
+              "column": 2
+            },
+            "end": {
+              "line": 9,
+              "column": 0
+            }
+          },
+          "moduleName": "fuelup/templates/home.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createTextNode("  		");
           dom.appendChild(el0, el1);
@@ -5085,37 +5077,35 @@ define('fuelup/templates/home', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes() { return []; },
+        statements: [
+
+        ],
+        locals: [],
+        templates: []
       };
     }());
     var child2 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 11,
+              "column": 25
+            },
+            "end": {
+              "line": 11,
+              "column": 105
+            }
+          },
+          "moduleName": "fuelup/templates/home.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createElement("a");
           dom.setAttribute(el1,"href","/add-vehicle");
@@ -5124,37 +5114,35 @@ define('fuelup/templates/home', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes() { return []; },
+        statements: [
+
+        ],
+        locals: [],
+        templates: []
       };
     }());
     var child3 = (function() {
       return {
-        isHTMLBars: true,
-        revision: "Ember@1.12.0",
-        blockParams: 0,
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 11,
+              "column": 128
+            },
+            "end": {
+              "line": 11,
+              "column": 206
+            }
+          },
+          "moduleName": "fuelup/templates/home.hbs"
+        },
+        arity: 0,
         cachedFragment: null,
         hasRendered: false,
-        build: function build(dom) {
+        buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
           var el1 = dom.createElement("a");
           dom.setAttribute(el1,"href","/add-fill-up");
@@ -5163,36 +5151,34 @@ define('fuelup/templates/home', ['exports'], function (exports) {
           dom.appendChild(el0, el1);
           return el0;
         },
-        render: function render(context, env, contextualElement) {
-          var dom = env.dom;
-          dom.detectNamespace(contextualElement);
-          var fragment;
-          if (env.useFragmentCache && dom.canClone) {
-            if (this.cachedFragment === null) {
-              fragment = this.build(dom);
-              if (this.hasRendered) {
-                this.cachedFragment = fragment;
-              } else {
-                this.hasRendered = true;
-              }
-            }
-            if (this.cachedFragment) {
-              fragment = dom.cloneNode(this.cachedFragment, true);
-            }
-          } else {
-            fragment = this.build(dom);
-          }
-          return fragment;
-        }
+        buildRenderNodes: function buildRenderNodes() { return []; },
+        statements: [
+
+        ],
+        locals: [],
+        templates: []
       };
     }());
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 13,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/home.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("h1");
         var el2 = dom.createTextNode("Welcome back!");
@@ -5230,37 +5216,23 @@ define('fuelup/templates/home', ['exports'], function (exports) {
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, block = hooks.block, content = hooks.content;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var element1 = dom.childAt(fragment, [6]);
-        var morph0 = dom.createMorphAt(fragment,4,4,contextualElement);
-        var morph1 = dom.createMorphAt(element1,1,1);
-        var morph2 = dom.createMorphAt(element1,3,3);
-        var morph3 = dom.createMorphAt(fragment,8,8,contextualElement);
-        block(env, morph0, context, "each", [get(env, context, "vehicle")], {"keyword": "vehicle"}, child0, child1);
-        block(env, morph1, context, "link-to", ["add-vehicle"], {"tagName": "li2"}, child2, null);
-        block(env, morph2, context, "link-to", ["add-fill-up"], {"tagName": "li2"}, child3, null);
-        content(env, morph3, context, "outlet");
-        return fragment;
-      }
+        var morphs = new Array(4);
+        morphs[0] = dom.createMorphAt(fragment,4,4,contextualElement);
+        morphs[1] = dom.createMorphAt(element1,1,1);
+        morphs[2] = dom.createMorphAt(element1,3,3);
+        morphs[3] = dom.createMorphAt(fragment,8,8,contextualElement);
+        return morphs;
+      },
+      statements: [
+        ["block","each",[["get","vehicle",["loc",[null,[5,19],[5,26]]]]],[],0,1,["loc",[null,[5,0],[9,9]]]],
+        ["block","link-to",["add-vehicle"],["tagName","li2"],2,null,["loc",[null,[11,25],[11,117]]]],
+        ["block","link-to",["add-fill-up"],["tagName","li2"],3,null,["loc",[null,[11,128],[11,218]]]],
+        ["content","outlet",["loc",[null,[12,0],[12,10]]]]
+      ],
+      locals: [],
+      templates: [child0, child1, child2, child3]
     };
   }()));
 
@@ -5271,12 +5243,25 @@ define('fuelup/templates/register', ['exports'], function (exports) {
 
   exports['default'] = Ember.HTMLBars.template((function() {
     return {
-      isHTMLBars: true,
-      revision: "Ember@1.12.0",
-      blockParams: 0,
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 21,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/register.hbs"
+      },
+      arity: 0,
       cachedFragment: null,
       hasRendered: false,
-      build: function build(dom) {
+      buildFragment: function buildFragment(dom) {
         var el0 = dom.createDocumentFragment();
         var el1 = dom.createElement("h2");
         var el2 = dom.createTextNode("We're glad you're here!");
@@ -5350,39 +5335,26 @@ define('fuelup/templates/register', ['exports'], function (exports) {
         dom.appendChild(el0, el1);
         return el0;
       },
-      render: function render(context, env, contextualElement) {
-        var dom = env.dom;
-        var hooks = env.hooks, get = hooks.get, element = hooks.element, inline = hooks.inline, content = hooks.content;
-        dom.detectNamespace(contextualElement);
-        var fragment;
-        if (env.useFragmentCache && dom.canClone) {
-          if (this.cachedFragment === null) {
-            fragment = this.build(dom);
-            if (this.hasRendered) {
-              this.cachedFragment = fragment;
-            } else {
-              this.hasRendered = true;
-            }
-          }
-          if (this.cachedFragment) {
-            fragment = dom.cloneNode(this.cachedFragment, true);
-          }
-        } else {
-          fragment = this.build(dom);
-        }
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var element0 = dom.childAt(fragment, [4]);
         var element1 = dom.childAt(element0, [1]);
-        var morph0 = dom.createMorphAt(dom.childAt(element1, [1]),1,1);
-        var morph1 = dom.createMorphAt(dom.childAt(element1, [3]),1,1);
-        var morph2 = dom.createMorphAt(dom.childAt(element1, [5]),1,1);
-        var morph3 = dom.createMorphAt(fragment,6,6,contextualElement);
-        element(env, element0, context, "action", ["createUser", get(env, context, "identification")], {"on": "submit"});
-        inline(env, morph0, context, "input", [], {"class": "form-control", "value": get(env, context, "username"), "placeholder": "Enter username"});
-        inline(env, morph1, context, "input", [], {"class": "form-control", "value": get(env, context, "password"), "placeholder": "Enter password", "type": "password"});
-        inline(env, morph2, context, "input", [], {"class": "form-control", "value": get(env, context, "password2"), "placeholder": "Confirm password", "type": "password"});
-        content(env, morph3, context, "outlet");
-        return fragment;
-      }
+        var morphs = new Array(5);
+        morphs[0] = dom.createElementMorph(element0);
+        morphs[1] = dom.createMorphAt(dom.childAt(element1, [1]),1,1);
+        morphs[2] = dom.createMorphAt(dom.childAt(element1, [3]),1,1);
+        morphs[3] = dom.createMorphAt(dom.childAt(element1, [5]),1,1);
+        morphs[4] = dom.createMorphAt(fragment,6,6,contextualElement);
+        return morphs;
+      },
+      statements: [
+        ["element","action",["createUser",["get","identification",["loc",[null,[6,28],[6,42]]]]],["on","submit"],["loc",[null,[6,6],[6,56]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","username",["loc",[null,[9,39],[9,47]]]]],[],[]],"placeholder","Enter username"],["loc",[null,[9,4],[9,78]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","password",["loc",[null,[12,39],[12,47]]]]],[],[]],"placeholder","Enter password","type","password"],["loc",[null,[12,4],[12,94]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","password2",["loc",[null,[15,39],[15,48]]]]],[],[]],"placeholder","Confirm password","type","password"],["loc",[null,[15,4],[15,97]]]],
+        ["content","outlet",["loc",[null,[20,0],[20,10]]]]
+      ],
+      locals: [],
+      templates: []
     };
   }()));
 
@@ -5391,9 +5363,9 @@ define('fuelup/tests/adapters/application.jshint', function () {
 
   'use strict';
 
-  module('JSHint - adapters');
-  test('adapters/application.js should pass jshint', function() { 
-    ok(true, 'adapters/application.js should pass jshint.'); 
+  QUnit.module('JSHint - adapters');
+  QUnit.test('adapters/application.js should pass jshint', function(assert) { 
+    assert.ok(true, 'adapters/application.js should pass jshint.'); 
   });
 
 });
@@ -5401,9 +5373,9 @@ define('fuelup/tests/app.jshint', function () {
 
   'use strict';
 
-  module('JSHint - .');
-  test('app.js should pass jshint', function() { 
-    ok(true, 'app.js should pass jshint.'); 
+  QUnit.module('JSHint - .');
+  QUnit.test('app.js should pass jshint', function(assert) { 
+    assert.ok(true, 'app.js should pass jshint.'); 
   });
 
 });
@@ -5411,9 +5383,9 @@ define('fuelup/tests/components/nav-bar.jshint', function () {
 
   'use strict';
 
-  module('JSHint - components');
-  test('components/nav-bar.js should pass jshint', function() { 
-    ok(true, 'components/nav-bar.js should pass jshint.'); 
+  QUnit.module('JSHint - components');
+  QUnit.test('components/nav-bar.js should pass jshint', function(assert) { 
+    assert.ok(true, 'components/nav-bar.js should pass jshint.'); 
   });
 
 });
@@ -5421,9 +5393,9 @@ define('fuelup/tests/controllers/add-fill-up.jshint', function () {
 
   'use strict';
 
-  module('JSHint - controllers');
-  test('controllers/add-fill-up.js should pass jshint', function() { 
-    ok(true, 'controllers/add-fill-up.js should pass jshint.'); 
+  QUnit.module('JSHint - controllers');
+  QUnit.test('controllers/add-fill-up.js should pass jshint', function(assert) { 
+    assert.ok(true, 'controllers/add-fill-up.js should pass jshint.'); 
   });
 
 });
@@ -5431,9 +5403,9 @@ define('fuelup/tests/controllers/add-vehicle.jshint', function () {
 
   'use strict';
 
-  module('JSHint - controllers');
-  test('controllers/add-vehicle.js should pass jshint', function() { 
-    ok(true, 'controllers/add-vehicle.js should pass jshint.'); 
+  QUnit.module('JSHint - controllers');
+  QUnit.test('controllers/add-vehicle.js should pass jshint', function(assert) { 
+    assert.ok(true, 'controllers/add-vehicle.js should pass jshint.'); 
   });
 
 });
@@ -5441,9 +5413,9 @@ define('fuelup/tests/controllers/application.jshint', function () {
 
   'use strict';
 
-  module('JSHint - controllers');
-  test('controllers/application.js should pass jshint', function() { 
-    ok(true, 'controllers/application.js should pass jshint.'); 
+  QUnit.module('JSHint - controllers');
+  QUnit.test('controllers/application.js should pass jshint', function(assert) { 
+    assert.ok(true, 'controllers/application.js should pass jshint.'); 
   });
 
 });
@@ -5451,9 +5423,9 @@ define('fuelup/tests/controllers/archive.jshint', function () {
 
   'use strict';
 
-  module('JSHint - controllers');
-  test('controllers/archive.js should pass jshint', function() { 
-    ok(true, 'controllers/archive.js should pass jshint.'); 
+  QUnit.module('JSHint - controllers');
+  QUnit.test('controllers/archive.js should pass jshint', function(assert) { 
+    assert.ok(true, 'controllers/archive.js should pass jshint.'); 
   });
 
 });
@@ -5461,9 +5433,9 @@ define('fuelup/tests/controllers/auth.jshint', function () {
 
   'use strict';
 
-  module('JSHint - controllers');
-  test('controllers/auth.js should pass jshint', function() { 
-    ok(true, 'controllers/auth.js should pass jshint.'); 
+  QUnit.module('JSHint - controllers');
+  QUnit.test('controllers/auth.js should pass jshint', function(assert) { 
+    assert.ok(true, 'controllers/auth.js should pass jshint.'); 
   });
 
 });
@@ -5471,9 +5443,9 @@ define('fuelup/tests/controllers/compare.jshint', function () {
 
   'use strict';
 
-  module('JSHint - controllers');
-  test('controllers/compare.js should pass jshint', function() { 
-    ok(true, 'controllers/compare.js should pass jshint.'); 
+  QUnit.module('JSHint - controllers');
+  QUnit.test('controllers/compare.js should pass jshint', function(assert) { 
+    assert.ok(true, 'controllers/compare.js should pass jshint.'); 
   });
 
 });
@@ -5481,9 +5453,9 @@ define('fuelup/tests/controllers/register.jshint', function () {
 
   'use strict';
 
-  module('JSHint - controllers');
-  test('controllers/register.js should pass jshint', function() { 
-    ok(true, 'controllers/register.js should pass jshint.'); 
+  QUnit.module('JSHint - controllers');
+  QUnit.test('controllers/register.js should pass jshint', function(assert) { 
+    assert.ok(true, 'controllers/register.js should pass jshint.'); 
   });
 
 });
@@ -5505,9 +5477,9 @@ define('fuelup/tests/helpers/resolver.jshint', function () {
 
   'use strict';
 
-  module('JSHint - helpers');
-  test('helpers/resolver.js should pass jshint', function() { 
-    ok(true, 'helpers/resolver.js should pass jshint.'); 
+  QUnit.module('JSHint - helpers');
+  QUnit.test('helpers/resolver.js should pass jshint', function(assert) { 
+    assert.ok(true, 'helpers/resolver.js should pass jshint.'); 
   });
 
 });
@@ -5538,9 +5510,9 @@ define('fuelup/tests/helpers/start-app.jshint', function () {
 
   'use strict';
 
-  module('JSHint - helpers');
-  test('helpers/start-app.js should pass jshint', function() { 
-    ok(true, 'helpers/start-app.js should pass jshint.'); 
+  QUnit.module('JSHint - helpers');
+  QUnit.test('helpers/start-app.js should pass jshint', function(assert) { 
+    assert.ok(true, 'helpers/start-app.js should pass jshint.'); 
   });
 
 });
@@ -5548,9 +5520,9 @@ define('fuelup/tests/models/fillup.jshint', function () {
 
   'use strict';
 
-  module('JSHint - models');
-  test('models/fillup.js should pass jshint', function() { 
-    ok(true, 'models/fillup.js should pass jshint.'); 
+  QUnit.module('JSHint - models');
+  QUnit.test('models/fillup.js should pass jshint', function(assert) { 
+    assert.ok(true, 'models/fillup.js should pass jshint.'); 
   });
 
 });
@@ -5558,9 +5530,9 @@ define('fuelup/tests/models/user.jshint', function () {
 
   'use strict';
 
-  module('JSHint - models');
-  test('models/user.js should pass jshint', function() { 
-    ok(true, 'models/user.js should pass jshint.'); 
+  QUnit.module('JSHint - models');
+  QUnit.test('models/user.js should pass jshint', function(assert) { 
+    assert.ok(true, 'models/user.js should pass jshint.'); 
   });
 
 });
@@ -5568,9 +5540,9 @@ define('fuelup/tests/models/vehicle.jshint', function () {
 
   'use strict';
 
-  module('JSHint - models');
-  test('models/vehicle.js should pass jshint', function() { 
-    ok(true, 'models/vehicle.js should pass jshint.'); 
+  QUnit.module('JSHint - models');
+  QUnit.test('models/vehicle.js should pass jshint', function(assert) { 
+    assert.ok(true, 'models/vehicle.js should pass jshint.'); 
   });
 
 });
@@ -5578,9 +5550,9 @@ define('fuelup/tests/router.jshint', function () {
 
   'use strict';
 
-  module('JSHint - .');
-  test('router.js should pass jshint', function() { 
-    ok(true, 'router.js should pass jshint.'); 
+  QUnit.module('JSHint - .');
+  QUnit.test('router.js should pass jshint', function(assert) { 
+    assert.ok(true, 'router.js should pass jshint.'); 
   });
 
 });
@@ -5588,9 +5560,9 @@ define('fuelup/tests/routes/about.jshint', function () {
 
   'use strict';
 
-  module('JSHint - routes');
-  test('routes/about.js should pass jshint', function() { 
-    ok(true, 'routes/about.js should pass jshint.'); 
+  QUnit.module('JSHint - routes');
+  QUnit.test('routes/about.js should pass jshint', function(assert) { 
+    assert.ok(true, 'routes/about.js should pass jshint.'); 
   });
 
 });
@@ -5598,9 +5570,9 @@ define('fuelup/tests/routes/add-fill-up.jshint', function () {
 
   'use strict';
 
-  module('JSHint - routes');
-  test('routes/add-fill-up.js should pass jshint', function() { 
-    ok(true, 'routes/add-fill-up.js should pass jshint.'); 
+  QUnit.module('JSHint - routes');
+  QUnit.test('routes/add-fill-up.js should pass jshint', function(assert) { 
+    assert.ok(true, 'routes/add-fill-up.js should pass jshint.'); 
   });
 
 });
@@ -5608,9 +5580,9 @@ define('fuelup/tests/routes/add-vehicle.jshint', function () {
 
   'use strict';
 
-  module('JSHint - routes');
-  test('routes/add-vehicle.js should pass jshint', function() { 
-    ok(true, 'routes/add-vehicle.js should pass jshint.'); 
+  QUnit.module('JSHint - routes');
+  QUnit.test('routes/add-vehicle.js should pass jshint', function(assert) { 
+    assert.ok(true, 'routes/add-vehicle.js should pass jshint.'); 
   });
 
 });
@@ -5618,9 +5590,9 @@ define('fuelup/tests/routes/application.jshint', function () {
 
   'use strict';
 
-  module('JSHint - routes');
-  test('routes/application.js should pass jshint', function() { 
-    ok(true, 'routes/application.js should pass jshint.'); 
+  QUnit.module('JSHint - routes');
+  QUnit.test('routes/application.js should pass jshint', function(assert) { 
+    assert.ok(true, 'routes/application.js should pass jshint.'); 
   });
 
 });
@@ -5628,9 +5600,9 @@ define('fuelup/tests/routes/archive.jshint', function () {
 
   'use strict';
 
-  module('JSHint - routes');
-  test('routes/archive.js should pass jshint', function() { 
-    ok(true, 'routes/archive.js should pass jshint.'); 
+  QUnit.module('JSHint - routes');
+  QUnit.test('routes/archive.js should pass jshint', function(assert) { 
+    assert.ok(true, 'routes/archive.js should pass jshint.'); 
   });
 
 });
@@ -5638,9 +5610,9 @@ define('fuelup/tests/routes/auth.jshint', function () {
 
   'use strict';
 
-  module('JSHint - routes');
-  test('routes/auth.js should pass jshint', function() { 
-    ok(true, 'routes/auth.js should pass jshint.'); 
+  QUnit.module('JSHint - routes');
+  QUnit.test('routes/auth.js should pass jshint', function(assert) { 
+    assert.ok(true, 'routes/auth.js should pass jshint.'); 
   });
 
 });
@@ -5648,9 +5620,9 @@ define('fuelup/tests/routes/compare.jshint', function () {
 
   'use strict';
 
-  module('JSHint - routes');
-  test('routes/compare.js should pass jshint', function() { 
-    ok(true, 'routes/compare.js should pass jshint.'); 
+  QUnit.module('JSHint - routes');
+  QUnit.test('routes/compare.js should pass jshint', function(assert) { 
+    assert.ok(true, 'routes/compare.js should pass jshint.'); 
   });
 
 });
@@ -5658,9 +5630,9 @@ define('fuelup/tests/routes/home.jshint', function () {
 
   'use strict';
 
-  module('JSHint - routes');
-  test('routes/home.js should pass jshint', function() { 
-    ok(true, 'routes/home.js should pass jshint.'); 
+  QUnit.module('JSHint - routes');
+  QUnit.test('routes/home.js should pass jshint', function(assert) { 
+    assert.ok(true, 'routes/home.js should pass jshint.'); 
   });
 
 });
@@ -5668,9 +5640,9 @@ define('fuelup/tests/routes/register.jshint', function () {
 
   'use strict';
 
-  module('JSHint - routes');
-  test('routes/register.js should pass jshint', function() { 
-    ok(true, 'routes/register.js should pass jshint.'); 
+  QUnit.module('JSHint - routes');
+  QUnit.test('routes/register.js should pass jshint', function(assert) { 
+    assert.ok(true, 'routes/register.js should pass jshint.'); 
   });
 
 });
@@ -5685,9 +5657,9 @@ define('fuelup/tests/test-helper.jshint', function () {
 
   'use strict';
 
-  module('JSHint - .');
-  test('test-helper.js should pass jshint', function() { 
-    ok(true, 'test-helper.js should pass jshint.'); 
+  QUnit.module('JSHint - .');
+  QUnit.test('test-helper.js should pass jshint', function(assert) { 
+    assert.ok(true, 'test-helper.js should pass jshint.'); 
   });
 
 });
@@ -5711,9 +5683,9 @@ define('fuelup/tests/unit/adapters/application-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/adapters');
-  test('unit/adapters/application-test.js should pass jshint', function() { 
-    ok(true, 'unit/adapters/application-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/adapters');
+  QUnit.test('unit/adapters/application-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/adapters/application-test.js should pass jshint.'); 
   });
 
 });
@@ -5744,9 +5716,9 @@ define('fuelup/tests/unit/components/nav-bar-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/components');
-  test('unit/components/nav-bar-test.js should pass jshint', function() { 
-    ok(true, 'unit/components/nav-bar-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/components');
+  QUnit.test('unit/components/nav-bar-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/components/nav-bar-test.js should pass jshint.'); 
   });
 
 });
@@ -5770,9 +5742,9 @@ define('fuelup/tests/unit/controllers/add-fill-up-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/controllers');
-  test('unit/controllers/add-fill-up-test.js should pass jshint', function() { 
-    ok(true, 'unit/controllers/add-fill-up-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/controllers');
+  QUnit.test('unit/controllers/add-fill-up-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/controllers/add-fill-up-test.js should pass jshint.'); 
   });
 
 });
@@ -5796,9 +5768,9 @@ define('fuelup/tests/unit/controllers/add-vehicle-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/controllers');
-  test('unit/controllers/add-vehicle-test.js should pass jshint', function() { 
-    ok(true, 'unit/controllers/add-vehicle-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/controllers');
+  QUnit.test('unit/controllers/add-vehicle-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/controllers/add-vehicle-test.js should pass jshint.'); 
   });
 
 });
@@ -5822,9 +5794,9 @@ define('fuelup/tests/unit/controllers/application-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/controllers');
-  test('unit/controllers/application-test.js should pass jshint', function() { 
-    ok(true, 'unit/controllers/application-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/controllers');
+  QUnit.test('unit/controllers/application-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/controllers/application-test.js should pass jshint.'); 
   });
 
 });
@@ -5848,9 +5820,9 @@ define('fuelup/tests/unit/controllers/archive-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/controllers');
-  test('unit/controllers/archive-test.js should pass jshint', function() { 
-    ok(true, 'unit/controllers/archive-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/controllers');
+  QUnit.test('unit/controllers/archive-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/controllers/archive-test.js should pass jshint.'); 
   });
 
 });
@@ -5874,9 +5846,9 @@ define('fuelup/tests/unit/controllers/auth-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/controllers');
-  test('unit/controllers/auth-test.js should pass jshint', function() { 
-    ok(true, 'unit/controllers/auth-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/controllers');
+  QUnit.test('unit/controllers/auth-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/controllers/auth-test.js should pass jshint.'); 
   });
 
 });
@@ -5900,9 +5872,9 @@ define('fuelup/tests/unit/controllers/compare-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/controllers');
-  test('unit/controllers/compare-test.js should pass jshint', function() { 
-    ok(true, 'unit/controllers/compare-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/controllers');
+  QUnit.test('unit/controllers/compare-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/controllers/compare-test.js should pass jshint.'); 
   });
 
 });
@@ -5926,9 +5898,9 @@ define('fuelup/tests/unit/controllers/register-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/controllers');
-  test('unit/controllers/register-test.js should pass jshint', function() { 
-    ok(true, 'unit/controllers/register-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/controllers');
+  QUnit.test('unit/controllers/register-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/controllers/register-test.js should pass jshint.'); 
   });
 
 });
@@ -5952,9 +5924,9 @@ define('fuelup/tests/unit/models/fillup-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/models');
-  test('unit/models/fillup-test.js should pass jshint', function() { 
-    ok(true, 'unit/models/fillup-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/models');
+  QUnit.test('unit/models/fillup-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/models/fillup-test.js should pass jshint.'); 
   });
 
 });
@@ -5978,9 +5950,9 @@ define('fuelup/tests/unit/models/user-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/models');
-  test('unit/models/user-test.js should pass jshint', function() { 
-    ok(true, 'unit/models/user-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/models');
+  QUnit.test('unit/models/user-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/models/user-test.js should pass jshint.'); 
   });
 
 });
@@ -6004,9 +5976,9 @@ define('fuelup/tests/unit/models/vehicle-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/models');
-  test('unit/models/vehicle-test.js should pass jshint', function() { 
-    ok(true, 'unit/models/vehicle-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/models');
+  QUnit.test('unit/models/vehicle-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/models/vehicle-test.js should pass jshint.'); 
   });
 
 });
@@ -6029,9 +6001,9 @@ define('fuelup/tests/unit/routes/about-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/routes');
-  test('unit/routes/about-test.js should pass jshint', function() { 
-    ok(true, 'unit/routes/about-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/routes');
+  QUnit.test('unit/routes/about-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/routes/about-test.js should pass jshint.'); 
   });
 
 });
@@ -6054,9 +6026,9 @@ define('fuelup/tests/unit/routes/add-fill-up-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/routes');
-  test('unit/routes/add-fill-up-test.js should pass jshint', function() { 
-    ok(true, 'unit/routes/add-fill-up-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/routes');
+  QUnit.test('unit/routes/add-fill-up-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/routes/add-fill-up-test.js should pass jshint.'); 
   });
 
 });
@@ -6079,9 +6051,9 @@ define('fuelup/tests/unit/routes/add-vehicle-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/routes');
-  test('unit/routes/add-vehicle-test.js should pass jshint', function() { 
-    ok(true, 'unit/routes/add-vehicle-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/routes');
+  QUnit.test('unit/routes/add-vehicle-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/routes/add-vehicle-test.js should pass jshint.'); 
   });
 
 });
@@ -6104,9 +6076,9 @@ define('fuelup/tests/unit/routes/application-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/routes');
-  test('unit/routes/application-test.js should pass jshint', function() { 
-    ok(true, 'unit/routes/application-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/routes');
+  QUnit.test('unit/routes/application-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/routes/application-test.js should pass jshint.'); 
   });
 
 });
@@ -6129,9 +6101,9 @@ define('fuelup/tests/unit/routes/archive-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/routes');
-  test('unit/routes/archive-test.js should pass jshint', function() { 
-    ok(true, 'unit/routes/archive-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/routes');
+  QUnit.test('unit/routes/archive-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/routes/archive-test.js should pass jshint.'); 
   });
 
 });
@@ -6154,9 +6126,9 @@ define('fuelup/tests/unit/routes/auth-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/routes');
-  test('unit/routes/auth-test.js should pass jshint', function() { 
-    ok(true, 'unit/routes/auth-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/routes');
+  QUnit.test('unit/routes/auth-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/routes/auth-test.js should pass jshint.'); 
   });
 
 });
@@ -6179,9 +6151,9 @@ define('fuelup/tests/unit/routes/compare-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/routes');
-  test('unit/routes/compare-test.js should pass jshint', function() { 
-    ok(true, 'unit/routes/compare-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/routes');
+  QUnit.test('unit/routes/compare-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/routes/compare-test.js should pass jshint.'); 
   });
 
 });
@@ -6204,9 +6176,9 @@ define('fuelup/tests/unit/routes/home-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/routes');
-  test('unit/routes/home-test.js should pass jshint', function() { 
-    ok(true, 'unit/routes/home-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/routes');
+  QUnit.test('unit/routes/home-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/routes/home-test.js should pass jshint.'); 
   });
 
 });
@@ -6229,9 +6201,9 @@ define('fuelup/tests/unit/routes/register-test.jshint', function () {
 
   'use strict';
 
-  module('JSHint - unit/routes');
-  test('unit/routes/register-test.js should pass jshint', function() { 
-    ok(true, 'unit/routes/register-test.js should pass jshint.'); 
+  QUnit.module('JSHint - unit/routes');
+  QUnit.test('unit/routes/register-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'unit/routes/register-test.js should pass jshint.'); 
   });
 
 });
@@ -6263,7 +6235,7 @@ catch(err) {
 if (runningTests) {
   require("fuelup/tests/test-helper");
 } else {
-  require("fuelup/app")["default"].create({"name":"fuelup","version":"0.0.0.41506d37"});
+  require("fuelup/app")["default"].create({"API_HOST":"http://localhost:8081","name":"fuelup","version":"0.0.0+41506d37","API_NAMESPACE":"api","API_ADD_TRAILING_SLASHES":true});
 }
 
 /* jshint ignore:end */
