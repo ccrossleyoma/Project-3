@@ -15,7 +15,7 @@ from rest_framework import status
 
 def home(request):
   """
-  Send requests to / to the ember.js clientside app  
+  Send requests to / to the ember.js clientside app
   """
   return render_to_response('index.html',
                 {}, RequestContext(request))

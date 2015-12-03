@@ -2,8 +2,8 @@ from django.conf.urls import include, url
 
 #Django Rest Framework
 from rest_framework import routers
-from rest_framework.urlpatterns import format_suffix_patterns
 from fuelup.api import views
+from rest_framework.urlpatterns import format_suffix_patterns
 
 #REST API routes
 router = routers.DefaultRouter()
