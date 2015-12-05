@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib import admin
 from decimal import Decimal
 from datetime import datetime
+from fuelup.api.validators import *
 
 # Create your models here.
 class Vehicle(models.Model):
@@ -10,9 +11,9 @@ class Vehicle(models.Model):
     This is a vehicle entry for user submitted vehicle entries.
     """
     year = models.DecimalField(max_digits=4, decimal_places=0, blank=False)
-    make = models.CharField(max_length=40, blank=False)
-    model = models.CharField(max_length=40, blank=False)
-    trim = models.CharField(max_length=40, blank=False)
+    make = models.CharField(max_length=40, blank=False, validators=[removeJavascriptKeyword])
+    model = models.CharField(max_length=40, blank=False, validators=[removeJavascriptKeyword])
+    trim = models.CharField(max_length=40, blank=False, validators=[removeJavascriptKeyword])
  	# def __str__(self):
  	# 	return str(self.id)+":"+self.name
 
@@ -27,10 +28,10 @@ class Fillup(models.Model):
 	This is a fillup entry for user submitted fillup entries
 	"""
 	date = models.DateField(auto_now_add=True, blank=False)
-	miles = models.DecimalField(max_digits=5, decimal_places=2, blank=False)
-	gallons = models.DecimalField(max_digits=5, decimal_places=2, blank=False)
-	pricePerGallon = models.DecimalField(max_digits=4, decimal_places=3, blank=False)
-	vehicle = models.ForeignKey(Vehicle, null=True)
+	miles = models.DecimalField(max_digits=5, decimal_places=2, blank=False, validators=[removeJavascriptKeyword])
+	gallons = models.DecimalField(max_digits=5, decimal_places=2, blank=False, validators=[removeJavascriptKeyword])
+	pricePerGallon = models.DecimalField(max_digits=4, decimal_places=3, blank=False, validators=[removeJavascriptKeyword])
+	vehicle = models.ForeignKey(Vehicle, null=True, validators=[removeJavascriptKeyword])
 
 	class Meta:
 		verbose_name_plural = "Fillups"
@@ -52,6 +53,11 @@ class User(models.Model):
         verbose_name_plural = "Users"
 
 class UserAdmin(admin.ModelAdmin):
-    #This inner class indicates to the admin interface how to display a post
+    #This inner class indicates to the admin interface how to display a User
     #See the Django documentation for more information
     list_display = ('username', 'vehicles')
+
+class SessionAdmin(admin.ModelAdmin):
+    #This inner class indicates to the admin interface how to display a session
+    #See the Django documentation for more information
+    list_display = ('username', 'userid', 'isauthenticated')

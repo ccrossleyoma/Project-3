@@ -241,14 +241,15 @@ define('fuelup/controllers/add-fill-up', ['exports', 'ember'], function (exports
 										date: fillUpDate,
 										miles: distance,
 										gallons: volume,
-										pricePerGallon: price
+										pricePerGallon: price,
+										vehicle: car
 									});
 
 									newFillUp.save();
 
 									console.log('new fill-up added');
 									alert("Success, new fill-up added!");
-									this.transitionTo('compare');
+									this.transitionToRoute('compare');
 								}
 			}
 		}
@@ -266,36 +267,77 @@ define('fuelup/controllers/add-vehicle', ['exports', 'ember'], function (exports
 				var brand = this.get('make');
 				var modelName = this.get('model');
 				var trimLevel = this.get('trim');
-				/*var uName = this.get('username');*/
 
+				if (checkVehicle(vehicleYear, brand, modelName, trimLevel)) {
+					var car = this.store.createRecord('vehicle', {
+						year: vehicleYear,
+						make: brand,
+						model: modelName,
+						trim: trimLevel
+					});
+
+					car.save();
+
+					console.log('new vehicle added');
+					alert("Success, new vehicle was added!");
+					this.transitionToRoute('home');
+				}
+			},
+
+			checkVehicle: function checkVehicle(vehicleYear, brand, modelName, trimLevel) {
 				//Make sure all fields are filled, otherwise complain to the user
-				if (vehicleYear === undefined || brand === undefined || modelName === undefined || trimLevel === undefined /*|| (uName === undefined)*/) {
-						alert("Please complete all fields!");
-					}
+				if (vehicleYear === undefined || brand === undefined || modelName === undefined || trimLevel === undefined) {
+					alert("Please complete all fields!");
+					return false;
+				}
 
-					//make sure vehicle year is between 1900 and 2016, otherwise complain to the user
-				else if (vehicleYear < 1900 || vehicleYear > 2016) {
-						alert("Please enter a valid year between 1900 and 2016!");
-					}
+				//make sure vehicle year is between 1900 and 2016, otherwise complain to the user
+				if (vehicleYear < 1900 || vehicleYear > 2016) {
+					alert("Please enter a valid year between 1900 and 2016!");
+					return false;
+				}
 
-					//Go ahead and create new record of vehicle
-					else {
-							var car = this.store.createRecord('vehicle', {
-								year: vehicleYear,
-								make: brand,
-								model: modelName,
-								trim: trimLevel
-							});
+				if (brand !== 'Acura' || brand !== 'Alfa Romeo' || brand !== 'AMC' || brand !== 'Aston Martin' || brand !== 'Audi' || brand !== 'Bently' || brand !== 'BMW' || brand !== 'Bugatti' || brand !== 'Buick' || brand !== 'Cadillac' || brand !== 'Chevrolet' || brand !== 'Chrysler' || brand !== 'Citroen' || brand !== 'Dodge' || brand !== 'Ferrari' || brand !== 'Fiat' || brand !== 'Ford' || brand !== 'Geely' || brand !== 'GMC' || brand !== 'Honda' || brand !== 'Hyundai' || brand !== 'Infiniti' || brand !== 'Jaguar' || brand !== 'Jeep' || brand !== 'Kia' || brand !== 'Koenigsegg' || brand !== 'Lamborghini' || brand !== 'Land Rover' || brand !== 'Lexus' || brand !== 'Maserati' || brand !== 'Mazda' || brand !== 'McLaren' || brand !== 'Mercedes-Benz' || brand !== 'Mini' || brand !== 'Mitsubishi' || brand !== 'Nissan' || brand !== 'Pagani' || brand !== 'Peugeot' || brand !== 'Porsche' || brand !== 'Renault' || brand !== 'Rolls Royce' || brand !== 'Saab' || brand !== 'Subaru' || brand !== 'Suzuki' || brand !== 'Tesla' || brand !== 'Toyota' || brand !== 'Volkswagen' || brand !== 'Volvo') {
+					alert("Please enter a valid vehicle make!");
+					return false;
+				}
 
-							car.save();
-
-							console.log('new vehicle added');
-							alert("Success, new vehicle was added!");
-							this.transitionTo('home');
-						}
+				// If everything checks out, return true
+				return true;
 			}
 		}
 	});
+
+	/*			//Make sure all fields are filled, otherwise complain to the user
+				if((vehicleYear === undefined) || (brand === undefined) || (modelName === undefined) || (trimLevel === undefined)) {
+					alert("Please complete all fields!");
+				}
+
+				//make sure vehicle year is between 1900 and 2016, otherwise complain to the user
+				else if((vehicleYear < 1900) || (vehicleYear > 2016)){
+					alert("Please enter a valid year between 1900 and 2016!");
+				}
+
+				else if((brand !== 'Acura') || (brand !== 'Alfa Romeo') || (brand !== 'AMC') || (brand !== 'Aston Martin') || (brand !== 'Audi') || (brand !== 'Bently') || (brand !== 'BMW') || (brand !== 'Bugatti') || (brand !== 'Buick') || (brand !== 'Cadillac') || (brand !== 'Chevrolet') || (brand !== 'Chrysler') || (brand !== 'Citroen') || (brand !== 'Dodge') || (brand !== 'Ferrari') || (brand !== 'Fiat') || (brand !== 'Ford') || (brand !== 'Geely') || (brand !== 'GMC') || (brand !== 'Honda') || (brand !== 'Hyundai') || (brand !== 'Infiniti') || (brand !== 'Jaguar') || (brand !== 'Jeep') || (brand !== 'Kia') || (brand !== 'Koenigsegg') || (brand !== 'Lamborghini') || (brand !== 'Land Rover') || (brand !== 'Lexus') || (brand !== 'Maserati') || (brand !== 'Mazda') || (brand !== 'McLaren') || (brand !== 'Mercedes-Benz') || (brand !== 'Mini') || (brand !== 'Mitsubishi') || (brand !== 'Nissan') || (brand !== 'Pagani') || (brand !== 'Peugeot') || (brand !== 'Porsche') || (brand !== 'Renault') || (brand !== 'Rolls Royce') || (brand !== 'Saab') || (brand !== 'Subaru') || (brand !== 'Suzuki') || (brand !== 'Tesla') || (brand !== 'Toyota') || (brand !== 'Volkswagen') || (brand !== 'Volvo')){
+					alert("Please enter a valid vehicle make!");
+					this.transitionToRoute('add-vehicle');
+				}
+
+				//Go ahead and create new record of vehicle
+				else {
+					var car = this.store.createRecord('vehicle',{
+						year: vehicleYear,
+						make: brand,
+						model: modelName,
+						trim: trimLevel
+					});
+
+					car.save();
+
+					console.log('new vehicle added');
+					alert("Success, new vehicle was added!");
+					this.transitionToRoute('home');
+				}*/
 
 });
 define('fuelup/controllers/application', ['exports', 'ember'], function (exports, Ember) {
@@ -355,38 +397,92 @@ define('fuelup/controllers/array', ['exports', 'ember'], function (exports, Embe
 });
 define('fuelup/controllers/auth', ['exports', 'ember'], function (exports, Ember) {
 
-	'use strict';
+    'use strict';
 
-	exports['default'] = Ember['default'].Controller.extend({
-		username: '',
-		loggedIn: false,
-		errorMsg: '',
-		remember: false,
-		actions: {
-			login: function login() {
-				//Check authentication here
-				console.log('login');
-				var user = this.get('username');
-				if (user !== "Colby") {
-					this.set('errorMsg', 'Login failed!');
-				} else {
-					this.set('loggedIn', true);
-					this.transitionTo('home');
-				}
-			},
-			logout: function logout() {
-				//Log user out of application
-				console.log('logout');
-				var user = this.get('username');
-				if (user === "Colby") {
-					this.set('loggedIn', false);
-					this.transitionTo('auth');
-				} else {
-					this.set('errorMsg', 'Logout failed!');
-				}
-			}
-		}
-	});
+    exports['default'] = Ember['default'].Controller.extend({
+        username: '',
+        loggedIn: false,
+        errorMsg: '',
+        remember: false,
+        actions: {
+            login: function login() {
+                //do stuff to authenticate here
+                var username = this.get('username');
+                var password = this.get('password');
+                var remember = this.get('remember');
+                var data = {
+                    'username': username,
+                    'password': password };
+                var controllerObj = this;
+                Ember['default'].$.post('../api/session/', data, function (response) {
+                    if (response.isauthenticated) {
+                        //success
+                        console.log('Login POST Request to ../api/session/ was successful.');
+                        controllerObj.set('username', response.username);
+                        controllerObj.set('userid', response.userid);
+                        controllerObj.set('loggedIn', true);
+                        controllerObj.transitionToRoute('home');
+                    } else {
+                        //errors
+                        console.log('Login POST Request to ../api/session/ was successful.');
+                        controllerObj.set('errorMsg', response.message);
+                    }
+                });
+            },
+            logout: function logout() {
+                var remember = this.get('remember');
+                var controllerObj = this;
+                Ember['default'].$.ajax({ url: '../api/session/', type: 'DELETE' }).then(function (response) {
+                    console.log('Logout success.');
+                    controllerObj.set('loggedIn', false);
+                    controllerObj.set('errorMsg', '');
+                    controllerObj.set('username', '');
+                    controllerObj.set('userid', '');
+                    if (!remember) {
+                        //save to username and pass to local storage
+
+                    }
+                    controllerObj.transitionToRoute('auth');
+                });
+            }
+        }
+    });
+
+    /*import Ember from 'ember';
+
+    export default Ember.Controller.extend({
+    	username: '',
+    	loggedIn: false,
+    	errorMsg: '',
+    	remember: false,
+    	actions: {
+    		login: function(){
+    			//Check authentication here
+    			console.log('login');
+    			var user = this.get('username');
+    			if(user!=="Colby"){
+    				this.set('errorMsg', 'Login failed!');
+    			}
+    			else{
+    				this.set('loggedIn', true);
+    				this.transitionTo('home');
+    			}
+
+    		},
+    		logout: function(){
+    			//Log user out of application
+    			console.log('logout');
+    			var user = this.get('username');
+    			if (user === "Colby"){
+    				this.set('loggedIn', false);
+    				this.transitionTo('auth');
+    			}
+    			else{
+    				this.set('errorMsg', 'Logout failed!');
+    			}
+    		}
+    	}
+    });*/
 
 });
 define('fuelup/controllers/compare', ['exports', 'ember'], function (exports, Ember) {
@@ -437,7 +533,7 @@ define('fuelup/controllers/register', ['exports', 'ember'], function (exports, E
 
 							console.log('new user registered');
 							alert(name + ", you have been registered!");
-							this.transitionTo('home');
+							this.transitionToRoute('home');
 						}
 			}
 		}
@@ -544,69 +640,42 @@ define('fuelup/initializers/load-bootstrap-config', ['exports', 'fuelup/config/e
 });
 define('fuelup/models/fillup', ['exports', 'ember-data'], function (exports, DS) {
 
-	'use strict';
+  'use strict';
 
-	exports['default'] = DS['default'].Model.extend({
-		date: DS['default'].attr('date'),
-		miles: DS['default'].attr('number'),
-		gallons: DS['default'].attr('number'),
-		pricePerGallon: DS['default'].attr('number'),
-		user: DS['default'].belongsTo('user', { async: true }),
-		vehicle: DS['default'].belongsTo('vehicle', { async: true })
-	}).reopenClass({
-		FIXTURES: [{
-			id: 1,
-			date: '2015-07-06',
-			miles: 315.4,
-			gallons: 10.2,
-			pricePerGallon: 2.459,
-			user: 1,
-			vehicle: 1
-		}]
-	});
+  exports['default'] = DS['default'].Model.extend({
+    date: DS['default'].attr('date'),
+    miles: DS['default'].attr('number'),
+    gallons: DS['default'].attr('number'),
+    pricePerGallon: DS['default'].attr('number'),
+    /*user: DS.belongsTo('user', {async: true}),*/
+    vehicle: DS['default'].belongsTo('vehicle', { async: true })
+  });
 
 });
 define('fuelup/models/user', ['exports', 'ember-data'], function (exports, DS) {
 
-	'use strict';
+  'use strict';
 
-	exports['default'] = DS['default'].Model.extend({
-		username: DS['default'].attr('string'),
-		password: DS['default'].attr('string'),
-		vehicles: DS['default'].hasMany('vehicle'),
-		fillups: DS['default'].hasMany('fillup')
-	}).reopenClass({
-		FIXTURES: [{
-			id: 1,
-			username: 'Colby',
-			vehicles: [1],
-			fillups: [1, 2]
-		}]
-	});
+  exports['default'] = DS['default'].Model.extend({
+    username: DS['default'].attr('string'),
+    password: DS['default'].attr('string'),
+    vehicles: DS['default'].hasMany('vehicle'),
+    fillups: DS['default'].hasMany('fillup')
+  });
 
 });
 define('fuelup/models/vehicle', ['exports', 'ember-data'], function (exports, DS) {
 
-	'use strict';
+  'use strict';
 
-	exports['default'] = DS['default'].Model.extend({
-		year: DS['default'].attr('number'),
-		make: DS['default'].attr('string'),
-		model: DS['default'].attr('string'),
-		trim: DS['default'].attr('string'),
-		user: DS['default'].belongsTo('user', { async: true }),
-		fillups: DS['default'].hasMany('fillup')
-	}).reopenClass({
-		FIXTURES: [{
-			id: 1,
-			year: 2015,
-			make: 'Toyota',
-			model: 'Camry',
-			trim: 'XLE',
-			user: 1,
-			fillups: [1, 2]
-		}]
-	});
+  exports['default'] = DS['default'].Model.extend({
+    year: DS['default'].attr('number'),
+    make: DS['default'].attr('string'),
+    model: DS['default'].attr('string'),
+    trim: DS['default'].attr('string'),
+    user: DS['default'].belongsTo('user', { async: true }),
+    fillups: DS['default'].hasMany('fillup')
+  });
 
 });
 define('fuelup/router', ['exports', 'ember', 'fuelup/config/environment'], function (exports, Ember, config) {
@@ -719,7 +788,7 @@ define('fuelup/routes/archive', ['exports', 'ember'], function (exports, Ember) 
 
 	exports['default'] = Ember['default'].Route.extend({
 		model: function model() {
-			return this.store.find('fillup');
+			return this.store.findAll('fillup');
 		},
 		setupController: function setupController(controller, model) {
 			controller.set('fillup', model);
@@ -762,7 +831,7 @@ define('fuelup/routes/compare', ['exports', 'ember'], function (exports, Ember) 
 
 	exports['default'] = Ember['default'].Route.extend({
 		model: function model() {
-			var allFillups = this.store.all('fillup');
+			var allFillups = this.store.peekAll('fillup');
 			var count = allFillups.get('length');
 			return allFillups.objectAt(count - 1);
 		},
@@ -796,7 +865,7 @@ define('fuelup/routes/home', ['exports', 'ember'], function (exports, Ember) {
 
 	exports['default'] = Ember['default'].Route.extend({
 		model: function model() {
-			return this.store.find('vehicle');
+			return this.store.findAll('vehicle');
 		},
 
 		setupController: function setupController(controller, model) {
@@ -5405,7 +5474,7 @@ define('fuelup/tests/controllers/add-vehicle.jshint', function () {
 
   QUnit.module('JSHint - controllers');
   QUnit.test('controllers/add-vehicle.js should pass jshint', function(assert) { 
-    assert.ok(true, 'controllers/add-vehicle.js should pass jshint.'); 
+    assert.ok(false, 'controllers/add-vehicle.js should pass jshint.\ncontrollers/add-vehicle.js: line 11, col 17, \'checkVehicle\' is not defined.\n\n1 error'); 
   });
 
 });
@@ -5435,7 +5504,7 @@ define('fuelup/tests/controllers/auth.jshint', function () {
 
   QUnit.module('JSHint - controllers');
   QUnit.test('controllers/auth.js should pass jshint', function(assert) { 
-    assert.ok(true, 'controllers/auth.js should pass jshint.'); 
+    assert.ok(false, 'controllers/auth.js should pass jshint.\ncontrollers/auth.js: line 13, col 17, \'remember\' is defined but never used.\ncontrollers/auth.js: line 37, col 22, \'response\' is defined but never used.\n\n2 errors'); 
   });
 
 });

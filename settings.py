@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'fuelup.api',
     'rest_framework',
+    'axes',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -49,6 +50,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'axes.middleware.FailedLoginMiddleware'
 )
 
 TEMPLATES = [
@@ -105,11 +107,12 @@ import fuelup.rest_framework_config
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated'
-    ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'fuelup.rest_framework_config.CsrfExemptSessionAuthentication',
         'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAdminUser'
+        # 'rest_framework.permissions.IsAuthenticated'
     ],
 }
