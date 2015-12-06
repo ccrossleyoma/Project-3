@@ -7,10 +7,9 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 #REST API routes
 router = routers.DefaultRouter()
-#router.register(r'forumposts', views.ForumpostViewSet) #use this for viewset approach
-router.register(r'fillups', views.FillupViewSet)
-router.register(r'vehicles', views.VehicleViewSet)
-router.register(r'users', views.UserViewSet)
+# router.register(r'fillups', views.FillupViewSet)
+# router.register(r'vehicles', views.VehicleViewSet)
+# router.register(r'users', views.UserViewSet)
 
 #REST API
 urlpatterns = [

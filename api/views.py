@@ -1,4 +1,5 @@
 from django.shortcuts import *
+from django.utils.html import escape
 
 # Import models
 from django.db import models
@@ -14,6 +15,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.permissions import *
+from rest_framework import filters
 
 class Session(APIView):
     permission_classes = (AllowAny,)
@@ -36,8 +38,8 @@ class Session(APIView):
 
     def post(self, request, *args, **kwargs):
         # Login
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        username = escape(request.POST.get('username'))
+        password = escape(request.POST.get('password'))
         user = authenticate(username=username, password=password)
         if user is not None:
             if user.is_active:
@@ -61,17 +63,37 @@ class UserList(APIView):
     """
     Create a new user
     """
+    permission_classes = (AllowAny,)
+    def form_response(self, username, password, error=""):
+        data = {
+            'username': username,
+            'password': password
+        }
+        if error:
+            data['message'] = error
+
+        return Response(data)
+
     def get(self, request, format=None):
-        User = User.objects.all() #you could limit this to only the posts for which the user has access
-        serializer = UserSerializer(Vehicle, many=True, context={'request': request})
+        user = User.objects.all() #you could limit this to only the posts for which the user has access
+        serializer = UserSerializer(user, many=True, context={'request': request})
         return Response(serializer.data) #you can customize the response here
     
-    def post(self, request, format=None):
-        serializer = UserSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED) #you could customize the response here
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) #you could customize the error message here
+    def post(self, request, *args, **kwargs):
+    # def post(self, request, format=None):
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = User.objects.filter(username=username)
+        if user.exists():
+            return self.form_response("Username has been taken. Please choose another.")
+        user = User.create_user(username=username, password=password)
+        user.save()
+
+        # serializer = UserSerializer(data=request.data, context={'request': request})
+        # if serializer.is_valid():
+        #     serializer.save()
+        #     return Response(serializer.data, status=status.HTTP_201_CREATED) #you could customize the response here
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) #you could customize the error message here
 
 class UserDetail(APIView):
     """
@@ -106,15 +128,19 @@ class VehicleList(APIView):
     List all vehicles, or create a new vehicle.
     """
     def get(self, request, format=None):
-        Vehicle = Vehicle.objects.filter(user=request.user) #you could limit this to only the posts for which the user has access
-        serializer = VehicleSerializer(Vehicle, many=True, context={'request': request})
+        # Get vehicles only belonging to the user
+        vehicle = Vehicle.objects.filter(user__username=request.user.username)
+        serializer = VehicleSerializer(vehicle, many=True, context={'request': request})
         return Response(serializer.data) #you can customize the response here
     
     def post(self, request, format=None):
+        brand = request.POST.get('make')
         serializer = VehicleSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED) #you could customize the response here
+            if checkModels(brand):
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED) #you could customize the response here
+            return Response(serializer.errors, {"errors": {"make": ["Invalid vehicle make!"]}})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) #you could customize the error message here
 
 class VehicleDetail(APIView):
@@ -123,12 +149,14 @@ class VehicleDetail(APIView):
     """
     def get_object(self, pk):
         try:
-            return Vehicle.objects.get(pk=pk)
+            return Vehicle.objects.filter(id=2)
+            # return Vehicle.objects.get(pk=pk)
         except Vehicle.DoesNotExist:
             raise Http404
 
     def get(self, request, pk, format=None):
-        Vehicle = self.get_object(pk)
+        Vehicle = Vehicle.objects.filter(id=2)
+        # Vehicle = self.get_object(pk)
         serializer = VehicleSerializer(Vehicle, context={'request': request})
         return Response(serializer.data)
 
@@ -151,8 +179,9 @@ class FillupList(APIView):
     List all Fillups, or create a new Fillup.
     """
     def get(self, request, format=None):
-        Fillup = Fillup.objects.all() #you could limit this to only the posts for which the user has access
-        serializer = FillupSerializer(Fillup, many=True, context={'request': request})
+        # Get Fillups belonging only to the user
+        fillup = Fillup.objects.filter(vehicle__user__username=request.user.username)
+        serializer = FillupSerializer(fillup, many=True, context={'request': request})
         return Response(serializer.data) #you can customize the response here
     
     def post(self, request, format=None):
@@ -173,7 +202,8 @@ class FillupDetail(APIView):
             raise Http404
 
     def get(self, request, pk, format=None):
-        Fillup = self.get_object(pk)
+        Fillup = Fillup.objects.filter(id="2")
+        # Fillup = self.get_object(pk)
         serializer = FillupSerializer(Fillup, context={'request': request})
         return Response(serializer.data)
 
@@ -189,27 +219,6 @@ class FillupDetail(APIView):
         Fillup = self.get_object(pk)
         Fillup.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-class FillupViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows for CRUD operations on Fillup objects.
-    """
-    queryset = Fillup.objects.all()
-    serializer_class = FillupSerializer
-
-class VehicleViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows for CRUD operations on Vehicle objects.
-    """
-    queryset = Vehicle.objects.all()
-    serializer_class = VehicleSerializer
-
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed.
-    """
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
 
 class SessionViewSet(viewsets.ModelViewSet):
     """

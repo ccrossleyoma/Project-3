@@ -268,8 +268,48 @@ define('fuelup/controllers/add-vehicle', ['exports', 'ember'], function (exports
 				var modelName = this.get('model');
 				var trimLevel = this.get('trim');
 
-				if (checkVehicle(vehicleYear, brand, modelName, trimLevel)) {
-					var car = this.store.createRecord('vehicle', {
+				//Make sure all fields are filled, otherwise complain to the user
+				if (vehicleYear === undefined || brand === undefined || modelName === undefined || trimLevel === undefined) {
+					alert("Please complete all fields!");
+				}
+
+				//make sure vehicle year is between 1900 and 2016, otherwise complain to the user
+				else if (vehicleYear < 1900 || vehicleYear > 2016) {
+						alert("Please enter a valid year between 1900 and 2016!");
+					}
+
+					/*else if((brand !== 'Acura') || (brand !== 'Alfa Romeo') || (brand !== 'AMC') || (brand !== 'Aston Martin') || (brand !== 'Audi') || (brand !== 'Bently') || (brand !== 'BMW') || (brand !== 'Bugatti') || (brand !== 'Buick') || (brand !== 'Cadillac') || (brand !== 'Chevrolet') || (brand !== 'Chrysler') || (brand !== 'Citroen') || (brand !== 'Dodge') || (brand !== 'Ferrari') || (brand !== 'Fiat') || (brand !== 'Ford') || (brand !== 'Geely') || (brand !== 'GMC') || (brand !== 'Honda') || (brand !== 'Hyundai') || (brand !== 'Infiniti') || (brand !== 'Jaguar') || (brand !== 'Jeep') || (brand !== 'Kia') || (brand !== 'Koenigsegg') || (brand !== 'Lamborghini') || (brand !== 'Land Rover') || (brand !== 'Lexus') || (brand !== 'Maserati') || (brand !== 'Mazda') || (brand !== 'McLaren') || (brand !== 'Mercedes-Benz') || (brand !== 'Mini') || (brand !== 'Mitsubishi') || (brand !== 'Nissan') || (brand !== 'Pagani') || (brand !== 'Peugeot') || (brand !== 'Porsche') || (brand !== 'Renault') || (brand !== 'Rolls Royce') || (brand !== 'Saab') || (brand !== 'Subaru') || (brand !== 'Suzuki') || (brand !== 'Tesla') || (brand !== 'Toyota') || (brand !== 'Volkswagen') || (brand !== 'Volvo')){
+	    	alert("Please enter a valid vehicle make!");
+	    	this.transitionToRoute('add-vehicle');
+	    }*/
+
+					//Go ahead and create new record of vehicle
+					else {
+							var car = this.store.createRecord('vehicle', {
+								year: vehicleYear,
+								make: brand,
+								model: modelName,
+								trim: trimLevel
+							});
+
+							car.save();
+
+							console.log('new vehicle added');
+							alert("Success, new vehicle was added!");
+							this.transitionToRoute('home');
+						}
+			}
+		}
+	});
+
+	/*addCar() {
+				var vehicleYear = this.get('year');
+				var brand = this.get('make');
+				var modelName = this.get('model');
+				var trimLevel = this.get('trim');
+
+				if (checkVehicle){
+					var car = this.store.createRecord('vehicle',{
 						year: vehicleYear,
 						make: brand,
 						model: modelName,
@@ -284,60 +324,33 @@ define('fuelup/controllers/add-vehicle', ['exports', 'ember'], function (exports
 				}
 			},
 
-			checkVehicle: function checkVehicle(vehicleYear, brand, modelName, trimLevel) {
+			checkVehicle: function(){
+				var vehicleYear = this.get('year');
+				var brand = this.get('make');
+				var modelName = this.get('model');
+				var trimLevel = this.get('trim');
+
 				//Make sure all fields are filled, otherwise complain to the user
-				if (vehicleYear === undefined || brand === undefined || modelName === undefined || trimLevel === undefined) {
+				if((vehicleYear === undefined) || (brand === undefined) || (modelName === undefined) || (trimLevel === undefined)) {
 					alert("Please complete all fields!");
 					return false;
 				}
 
 				//make sure vehicle year is between 1900 and 2016, otherwise complain to the user
-				if (vehicleYear < 1900 || vehicleYear > 2016) {
+				if((vehicleYear < 1900) || (vehicleYear > 2016)){
 					alert("Please enter a valid year between 1900 and 2016!");
 					return false;
 				}
 
-				if (brand !== 'Acura' || brand !== 'Alfa Romeo' || brand !== 'AMC' || brand !== 'Aston Martin' || brand !== 'Audi' || brand !== 'Bently' || brand !== 'BMW' || brand !== 'Bugatti' || brand !== 'Buick' || brand !== 'Cadillac' || brand !== 'Chevrolet' || brand !== 'Chrysler' || brand !== 'Citroen' || brand !== 'Dodge' || brand !== 'Ferrari' || brand !== 'Fiat' || brand !== 'Ford' || brand !== 'Geely' || brand !== 'GMC' || brand !== 'Honda' || brand !== 'Hyundai' || brand !== 'Infiniti' || brand !== 'Jaguar' || brand !== 'Jeep' || brand !== 'Kia' || brand !== 'Koenigsegg' || brand !== 'Lamborghini' || brand !== 'Land Rover' || brand !== 'Lexus' || brand !== 'Maserati' || brand !== 'Mazda' || brand !== 'McLaren' || brand !== 'Mercedes-Benz' || brand !== 'Mini' || brand !== 'Mitsubishi' || brand !== 'Nissan' || brand !== 'Pagani' || brand !== 'Peugeot' || brand !== 'Porsche' || brand !== 'Renault' || brand !== 'Rolls Royce' || brand !== 'Saab' || brand !== 'Subaru' || brand !== 'Suzuki' || brand !== 'Tesla' || brand !== 'Toyota' || brand !== 'Volkswagen' || brand !== 'Volvo') {
+				if((brand !== 'Acura') || (brand !== 'Alfa Romeo') || (brand !== 'AMC') || (brand !== 'Aston Martin') || (brand !== 'Audi') || (brand !== 'Bently') || (brand !== 'BMW') || (brand !== 'Bugatti') || (brand !== 'Buick') || (brand !== 'Cadillac') || (brand !== 'Chevrolet') || (brand !== 'Chrysler') || (brand !== 'Citroen') || (brand !== 'Dodge') || (brand !== 'Ferrari') || (brand !== 'Fiat') || (brand !== 'Ford') || (brand !== 'Geely') || (brand !== 'GMC') || (brand !== 'Honda') || (brand !== 'Hyundai') || (brand !== 'Infiniti') || (brand !== 'Jaguar') || (brand !== 'Jeep') || (brand !== 'Kia') || (brand !== 'Koenigsegg') || (brand !== 'Lamborghini') || (brand !== 'Land Rover') || (brand !== 'Lexus') || (brand !== 'Maserati') || (brand !== 'Mazda') || (brand !== 'McLaren') || (brand !== 'Mercedes-Benz') || (brand !== 'Mini') || (brand !== 'Mitsubishi') || (brand !== 'Nissan') || (brand !== 'Pagani') || (brand !== 'Peugeot') || (brand !== 'Porsche') || (brand !== 'Renault') || (brand !== 'Rolls Royce') || (brand !== 'Saab') || (brand !== 'Subaru') || (brand !== 'Suzuki') || (brand !== 'Tesla') || (brand !== 'Toyota') || (brand !== 'Volkswagen') || (brand !== 'Volvo')){
 					alert("Please enter a valid vehicle make!");
 					return false;
 				}
 
 				// If everything checks out, return true
 				return true;
-			}
-		}
-	});
-
-	/*			//Make sure all fields are filled, otherwise complain to the user
-				if((vehicleYear === undefined) || (brand === undefined) || (modelName === undefined) || (trimLevel === undefined)) {
-					alert("Please complete all fields!");
-				}
-
-				//make sure vehicle year is between 1900 and 2016, otherwise complain to the user
-				else if((vehicleYear < 1900) || (vehicleYear > 2016)){
-					alert("Please enter a valid year between 1900 and 2016!");
-				}
-
-				else if((brand !== 'Acura') || (brand !== 'Alfa Romeo') || (brand !== 'AMC') || (brand !== 'Aston Martin') || (brand !== 'Audi') || (brand !== 'Bently') || (brand !== 'BMW') || (brand !== 'Bugatti') || (brand !== 'Buick') || (brand !== 'Cadillac') || (brand !== 'Chevrolet') || (brand !== 'Chrysler') || (brand !== 'Citroen') || (brand !== 'Dodge') || (brand !== 'Ferrari') || (brand !== 'Fiat') || (brand !== 'Ford') || (brand !== 'Geely') || (brand !== 'GMC') || (brand !== 'Honda') || (brand !== 'Hyundai') || (brand !== 'Infiniti') || (brand !== 'Jaguar') || (brand !== 'Jeep') || (brand !== 'Kia') || (brand !== 'Koenigsegg') || (brand !== 'Lamborghini') || (brand !== 'Land Rover') || (brand !== 'Lexus') || (brand !== 'Maserati') || (brand !== 'Mazda') || (brand !== 'McLaren') || (brand !== 'Mercedes-Benz') || (brand !== 'Mini') || (brand !== 'Mitsubishi') || (brand !== 'Nissan') || (brand !== 'Pagani') || (brand !== 'Peugeot') || (brand !== 'Porsche') || (brand !== 'Renault') || (brand !== 'Rolls Royce') || (brand !== 'Saab') || (brand !== 'Subaru') || (brand !== 'Suzuki') || (brand !== 'Tesla') || (brand !== 'Toyota') || (brand !== 'Volkswagen') || (brand !== 'Volvo')){
-					alert("Please enter a valid vehicle make!");
-					this.transitionToRoute('add-vehicle');
-				}
-
-				//Go ahead and create new record of vehicle
-				else {
-					var car = this.store.createRecord('vehicle',{
-						year: vehicleYear,
-						make: brand,
-						model: modelName,
-						trim: trimLevel
-					});
-
-					car.save();
-
-					console.log('new vehicle added');
-					alert("Success, new vehicle was added!");
-					this.transitionToRoute('home');
-				}*/
+			},
+		}*/
 
 });
 define('fuelup/controllers/application', ['exports', 'ember'], function (exports, Ember) {
@@ -505,7 +518,6 @@ define('fuelup/controllers/register', ['exports', 'ember'], function (exports, E
 
 	exports['default'] = Ember['default'].Controller.extend({
 		actions: {
-			checkUser: function checkUser() {},
 
 			createUser: function createUser() {
 				var uName = this.get('username');
@@ -524,15 +536,15 @@ define('fuelup/controllers/register', ['exports', 'ember'], function (exports, E
 
 					//Go ahead and create new user account
 					else {
-							var newUser = this.store.createRecord('user', {
+							var user = this.store.createRecord('user', {
 								username: uName,
 								password: pass
 							});
 
-							newUser.save();
+							user.save();
 
 							console.log('new user registered');
-							alert(name + ", you have been registered!");
+							alert(uName + ", you have been registered!");
 							this.transitionToRoute('home');
 						}
 			}
@@ -766,9 +778,17 @@ define('fuelup/routes/application', ['exports', 'ember'], function (exports, Emb
 							t.transitionTo('auth');
 						}
 			} else if (previoustrans) {
-				console.log('Redirecting back to original request: /' + previoustrans.targetName);
-				t.set('currentTransition', null);
-				previoustrans.retry();
+				if (transition.targetname === 'register') {
+					t.set('currentTransition', transition);
+					transition.abort();
+					console.log('User is authenicated and is requesting registration page, redirecting');
+					t.transitionTo('home');
+					/*transitionToRoute('about');*/
+				} else {
+						console.log('Redirecting back to original request: /' + previoustrans.targetName);
+						t.set('currentTransition', null);
+						previoustrans.retry();
+					}
 			}
 		},
 		setupController: function setupController(controller) {
@@ -1106,6 +1126,55 @@ define('fuelup/templates/add-vehicle', ['exports'], function (exports) {
   'use strict';
 
   exports['default'] = Ember.HTMLBars.template((function() {
+    var child0 = (function() {
+      return {
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 9,
+              "column": 4
+            },
+            "end": {
+              "line": 13,
+              "column": 4
+            }
+          },
+          "moduleName": "fuelup/templates/add-vehicle.hbs"
+        },
+        arity: 1,
+        cachedFragment: null,
+        hasRendered: false,
+        buildFragment: function buildFragment(dom) {
+          var el0 = dom.createDocumentFragment();
+          var el1 = dom.createTextNode("				");
+          dom.appendChild(el0, el1);
+          var el1 = dom.createElement("div");
+          dom.setAttribute(el1,"class","error");
+          var el2 = dom.createTextNode("\n				");
+          dom.appendChild(el1, el2);
+          var el2 = dom.createComment("");
+          dom.appendChild(el1, el2);
+          var el2 = dom.createTextNode("\n				");
+          dom.appendChild(el1, el2);
+          dom.appendChild(el0, el1);
+          var el1 = dom.createTextNode("\n");
+          dom.appendChild(el0, el1);
+          return el0;
+        },
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var morphs = new Array(1);
+          morphs[0] = dom.createMorphAt(dom.childAt(fragment, [1]),1,1);
+          return morphs;
+        },
+        statements: [
+          ["content","error.message",["loc",[null,[11,4],[11,21]]]]
+        ],
+        locals: ["error"],
+        templates: []
+      };
+    }());
     return {
       meta: {
         "revision": "Ember@1.13.7",
@@ -1116,7 +1185,7 @@ define('fuelup/templates/add-vehicle', ['exports'], function (exports) {
             "column": 0
           },
           "end": {
-            "line": 19,
+            "line": 24,
             "column": 0
           }
         },
@@ -1159,7 +1228,11 @@ define('fuelup/templates/add-vehicle', ['exports'], function (exports) {
         dom.appendChild(el2, el3);
         var el3 = dom.createComment("");
         dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n			");
+        var el3 = dom.createTextNode("\n");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createComment("");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("			");
         dom.appendChild(el2, el3);
         dom.appendChild(el1, el2);
         var el2 = dom.createTextNode("\n			");
@@ -1205,25 +1278,28 @@ define('fuelup/templates/add-vehicle', ['exports'], function (exports) {
       },
       buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var element0 = dom.childAt(fragment, [4]);
-        var morphs = new Array(6);
+        var element1 = dom.childAt(element0, [3]);
+        var morphs = new Array(7);
         morphs[0] = dom.createElementMorph(element0);
         morphs[1] = dom.createMorphAt(dom.childAt(element0, [1]),1,1);
-        morphs[2] = dom.createMorphAt(dom.childAt(element0, [3]),1,1);
-        morphs[3] = dom.createMorphAt(dom.childAt(element0, [5]),1,1);
-        morphs[4] = dom.createMorphAt(dom.childAt(element0, [7]),1,1);
-        morphs[5] = dom.createMorphAt(fragment,6,6,contextualElement);
+        morphs[2] = dom.createMorphAt(element1,1,1);
+        morphs[3] = dom.createMorphAt(element1,3,3);
+        morphs[4] = dom.createMorphAt(dom.childAt(element0, [5]),1,1);
+        morphs[5] = dom.createMorphAt(dom.childAt(element0, [7]),1,1);
+        morphs[6] = dom.createMorphAt(fragment,6,6,contextualElement);
         return morphs;
       },
       statements: [
         ["element","action",["addCar",["get","identification",["loc",[null,[3,24],[3,38]]]]],["on","submit"],["loc",[null,[3,6],[3,52]]]],
         ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","year",["loc",[null,[5,39],[5,43]]]]],[],[]],"placeholder","Year","type","number","min","1900","max","2016"],["loc",[null,[5,4],[5,100]]]],
         ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","make",["loc",[null,[8,39],[8,43]]]]],[],[]],"placeholder","Make"],["loc",[null,[8,4],[8,65]]]],
-        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","model",["loc",[null,[11,39],[11,44]]]]],[],[]],"placeholder","Model"],["loc",[null,[11,4],[11,67]]]],
-        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","trim",["loc",[null,[14,39],[14,43]]]]],[],[]],"placeholder","Trim"],["loc",[null,[14,4],[14,65]]]],
-        ["content","outlet",["loc",[null,[18,0],[18,10]]]]
+        ["block","each",[["get","model.errors.make",["loc",[null,[9,12],[9,29]]]]],[],0,null,["loc",[null,[9,4],[13,13]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","model",["loc",[null,[16,39],[16,44]]]]],[],[]],"placeholder","Model"],["loc",[null,[16,4],[16,67]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","trim",["loc",[null,[19,39],[19,43]]]]],[],[]],"placeholder","Trim"],["loc",[null,[19,4],[19,65]]]],
+        ["content","outlet",["loc",[null,[23,0],[23,10]]]]
       ],
       locals: [],
-      templates: []
+      templates: [child0]
     };
   }()));
 
@@ -5474,7 +5550,7 @@ define('fuelup/tests/controllers/add-vehicle.jshint', function () {
 
   QUnit.module('JSHint - controllers');
   QUnit.test('controllers/add-vehicle.js should pass jshint', function(assert) { 
-    assert.ok(false, 'controllers/add-vehicle.js should pass jshint.\ncontrollers/add-vehicle.js: line 11, col 17, \'checkVehicle\' is not defined.\n\n1 error'); 
+    assert.ok(true, 'controllers/add-vehicle.js should pass jshint.'); 
   });
 
 });
