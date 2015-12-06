@@ -34,17 +34,41 @@ def removeJavascriptKeyword(value):
         raise ValidationError(('String contains javascript'), code='invalid')
     if "<A HREF=" in value:
         raise ValidationError(('String contains javascript'), code='invalid')
-        
-        
 
-# def (value):
-# 	if "script" in value
-# 		return
-# 	else
-# 		retu
+# Check to see if vehicle year is 1900-2016, the supported vehicle model years
+def checkYear(value):
+	if (value >= 1900) and (value <= 2016):
+		return True
+	return False
 
+# Check to see if model is in list of known models, return true if so
 def checkModels(value):
-	brands = ['Acura', 'BMW', 'Volvo']
+	brands = ['Acura', 'Alfa-Romeo', 'Aston Martin', 'Bentley', 'BMW', 'Bugatti', 'Buick', 'Cadillac', 
+	'Chevrolet', 'Chrysler', 'Citroen', 'Dodge', 'Ferrari', 'Fiat', 'Ford', 'Geely', 'GMC', 'Honda',
+	'Hyundai', 'Infiniti', 'Jaguar', 'Jeep', 'Kia', 'Koenigsegg', 'Lamborghini', 'Land Rover', 'Lexus',
+	'Maserati', 'Mazda', 'McLaren', 'Mercedes-Benz', 'Mini', 'Mitsubishi', 'Nissan', 'Pagani', 'Peugeot',
+	'Porsche', 'Renault', 'Rolls Royce', 'Saab', 'Subaru', 'Suzuki', 'Tata', 'Tesla', 'Toyota', 'Volkswagen',
+	'Volvo']
+
 	if any(x in value for x in brands):
 		return True
 	return False
+
+# Check to see if miles/distance traveled is above 0
+def checkDistance(value):
+	if (value > 0):
+		return True
+	return False
+
+# Check to see if volume is above 0
+def checkVolume(value):
+	if (value > 0):
+		return True
+	return False
+
+# Check to see if price is above 0
+def checkPrice(value):
+	if (value > 0):
+		return True
+	return False
+

@@ -133,14 +133,17 @@ class VehicleList(APIView):
         serializer = VehicleSerializer(vehicle, many=True, context={'request': request})
         return Response(serializer.data) #you can customize the response here
     
-    def post(self, request, format=None):
-        brand = request.POST.get('make')
+    def post(self, request, format=None, *args, **kwargs):
+        modelYear = escape(request.POST.get('year'))
+        brand = escape(request.POST.get('make'))
         serializer = VehicleSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            if checkModels(brand):
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED) #you could customize the response here
-            return Response(serializer.errors, {"errors": {"make": ["Invalid vehicle make!"]}})
+            if checkYear(modelYear):
+                if checkModels(brand):
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED) #you could customize the response here
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) #{"errors": {"make": ["Invalid vehicle make!"],}})
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) #{"errors": { "year": ["Vehicle year must be 1900-2016!"],}})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) #you could customize the error message here
 
 class VehicleDetail(APIView):
