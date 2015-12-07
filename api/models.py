@@ -56,8 +56,3 @@ class UserAdmin(admin.ModelAdmin):
     #This inner class indicates to the admin interface how to display a User
     #See the Django documentation for more information
     list_display = ('username', 'vehicles')
-
-class SessionAdmin(admin.ModelAdmin):
-    #This inner class indicates to the admin interface how to display a session
-    #See the Django documentation for more information
-    list_display = ('username', 'userid', 'isauthenticated')
