@@ -281,7 +281,7 @@ define('fuelup/controllers/add-vehicle', ['exports', 'ember'], function (exports
 					/*else if((brand !== 'Acura') || (brand !== 'Alfa Romeo') || (brand !== 'AMC') || (brand !== 'Aston Martin') || (brand !== 'Audi') || (brand !== 'Bently') || (brand !== 'BMW') || (brand !== 'Bugatti') || (brand !== 'Buick') || (brand !== 'Cadillac') || (brand !== 'Chevrolet') || (brand !== 'Chrysler') || (brand !== 'Citroen') || (brand !== 'Dodge') || (brand !== 'Ferrari') || (brand !== 'Fiat') || (brand !== 'Ford') || (brand !== 'Geely') || (brand !== 'GMC') || (brand !== 'Honda') || (brand !== 'Hyundai') || (brand !== 'Infiniti') || (brand !== 'Jaguar') || (brand !== 'Jeep') || (brand !== 'Kia') || (brand !== 'Koenigsegg') || (brand !== 'Lamborghini') || (brand !== 'Land Rover') || (brand !== 'Lexus') || (brand !== 'Maserati') || (brand !== 'Mazda') || (brand !== 'McLaren') || (brand !== 'Mercedes-Benz') || (brand !== 'Mini') || (brand !== 'Mitsubishi') || (brand !== 'Nissan') || (brand !== 'Pagani') || (brand !== 'Peugeot') || (brand !== 'Porsche') || (brand !== 'Renault') || (brand !== 'Rolls Royce') || (brand !== 'Saab') || (brand !== 'Subaru') || (brand !== 'Suzuki') || (brand !== 'Tesla') || (brand !== 'Toyota') || (brand !== 'Volkswagen') || (brand !== 'Volvo')){
 	    	alert("Please enter a valid vehicle make!");
 	    	this.transitionToRoute('add-vehicle');
-	    }*/
+	    */
 
 					//Go ahead and create new record of vehicle
 					else {
@@ -6380,7 +6380,7 @@ catch(err) {
 if (runningTests) {
   require("fuelup/tests/test-helper");
 } else {
-  require("fuelup/app")["default"].create({"API_HOST":"http://localhost:8081","name":"fuelup","version":"0.0.0+41506d37","API_NAMESPACE":"api","API_ADD_TRAILING_SLASHES":true});
+  require("fuelup/app")["default"].create({"API_HOST":"http://localhost:8081","name":"fuelup","version":"0.0.0+a2a99c8d","API_NAMESPACE":"api","API_ADD_TRAILING_SLASHES":true});
 }
 
 /* jshint ignore:end */

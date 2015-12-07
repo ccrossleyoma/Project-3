@@ -50,36 +50,36 @@ table#t01 th {
 }
 
 @media (max-width: 1125px) {
-    .navbar-header {
+    .nav-bar-header {
         float: none;
     }
-    .navbar-toggle {
+    .nav-bar-toggle {
         display: block;
     }
-    .navbar-collapse {
+    .nav-bar-collapse {
         border-top: 1px solid transparent;
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
     }
-    .navbar-collapse.collapse {
+    .nav-bar-collapse.collapse {
         display: none!important;
     }
-    .navbar-nav {
+    .nav-bar-nav {
         float: none!important;
         margin: 7.5px -15px;
     }
-    .navbar-nav>li {
+    .nav-bar-nav>li {
         float: none;
     }
-    .navbar-nav>li>a {
+    .nav-bar-nav>li>a {
         padding-top: 10px;
         padding-bottom: 10px;
     }
-    .navbar-text {
+    .nav-bar-text {
         float: none;
         margin: 15px 0;
     }
     /* since 3.1.0 */
-    .navbar-collapse.collapse.in {
+    .nav-bar-collapse.collapse.in {
         display: block!important;
     }
     .collapsing {

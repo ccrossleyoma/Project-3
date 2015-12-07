@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'fuelup.api',
     'rest_framework',
     'axes',
+    'pytz',
 )
 
 MIDDLEWARE_CLASSES = (
