@@ -427,6 +427,7 @@ define('fuelup/controllers/auth', ['exports', 'ember'], function (exports, Ember
                     'username': username,
                     'password': password };
                 var controllerObj = this;
+
                 Ember['default'].$.post('../api/session/', data, function (response) {
                     if (response.isauthenticated) {
                         //success
@@ -453,8 +454,8 @@ define('fuelup/controllers/auth', ['exports', 'ember'], function (exports, Ember
                     controllerObj.set('userid', '');
                     if (!remember) {
                         //save to username and pass to local storage
-
                     }
+
                     controllerObj.transitionToRoute('auth');
                 });
             }
@@ -855,23 +856,24 @@ define('fuelup/routes/compare', ['exports', 'ember'], function (exports, Ember) 
 			var count = allFillups.get('length');
 			return allFillups.objectAt(count - 1);
 		},
-		/*mpg: function(){
-	 var allFillups = this.store.all('fillup');
-	 var count = allFillups.get('length');
-	 var lastFillup = allFillups.objectAt(count-1);
-	 var lastMiles = lastFillup.miles;
-	 var lastGallons = lastFillup.gallons;
-	 var mpg = (lastMiles / lastGallons);
-	 return mpg;
-	 },
-	 maxMPG: function(){
-	 		var allFillups = this.store.all('fillup');
-	 var count = allFillups.get('length');
-	 var lastFillup = allFillups.objectAt(count-1);
-	 var lastMiles = lastFillup.miles;
-	 var lastGallons = lastFillup.gallons;
-	 var mpg = (lastMiles / lastGallons);
-	 },*/
+
+		/*    mpg: function(){
+	 			var allFillups = this.store.peekAll('fillup');
+	 			var count = allFillups.get('length');
+	 			var lastFillup = allFillups.objectAt(count-1);
+	 			var lastMiles = lastFillup.miles;
+	 			var lastGallons = lastFillup.gallons;
+	 			var mpg = (lastMiles / lastGallons);
+	 			return mpg;
+	     },*/
+		/*    maxMPG: function(){
+	     		var allFillups = this.store.peekAll('fillup');
+	 			var count = allFillups.get('length');
+	 			var lastFillup = allFillups.objectAt(count-1);
+	 			var lastMiles = lastFillup.miles;
+	 			var lastGallons = lastFillup.gallons;
+	 			var mpg = (lastMiles / lastGallons);
+	     },*/
 
 		setupController: function setupController(controller, model) {
 			controller.set('allFillups', model);
@@ -1374,11 +1376,11 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
           "loc": {
             "source": null,
             "start": {
-              "line": 14,
+              "line": 15,
               "column": 6
             },
             "end": {
-              "line": 22,
+              "line": 24,
               "column": 8
             }
           },
@@ -1438,6 +1440,10 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
           var el3 = dom.createComment("");
           dom.appendChild(el2, el3);
           dom.appendChild(el1, el2);
+          var el2 = dom.createTextNode("\n          ");
+          dom.appendChild(el1, el2);
+          var el2 = dom.createElement("td");
+          dom.appendChild(el1, el2);
           var el2 = dom.createTextNode("\n        ");
           dom.appendChild(el1, el2);
           dom.appendChild(el0, el1);
@@ -1460,14 +1466,14 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
           return morphs;
         },
         statements: [
-          ["content","fillup.id",["loc",[null,[16,14],[16,27]]]],
-          ["content","fillup.date",["loc",[null,[17,14],[17,29]]]],
-          ["content","fillup.miles",["loc",[null,[18,14],[18,30]]]],
-          ["content","fillup.pricePerGallon",["loc",[null,[19,15],[19,40]]]],
-          ["content","fillup.vehicle.year",["loc",[null,[20,14],[20,37]]]],
-          ["content","fillup.vehicle.make",["loc",[null,[20,38],[20,61]]]],
-          ["content","fillup.vehicle.model",["loc",[null,[20,62],[20,86]]]],
-          ["content","fillup.vehicle.trim",["loc",[null,[20,87],[20,110]]]]
+          ["content","fillup.id",["loc",[null,[17,14],[17,27]]]],
+          ["content","fillup.date",["loc",[null,[18,14],[18,29]]]],
+          ["content","fillup.miles",["loc",[null,[19,14],[19,30]]]],
+          ["content","fillup.pricePerGallon",["loc",[null,[20,15],[20,40]]]],
+          ["content","fillup.vehicle.year",["loc",[null,[21,14],[21,37]]]],
+          ["content","fillup.vehicle.make",["loc",[null,[21,38],[21,61]]]],
+          ["content","fillup.vehicle.model",["loc",[null,[21,62],[21,86]]]],
+          ["content","fillup.vehicle.trim",["loc",[null,[21,87],[21,110]]]]
         ],
         locals: ["fillup"],
         templates: []
@@ -1480,11 +1486,11 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
           "loc": {
             "source": null,
             "start": {
-              "line": 22,
+              "line": 24,
               "column": 8
             },
             "end": {
-              "line": 24,
+              "line": 26,
               "column": 6
             }
           },
@@ -1523,7 +1529,7 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
             "column": 0
           },
           "end": {
-            "line": 27,
+            "line": 29,
             "column": 0
           }
         },
@@ -1578,6 +1584,12 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
         var el5 = dom.createTextNode("Vehicle");
         dom.appendChild(el4, el5);
         dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n        ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("th");
+        var el5 = dom.createTextNode("Remove Entry?");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
         var el4 = dom.createTextNode("\n      ");
         dom.appendChild(el3, el4);
         dom.appendChild(el2, el3);
@@ -1607,7 +1619,7 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
         return morphs;
       },
       statements: [
-        ["block","each",[["get","fillup",["loc",[null,[14,24],[14,30]]]]],[],0,1,["loc",[null,[14,6],[24,15]]]]
+        ["block","each",[["get","fillup",["loc",[null,[15,24],[15,30]]]]],[],0,1,["loc",[null,[15,6],[26,15]]]]
       ],
       locals: [],
       templates: [child0, child1]
@@ -2135,7 +2147,21 @@ define('fuelup/templates/compare', ['exports'], function (exports) {
         var el4 = dom.createElement("td");
         var el5 = dom.createComment("");
         dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("mi");
+        var el5 = dom.createTextNode("mi on ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createComment("");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode(" ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createComment("");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode(" ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createComment("");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode(" ");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createComment("");
         dom.appendChild(el4, el5);
         dom.appendChild(el3, el4);
         var el4 = dom.createTextNode("\n          ");
@@ -2187,15 +2213,24 @@ define('fuelup/templates/compare', ['exports'], function (exports) {
       },
       buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var element0 = dom.childAt(fragment, [2, 3, 1]);
-        var morphs = new Array(3);
+        var element1 = dom.childAt(element0, [3]);
+        var morphs = new Array(7);
         morphs[0] = dom.createMorphAt(dom.childAt(element0, [1]),1,1);
-        morphs[1] = dom.createMorphAt(dom.childAt(element0, [3]),0,0);
-        morphs[2] = dom.createMorphAt(fragment,4,4,contextualElement);
+        morphs[1] = dom.createMorphAt(element1,0,0);
+        morphs[2] = dom.createMorphAt(element1,2,2);
+        morphs[3] = dom.createMorphAt(element1,4,4);
+        morphs[4] = dom.createMorphAt(element1,6,6);
+        morphs[5] = dom.createMorphAt(element1,8,8);
+        morphs[6] = dom.createMorphAt(fragment,4,4,contextualElement);
         return morphs;
       },
       statements: [
         ["content","allFillups.pricePerGallon",["loc",[null,[16,15],[16,44]]]],
         ["content","allFillups.miles",["loc",[null,[17,14],[17,34]]]],
+        ["content","allFillups.vehicle.year",["loc",[null,[17,40],[17,67]]]],
+        ["content","allFillups.vehicle.make",["loc",[null,[17,68],[17,95]]]],
+        ["content","allFillups.vehicle.model",["loc",[null,[17,96],[17,124]]]],
+        ["content","allFillups.vehicle.trim",["loc",[null,[17,125],[17,152]]]],
         ["content","outlet",["loc",[null,[26,0],[26,10]]]]
       ],
       locals: [],
@@ -5580,7 +5615,7 @@ define('fuelup/tests/controllers/auth.jshint', function () {
 
   QUnit.module('JSHint - controllers');
   QUnit.test('controllers/auth.js should pass jshint', function(assert) { 
-    assert.ok(false, 'controllers/auth.js should pass jshint.\ncontrollers/auth.js: line 13, col 17, \'remember\' is defined but never used.\ncontrollers/auth.js: line 37, col 22, \'response\' is defined but never used.\n\n2 errors'); 
+    assert.ok(false, 'controllers/auth.js should pass jshint.\ncontrollers/auth.js: line 13, col 17, \'remember\' is defined but never used.\ncontrollers/auth.js: line 38, col 22, \'response\' is defined but never used.\n\n2 errors'); 
   });
 
 });

@@ -81,12 +81,12 @@ class UserList(APIView):
     
     def post(self, request, *args, **kwargs):
     # def post(self, request, format=None):
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        username = escape(request.POST.get('username'))
+        password = escape(request.POST.get('password'))
         user = User.objects.filter(username=username)
         if user.exists():
             return self.form_response("Username has been taken. Please choose another.")
-        user = User.create_user(username=username, password=password)
+        user = User.create_user(username, 'noemail', password)
         user.save()
 
         # serializer = UserSerializer(data=request.data, context={'request': request})
