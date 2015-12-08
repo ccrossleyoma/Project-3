@@ -194,6 +194,32 @@ define('fuelup/components/nav-bar', ['exports', 'ember'], function (exports, Emb
 	});
 
 });
+define('fuelup/components/vehicle-display', ['exports', 'ember'], function (exports, Ember) {
+
+	'use strict';
+
+	exports['default'] = Ember['default'].Controller.extend({
+		fillups: null,
+		vehicle: null,
+		init: function init() {
+			var t = this;
+			this.store.find('vehicle.fillups').then(function (records) {
+				t.set('fillups', records.filterBy('vehicle', t.get('vehicle')));
+			});
+		},
+
+		avgMPG: (function () {
+			var allFillups = this.get('fillups');
+			var totalMiles = 0;
+			var totalGallons = 0;
+			allFillups.forEach(function (item) {
+				totalMiles = totalMiles + item.get('miles');
+				totalGallons = totalGallons + item.get('gallons');
+			});
+		}).property('fillups')
+	});
+
+});
 define('fuelup/controllers/add-fill-up', ['exports', 'ember'], function (exports, Ember) {
 
 	'use strict';
@@ -361,41 +387,9 @@ define('fuelup/controllers/application', ['exports', 'ember'], function (exports
 });
 define('fuelup/controllers/archive', ['exports', 'ember'], function (exports, Ember) {
 
-  'use strict';
+	'use strict';
 
-  exports['default'] = Ember['default'].Controller.extend({
-    /*	sortProperties: ['id'],
-      theFilter: "",
-      actions: {
-        sortBy: function(property) {
-            this.set("sortProperties", [property]);
-        },
-    
-      checkFilterMatch: function(theObject, str) {
-        var field, match;
-        match = false;
-        for (field in theObject) {
-          if (theObject[field].toString().slice(0, str.length) === str) {
-            match = true;
-          }
-        }
-        return match;
-      },
-    
-      filterPeople: (function() {
-        return this.get("arrangedContent").filter((function(_this) {
-          return function(theObject, index, enumerable) {
-            if (_this.get("theFilter")) {
-              return _this.checkFilterMatch(theObject, _this.get("theFilter"));
-            } else {
-              return true;
-            }
-          };
-        })(this));
-      }).property("theFilter", "sortProperties"),
-    
-      }*/
-  });
+	exports['default'] = Ember['default'].Controller.extend({});
 
 });
 define('fuelup/controllers/array', ['exports', 'ember'], function (exports, Ember) {
@@ -463,7 +457,62 @@ define('fuelup/controllers/compare', ['exports', 'ember'], function (exports, Em
 
 	'use strict';
 
-	exports['default'] = Ember['default'].Controller.extend({});
+	exports['default'] = Ember['default'].Controller.extend({
+		/*	avgMPG: function(){
+	 			var allFillups = this.get('fillup');
+	 			var totalMiles = 0;
+	 			var totalGallons = 0;
+	 			allFillups.forEach(function(item){
+	 				totalMiles = totalMiles + allFillups.get('miles');
+	 				totalGallons = totalGallons + allFillups.get('gallons');
+	 			});
+	 			var mpg = (totalMiles / totalGallons);
+	 			return mpg;
+	     }.property('vehicle'),*/
+
+		/*			var count = allFillups.get('length');
+	 			var lastFillup = allFillups.objectAt(count-1);
+	 			var lastMiles = lastFillup.miles;
+	 			var lastGallons = lastFillup.gallons;
+	 			var mpg = (lastMiles / lastGallons);
+	 			return mpg;*/
+
+		/*
+	     avgPricePerMile: function(){
+	 			var allFillups = this.get('fillup');
+	 			var totalMiles = 0;
+	 			var totalPrice = 0;
+	 			allFillups.forEach(function(item){
+	 				totalMiles + allFillups.get('miles');
+	 				totalPrice = totalPrice + allFillups.get('pricepergallon');
+	 			});
+	 			var ppm = (totalPrice / totalMiles);
+	 			return ppm;
+	 	}.property('vehicle'),*/
+
+		/*	lastMPG: function(){
+	 			var allFillups = this.get('allFillups');
+	 			var count = allFillups.get('length');
+	 			var lastFillup = allFillups.objectAt(count-1);
+	 			var lastMiles = lastFillup.miles;
+	 			var lastGallons = lastFillup.gallons;
+	 			var mpg = (lastMiles / lastGallons);
+	 			return mpg
+	 	}
+	 
+	 	bestMPG: function(){
+	 			var allFillups = this.get('allFillups');
+	 			var totalMiles;
+	 			var totalGallons
+	 			allFillups.forEach(function(item){
+	 				totalMiles = totalMiles + allFillups.get('miles');
+	 				totalGallons = totalGallons + allFillups.get('gallons');
+	 			});
+	 			var mpg = (totalMiles / totalGallons);
+	 			return mpg;
+	 	}.property('allFillups'),
+	 */
+	});
 
 });
 define('fuelup/controllers/object', ['exports', 'ember'], function (exports, Ember) {
@@ -620,7 +669,6 @@ define('fuelup/models/fillup', ['exports', 'ember-data'], function (exports, DS)
     miles: DS['default'].attr('number'),
     gallons: DS['default'].attr('number'),
     pricepergallon: DS['default'].attr('number'),
-    /*user: DS.belongsTo('user', {async: true}),*/
     vehicle: DS['default'].belongsTo('vehicle', { async: true })
   });
 
@@ -646,7 +694,7 @@ define('fuelup/models/vehicle', ['exports', 'ember-data'], function (exports, DS
     model: DS['default'].attr('string'),
     trim: DS['default'].attr('string'),
     /*user: DS.belongsTo('user', {async: true}),*/
-    fillups: DS['default'].hasMany('fillup')
+    fillup: DS['default'].hasMany('fillup')
   });
 
 });
@@ -1392,7 +1440,7 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
           ["content","fillup.id",["loc",[null,[17,14],[17,27]]]],
           ["content","fillup.date",["loc",[null,[18,14],[18,29]]]],
           ["content","fillup.miles",["loc",[null,[19,14],[19,30]]]],
-          ["content","fillup.pricePerGallon",["loc",[null,[20,15],[20,40]]]],
+          ["content","fillup.pricepergallon",["loc",[null,[20,15],[20,40]]]],
           ["content","fillup.vehicle.year",["loc",[null,[21,14],[21,37]]]],
           ["content","fillup.vehicle.make",["loc",[null,[21,38],[21,61]]]],
           ["content","fillup.vehicle.model",["loc",[null,[21,62],[21,86]]]],
@@ -1975,12 +2023,12 @@ define('fuelup/templates/compare', ['exports'], function (exports) {
           "loc": {
             "source": null,
             "start": {
-              "line": 14,
-              "column": 6
+              "line": 3,
+              "column": 0
             },
             "end": {
-              "line": 23,
-              "column": 8
+              "line": 5,
+              "column": 4
             }
           },
           "moduleName": "fuelup/templates/compare.hbs"
@@ -1990,83 +2038,21 @@ define('fuelup/templates/compare', ['exports'], function (exports) {
         hasRendered: false,
         buildFragment: function buildFragment(dom) {
           var el0 = dom.createDocumentFragment();
-          var el1 = dom.createTextNode("        ");
+          var el1 = dom.createTextNode("    ");
           dom.appendChild(el0, el1);
-          var el1 = dom.createElement("tr");
-          var el2 = dom.createTextNode("\n          ");
-          dom.appendChild(el1, el2);
-          var el2 = dom.createElement("td");
-          var el3 = dom.createComment("");
-          dom.appendChild(el2, el3);
-          var el3 = dom.createTextNode(" ");
-          dom.appendChild(el2, el3);
-          var el3 = dom.createComment("");
-          dom.appendChild(el2, el3);
-          var el3 = dom.createTextNode(" ");
-          dom.appendChild(el2, el3);
-          var el3 = dom.createComment("");
-          dom.appendChild(el2, el3);
-          var el3 = dom.createTextNode(" ");
-          dom.appendChild(el2, el3);
-          var el3 = dom.createComment("");
-          dom.appendChild(el2, el3);
-          dom.appendChild(el1, el2);
-          var el2 = dom.createTextNode("\n          ");
-          dom.appendChild(el1, el2);
-          var el2 = dom.createElement("td");
-          var el3 = dom.createComment("");
-          dom.appendChild(el2, el3);
-          dom.appendChild(el1, el2);
-          var el2 = dom.createTextNode("\n          ");
-          dom.appendChild(el1, el2);
-          var el2 = dom.createElement("td");
-          var el3 = dom.createComment("");
-          dom.appendChild(el2, el3);
-          var el3 = dom.createTextNode("mi");
-          dom.appendChild(el2, el3);
-          dom.appendChild(el1, el2);
-          var el2 = dom.createTextNode("\n          ");
-          dom.appendChild(el1, el2);
-          var el2 = dom.createElement("td");
-          var el3 = dom.createTextNode("mi");
-          dom.appendChild(el2, el3);
-          dom.appendChild(el1, el2);
-          var el2 = dom.createTextNode("\n          ");
-          dom.appendChild(el1, el2);
-          var el2 = dom.createElement("td");
-          var el3 = dom.createTextNode("$");
-          dom.appendChild(el2, el3);
-          dom.appendChild(el1, el2);
-          var el2 = dom.createTextNode("\n          ");
-          dom.appendChild(el1, el2);
-          var el2 = dom.createElement("td");
-          dom.appendChild(el1, el2);
-          var el2 = dom.createTextNode("\n        ");
-          dom.appendChild(el1, el2);
+          var el1 = dom.createComment("");
           dom.appendChild(el0, el1);
           var el1 = dom.createTextNode("\n");
           dom.appendChild(el0, el1);
           return el0;
         },
         buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
-          var element0 = dom.childAt(fragment, [1]);
-          var element1 = dom.childAt(element0, [1]);
-          var morphs = new Array(6);
-          morphs[0] = dom.createMorphAt(element1,0,0);
-          morphs[1] = dom.createMorphAt(element1,2,2);
-          morphs[2] = dom.createMorphAt(element1,4,4);
-          morphs[3] = dom.createMorphAt(element1,6,6);
-          morphs[4] = dom.createMorphAt(dom.childAt(element0, [3]),0,0);
-          morphs[5] = dom.createMorphAt(dom.childAt(element0, [5]),0,0);
+          var morphs = new Array(1);
+          morphs[0] = dom.createMorphAt(fragment,1,1,contextualElement);
           return morphs;
         },
         statements: [
-          ["content","allFillups.vehicle.year",["loc",[null,[16,14],[16,41]]]],
-          ["content","allFillups.vehicle.make",["loc",[null,[16,42],[16,69]]]],
-          ["content","allFillups.vehicle.model",["loc",[null,[16,70],[16,98]]]],
-          ["content","allFillups.vehicle.trim",["loc",[null,[16,99],[16,126]]]],
-          ["content","allFillups.pricePerGallon",["loc",[null,[17,14],[17,43]]]],
-          ["content","allFillups.miles",["loc",[null,[18,14],[18,34]]]]
+          ["inline","vehicle-display",[],["vehicle",["subexpr","@mut",[["get","vehicle",["loc",[null,[4,30],[4,37]]]]],[],[]]],["loc",[null,[4,4],[4,39]]]]
         ],
         locals: ["vehicle"],
         templates: []
@@ -2079,12 +2065,12 @@ define('fuelup/templates/compare', ['exports'], function (exports) {
           "loc": {
             "source": null,
             "start": {
-              "line": 23,
-              "column": 8
+              "line": 5,
+              "column": 4
             },
             "end": {
-              "line": 25,
-              "column": 6
+              "line": 7,
+              "column": 0
             }
           },
           "moduleName": "fuelup/templates/compare.hbs"
@@ -2122,7 +2108,7 @@ define('fuelup/templates/compare', ['exports'], function (exports) {
             "column": 0
           },
           "end": {
-            "line": 30,
+            "line": 38,
             "column": 0
           }
         },
@@ -2137,72 +2123,9 @@ define('fuelup/templates/compare', ['exports'], function (exports) {
         var el2 = dom.createTextNode("Let's see how you're doing...");
         dom.appendChild(el1, el2);
         dom.appendChild(el0, el1);
-        var el1 = dom.createTextNode("\n");
+        var el1 = dom.createTextNode("\n\n");
         dom.appendChild(el0, el1);
-        var el1 = dom.createElement("table");
-        dom.setAttribute(el1,"class","table table-striped");
-        var el2 = dom.createTextNode("\n    ");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("thead");
-        var el3 = dom.createTextNode("\n      ");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createElement("tr");
-        var el4 = dom.createTextNode("\n        ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("th");
-        var el5 = dom.createTextNode("Vehicle");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n        ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("th");
-        var el5 = dom.createTextNode("Last Price per Gallon");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n        ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("th");
-        var el5 = dom.createTextNode("Last Miles on Tank");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n        ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("th");
-        var el5 = dom.createTextNode("Last MPG");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n        ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("th");
-        var el5 = dom.createTextNode("Average MPG");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n        ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("th");
-        var el5 = dom.createTextNode("Best MPG");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n      ");
-        dom.appendChild(el3, el4);
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n    ");
-        dom.appendChild(el2, el3);
-        dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n    ");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("tbody");
-        var el3 = dom.createTextNode("\n");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createComment("");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("    ");
-        dom.appendChild(el2, el3);
-        dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n");
-        dom.appendChild(el1, el2);
-        dom.appendChild(el0, el1);
-        var el1 = dom.createTextNode("\n");
+        var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
@@ -2212,13 +2135,13 @@ define('fuelup/templates/compare', ['exports'], function (exports) {
       },
       buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var morphs = new Array(2);
-        morphs[0] = dom.createMorphAt(dom.childAt(fragment, [2, 3]),1,1);
-        morphs[1] = dom.createMorphAt(fragment,4,4,contextualElement);
+        morphs[0] = dom.createMorphAt(fragment,2,2,contextualElement);
+        morphs[1] = dom.createMorphAt(fragment,3,3,contextualElement);
         return morphs;
       },
       statements: [
-        ["block","each",[["get","vehicle",["loc",[null,[14,25],[14,32]]]]],[],0,1,["loc",[null,[14,6],[25,15]]]],
-        ["content","outlet",["loc",[null,[28,0],[28,10]]]]
+        ["block","each",[["get","vehicle",["loc",[null,[3,19],[3,26]]]]],[],0,1,["loc",[null,[3,0],[7,9]]]],
+        ["content","outlet",["loc",[null,[36,0],[36,10]]]]
       ],
       locals: [],
       templates: [child0, child1]
@@ -5144,6 +5067,163 @@ define('fuelup/templates/components/nav-bar', ['exports'], function (exports) {
   }()));
 
 });
+define('fuelup/templates/components/vehicle-display', ['exports'], function (exports) {
+
+  'use strict';
+
+  exports['default'] = Ember.HTMLBars.template((function() {
+    return {
+      meta: {
+        "revision": "Ember@1.13.7",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 27,
+            "column": 0
+          }
+        },
+        "moduleName": "fuelup/templates/components/vehicle-display.hbs"
+      },
+      arity: 0,
+      cachedFragment: null,
+      hasRendered: false,
+      buildFragment: function buildFragment(dom) {
+        var el0 = dom.createDocumentFragment();
+        var el1 = dom.createElement("table");
+        dom.setAttribute(el1,"class","table table-striped");
+        var el2 = dom.createTextNode("\n    ");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createElement("thead");
+        var el3 = dom.createTextNode("\n      ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("tr");
+        var el4 = dom.createTextNode("\n        ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("th");
+        var el5 = dom.createTextNode("Vehicle");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n        ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("th");
+        var el5 = dom.createTextNode("Last Price per Gallon");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n        ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("th");
+        var el5 = dom.createTextNode("Last Miles on Tank");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n        ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("th");
+        var el5 = dom.createTextNode("Last MPG");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n        ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("th");
+        var el5 = dom.createTextNode("Average MPG");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n        ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("th");
+        var el5 = dom.createTextNode("Average Price per Mile");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n        ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("th");
+        var el5 = dom.createTextNode("Best MPG");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n      ");
+        dom.appendChild(el3, el4);
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n    ");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createElement("tbody");
+        var el3 = dom.createTextNode("\n        ");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createElement("tr");
+        var el4 = dom.createTextNode("\n");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("          ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("td");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n          ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("td");
+        var el5 = dom.createTextNode("mi");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n          ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("td");
+        var el5 = dom.createTextNode("mi");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n          ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("td");
+        var el5 = dom.createComment("");
+        dom.appendChild(el4, el5);
+        var el5 = dom.createTextNode(" MPG");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n          ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("td");
+        var el5 = dom.createTextNode("$ per mi");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n          ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("td");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n        ");
+        dom.appendChild(el3, el4);
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n    ");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n");
+        dom.appendChild(el1, el2);
+        dom.appendChild(el0, el1);
+        var el1 = dom.createTextNode("\n\n");
+        dom.appendChild(el0, el1);
+        var el1 = dom.createComment("");
+        dom.appendChild(el0, el1);
+        var el1 = dom.createTextNode("\n");
+        dom.appendChild(el0, el1);
+        return el0;
+      },
+      buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+        var morphs = new Array(2);
+        morphs[0] = dom.createMorphAt(dom.childAt(fragment, [0, 3, 1, 8]),0,0);
+        morphs[1] = dom.createMorphAt(fragment,2,2,contextualElement);
+        return morphs;
+      },
+      statements: [
+        ["content","avgMPG",["loc",[null,[19,14],[19,24]]]],
+        ["content","yield",["loc",[null,[26,0],[26,9]]]]
+      ],
+      locals: [],
+      templates: []
+    };
+  }()));
+
+});
 define('fuelup/templates/home', ['exports'], function (exports) {
 
   'use strict';
@@ -5556,6 +5636,16 @@ define('fuelup/tests/components/nav-bar.jshint', function () {
   });
 
 });
+define('fuelup/tests/components/vehicle-display.jshint', function () {
+
+  'use strict';
+
+  QUnit.module('JSHint - components');
+  QUnit.test('components/vehicle-display.js should pass jshint', function(assert) { 
+    assert.ok(true, 'components/vehicle-display.js should pass jshint.'); 
+  });
+
+});
 define('fuelup/tests/controllers/add-fill-up.jshint', function () {
 
   'use strict';
@@ -5683,6 +5773,149 @@ define('fuelup/tests/helpers/start-app.jshint', function () {
   });
 
 });
+define('fuelup/tests/integration/components/vehicle-display-test', ['ember-qunit'], function (ember_qunit) {
+
+  'use strict';
+
+  ember_qunit.moduleForComponent('vehicle-display', 'Integration | Component | vehicle display', {
+    integration: true
+  });
+
+  ember_qunit.test('it renders', function (assert) {
+    assert.expect(2);
+
+    // Set any properties with this.set('myProperty', 'value');
+    // Handle any actions with this.on('myAction', function(val) { ... });
+
+    this.render(Ember.HTMLBars.template((function () {
+      return {
+        meta: {
+          'revision': 'Ember@1.13.7',
+          'loc': {
+            'source': null,
+            'start': {
+              'line': 1,
+              'column': 0
+            },
+            'end': {
+              'line': 1,
+              'column': 19
+            }
+          }
+        },
+        arity: 0,
+        cachedFragment: null,
+        hasRendered: false,
+        buildFragment: function buildFragment(dom) {
+          var el0 = dom.createDocumentFragment();
+          var el1 = dom.createComment('');
+          dom.appendChild(el0, el1);
+          return el0;
+        },
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var morphs = new Array(1);
+          morphs[0] = dom.createMorphAt(fragment, 0, 0, contextualElement);
+          dom.insertBoundary(fragment, 0);
+          dom.insertBoundary(fragment, null);
+          return morphs;
+        },
+        statements: [['content', 'vehicle-display', ['loc', [null, [1, 0], [1, 19]]]]],
+        locals: [],
+        templates: []
+      };
+    })()));
+
+    assert.equal(this.$().text().trim(), '');
+
+    // Template block usage:
+    this.render(Ember.HTMLBars.template((function () {
+      var child0 = (function () {
+        return {
+          meta: {
+            'revision': 'Ember@1.13.7',
+            'loc': {
+              'source': null,
+              'start': {
+                'line': 2,
+                'column': 4
+              },
+              'end': {
+                'line': 4,
+                'column': 4
+              }
+            }
+          },
+          arity: 0,
+          cachedFragment: null,
+          hasRendered: false,
+          buildFragment: function buildFragment(dom) {
+            var el0 = dom.createDocumentFragment();
+            var el1 = dom.createTextNode('      template block text\n');
+            dom.appendChild(el0, el1);
+            return el0;
+          },
+          buildRenderNodes: function buildRenderNodes() {
+            return [];
+          },
+          statements: [],
+          locals: [],
+          templates: []
+        };
+      })();
+
+      return {
+        meta: {
+          'revision': 'Ember@1.13.7',
+          'loc': {
+            'source': null,
+            'start': {
+              'line': 1,
+              'column': 0
+            },
+            'end': {
+              'line': 5,
+              'column': 2
+            }
+          }
+        },
+        arity: 0,
+        cachedFragment: null,
+        hasRendered: false,
+        buildFragment: function buildFragment(dom) {
+          var el0 = dom.createDocumentFragment();
+          var el1 = dom.createTextNode('\n');
+          dom.appendChild(el0, el1);
+          var el1 = dom.createComment('');
+          dom.appendChild(el0, el1);
+          var el1 = dom.createTextNode('  ');
+          dom.appendChild(el0, el1);
+          return el0;
+        },
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var morphs = new Array(1);
+          morphs[0] = dom.createMorphAt(fragment, 1, 1, contextualElement);
+          return morphs;
+        },
+        statements: [['block', 'vehicle-display', [], [], 0, null, ['loc', [null, [2, 4], [4, 24]]]]],
+        locals: [],
+        templates: [child0]
+      };
+    })()));
+
+    assert.equal(this.$().text().trim(), 'template block text');
+  });
+
+});
+define('fuelup/tests/integration/components/vehicle-display-test.jshint', function () {
+
+  'use strict';
+
+  QUnit.module('JSHint - integration/components');
+  QUnit.test('integration/components/vehicle-display-test.js should pass jshint', function(assert) { 
+    assert.ok(true, 'integration/components/vehicle-display-test.js should pass jshint.'); 
+  });
+
+});
 define('fuelup/tests/models/fillup.jshint', function () {
 
   'use strict';
@@ -5789,7 +6022,7 @@ define('fuelup/tests/routes/compare.jshint', function () {
 
   QUnit.module('JSHint - routes');
   QUnit.test('routes/compare.js should pass jshint', function(assert) { 
-    assert.ok(false, 'routes/compare.js should pass jshint.\nroutes/compare.js: line 5, col 49, Missing semicolon.\n\n1 error'); 
+    assert.ok(true, 'routes/compare.js should pass jshint.'); 
   });
 
 });
@@ -6402,7 +6635,7 @@ catch(err) {
 if (runningTests) {
   require("fuelup/tests/test-helper");
 } else {
-  require("fuelup/app")["default"].create({"API_HOST":"http://localhost:8081","name":"fuelup","version":"0.0.0+a2a99c8d","API_NAMESPACE":"api","API_ADD_TRAILING_SLASHES":true});
+  require("fuelup/app")["default"].create({"API_HOST":"http://localhost:8081","name":"fuelup","version":"0.0.0+ed9182c7","API_NAMESPACE":"api","API_ADD_TRAILING_SLASHES":true});
 }
 
 /* jshint ignore:end */

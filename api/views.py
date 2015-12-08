@@ -88,39 +88,33 @@ class UserList(APIView):
         serializer = FuelupuserSerializer(fuelupuser, many=False, context={'request': request})
         return Response(serializer.data)
 
-        # serializer = UserSerializer(data=request.data, context={'request': request})
-        # if serializer.is_valid():
-        #     serializer.save()
-        #     return Response(serializer.data, status=status.HTTP_201_CREATED) #you could customize the response here
-        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) #you could customize the error message here
+# class UserDetail(APIView):
+#     """
+#     Retrieve, update or delete a single user.
+#     """
+#     def get_object(self, pk):
+#         try:
+#             return User.objects.get(pk=pk)
+#         except User.DoesNotExist:
+#             raise Http404
 
-class UserDetail(APIView):
-    """
-    Retrieve, update or delete a single user.
-    """
-    def get_object(self, pk):
-        try:
-            return User.objects.get(pk=pk)
-        except User.DoesNotExist:
-            raise Http404
+#     def get(self, request, pk, format=None):
+#         User = self.get_object(pk)
+#         serializer = UserSerializer(User, context={'request': request})
+#         return Response(serializer.data)
 
-    def get(self, request, pk, format=None):
-        User = self.get_object(pk)
-        serializer = UserSerializer(User, context={'request': request})
-        return Response(serializer.data)
+#     def put(self, request, pk, format=None):
+#         User = self.get_object(pk)
+#         serializer = UserSerializer(User, data=request.data, context={'request': request})
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def put(self, request, pk, format=None):
-        User = self.get_object(pk)
-        serializer = UserSerializer(User, data=request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk, format=None):
-        User = self.get_object(pk)
-        User.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+#     def delete(self, request, pk, format=None):
+#         User = self.get_object(pk)
+#         User.delete()
+#         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class VehicleList(APIView):
     """
@@ -149,34 +143,34 @@ class VehicleList(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) #{"errors": { "year": ["Vehicle year must be 1900-2016!"],}})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) #you could customize the error message here
 
-class VehicleDetail(APIView):
-    """
-    Retrieve, update or delete a single vehicle.
-    """
-    def get_object(self, pk):
-        try:
-            return Vehicle.objects.filter(fuelupuser__user__username=request.user.username)
-            # return Vehicle.objects.get(pk=pk)
-        except Vehicle.DoesNotExist:
-            raise Http404
+# class VehicleDetail(APIView):
+#     """
+#     Retrieve, update or delete a single vehicle.
+#     """
+#     def get_object(self, pk):
+#         try:
+#             return Vehicle.objects.filter(fuelupuser__user__username=request.user.username)
+#             # return Vehicle.objects.get(pk=pk)
+#         except Vehicle.DoesNotExist:
+#             raise Http404
 
-    def get(self, request, pk, format=None):
-        Vehicle = Vehicle.objects.filter(fuelupuser__user__username=request.user.username)
-        serializer = VehicleSerializer(Vehicle, context={'request': request})
-        return Response(serializer.data)
+#     def get(self, request, pk, format=None):
+#         Vehicle = Vehicle.objects.filter(fuelupuser__user__username=request.user.username)
+#         serializer = VehicleSerializer(Vehicle, context={'request': request})
+#         return Response(serializer.data)
 
-    def put(self, request, pk, format=None):
-        Vehicle = self.get_object(pk)
-        serializer = VehicleSerializer(Vehicle, data=request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#     def put(self, request, pk, format=None):
+#         Vehicle = self.get_object(pk)
+#         serializer = VehicleSerializer(Vehicle, data=request.data, context={'request': request})
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # def delete(self, request, pk, format=None):
-    #     Vehicle = self.get_object(pk)
-    #     Vehicle.delete()
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
+#     # def delete(self, request, pk, format=None):
+#     #     Vehicle = self.get_object(pk)
+#     #     Vehicle.delete()
+#     #     return Response(status=status.HTTP_204_NO_CONTENT)
 
 #more detailed, but more control class based view example
 class FillupList(APIView):
@@ -208,25 +202,25 @@ class FillupDetail(APIView):
     """
     Retrieve, update or delete a single Fillup.
     """
-    # def get_object(self, pk):
-    #     try:
-    #         return Fillup.objects.get(pk=pk)
-    #     except Fillup.DoesNotExist:
-    #         raise Http404
+    def get_object(self, pk):
+        try:
+            return Fillup.objects.filter(vehicle__fuelupuser__user__username=request.user.username)
+        except Fillup.DoesNotExist:
+            raise Http404
 
-    # def get(self, request, pk, format=None):
-    #     Fillup = Fillup.objects.filter(id="2")
-    #     # Fillup = self.get_object(pk)
-    #     serializer = FillupSerializer(Fillup, context={'request': request})
-    #     return Response(serializer.data)
+    def get(self, request, pk, format=None):
+        Fillup = Fillup.objects.filter(id="2")
+        # Fillup = self.get_object(pk)
+        serializer = FillupSerializer(Fillup, context={'request': request})
+        return Response(serializer.data)
 
-    # def put(self, request, pk, format=None):
-    #     Fillup = self.get_object(pk)
-    #     serializer = FillupSerializer(Fillup, data=request.data, context={'request': request})
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, pk, format=None):
+        Fillup = self.get_object(pk)
+        serializer = FillupSerializer(Fillup, data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
         Fillup = self.get_object(pk)

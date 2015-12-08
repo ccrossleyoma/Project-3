@@ -27,7 +27,7 @@ class Fillup(models.Model):
 	"""
 	This is a fillup entry for user submitted fillup entries
 	"""
-	date = models.DateField(auto_now_add=True, blank=False, validators=[removeJavascriptKeyword])
+	date = models.DateField(blank=False)
 	miles = models.DecimalField(max_digits=5, decimal_places=2, blank=False)
 	gallons = models.DecimalField(max_digits=5, decimal_places=2, blank=False)
 	pricepergallon = models.DecimalField(max_digits=4, decimal_places=3, blank=False)
