@@ -206,14 +206,11 @@ define('fuelup/controllers/add-fill-up', ['exports', 'ember'], function (exports
 	    }.property(),
 	  */
 			addFillUp: function addFillUp() {
+				var car = this.get('vehicle');
 				var fillUpDate = this.get('date');
 				var distance = this.get('miles');
 				var volume = this.get('gallons');
-				var price = this.get('pricePerGallon');
-				var car = this.get('vehicle');
-				/*var uName = 1;*/
-				/*var t = this;*/
-				/*var auth = t.controllerFor('auth');*/
+				var price = this.get('pricepergallon');
 
 				//Make sure all fields are filled, otherwise complain to the user
 				if (fillUpDate === undefined || distance === undefined || volume === undefined || price === undefined || car === undefined /*|| (uName === undefined)*/) {
@@ -222,7 +219,7 @@ define('fuelup/controllers/add-fill-up', ['exports', 'ember'], function (exports
 
 					//Miles traveled is equal to or less than 0
 				else if (distance <= 0) {
-						alert("Gallons of fuel must be greater than 0!");
+						alert("Miles on tank must be greater than 0!");
 					}
 
 					//Volume of fuel is equal to or less than 0
@@ -237,15 +234,15 @@ define('fuelup/controllers/add-fill-up', ['exports', 'ember'], function (exports
 
 							//Go ahead and create new record of fill up
 							else {
-									var newFillUp = this.store.createRecord('fillup', {
+									var fillup = this.store.createRecord('fillup', {
 										date: fillUpDate,
 										miles: distance,
 										gallons: volume,
-										pricePerGallon: price,
+										pricepergallon: price,
 										vehicle: car
 									});
 
-									newFillUp.save();
+									fillup.save();
 
 									console.log('new fill-up added');
 									alert("Success, new fill-up added!");
@@ -285,14 +282,14 @@ define('fuelup/controllers/add-vehicle', ['exports', 'ember'], function (exports
 
 					//Go ahead and create new record of vehicle
 					else {
-							var car = this.store.createRecord('vehicle', {
+							var vehicle = this.store.createRecord('vehicle', {
 								year: vehicleYear,
 								make: brand,
 								model: modelName,
 								trim: trimLevel
 							});
 
-							car.save();
+							vehicle.save();
 
 							console.log('new vehicle added');
 							alert("Success, new vehicle was added!");
@@ -455,48 +452,11 @@ define('fuelup/controllers/auth', ['exports', 'ember'], function (exports, Ember
                     if (!remember) {
                         //save to username and pass to local storage
                     }
-
                     controllerObj.transitionToRoute('auth');
                 });
             }
         }
     });
-
-    /*import Ember from 'ember';
-
-    export default Ember.Controller.extend({
-    	username: '',
-    	loggedIn: false,
-    	errorMsg: '',
-    	remember: false,
-    	actions: {
-    		login: function(){
-    			//Check authentication here
-    			console.log('login');
-    			var user = this.get('username');
-    			if(user!=="Colby"){
-    				this.set('errorMsg', 'Login failed!');
-    			}
-    			else{
-    				this.set('loggedIn', true);
-    				this.transitionTo('home');
-    			}
-
-    		},
-    		logout: function(){
-    			//Log user out of application
-    			console.log('logout');
-    			var user = this.get('username');
-    			if (user === "Colby"){
-    				this.set('loggedIn', false);
-    				this.transitionTo('auth');
-    			}
-    			else{
-    				this.set('errorMsg', 'Logout failed!');
-    			}
-    		}
-    	}
-    });*/
 
 });
 define('fuelup/controllers/compare', ['exports', 'ember'], function (exports, Ember) {
@@ -659,7 +619,7 @@ define('fuelup/models/fillup', ['exports', 'ember-data'], function (exports, DS)
     date: DS['default'].attr('date'),
     miles: DS['default'].attr('number'),
     gallons: DS['default'].attr('number'),
-    pricePerGallon: DS['default'].attr('number'),
+    pricepergallon: DS['default'].attr('number'),
     /*user: DS.belongsTo('user', {async: true}),*/
     vehicle: DS['default'].belongsTo('vehicle', { async: true })
   });
@@ -667,14 +627,13 @@ define('fuelup/models/fillup', ['exports', 'ember-data'], function (exports, DS)
 });
 define('fuelup/models/user', ['exports', 'ember-data'], function (exports, DS) {
 
-  'use strict';
+	'use strict';
 
-  exports['default'] = DS['default'].Model.extend({
-    username: DS['default'].attr('string'),
-    password: DS['default'].attr('string'),
-    vehicles: DS['default'].hasMany('vehicle'),
-    fillups: DS['default'].hasMany('fillup')
-  });
+	exports['default'] = DS['default'].Model.extend({
+		username: DS['default'].attr('string'),
+		password: DS['default'].attr('string'),
+		vehicles: DS['default'].hasMany('vehicle')
+	});
 
 });
 define('fuelup/models/vehicle', ['exports', 'ember-data'], function (exports, DS) {
@@ -686,7 +645,7 @@ define('fuelup/models/vehicle', ['exports', 'ember-data'], function (exports, DS
     make: DS['default'].attr('string'),
     model: DS['default'].attr('string'),
     trim: DS['default'].attr('string'),
-    user: DS['default'].belongsTo('user', { async: true }),
+    /*user: DS.belongsTo('user', {async: true}),*/
     fillups: DS['default'].hasMany('fillup')
   });
 
@@ -761,7 +720,6 @@ define('fuelup/routes/application', ['exports', 'ember'], function (exports, Emb
 					transition.abort();
 					console.log('User is unauthenicated and is requesting public about page, redirecting');
 					t.transitionTo('about');
-					/*transitionToRoute('about');*/
 				}
 				//If  user is trying to register, allow them to register without authentication
 				else if (transition.targetname === 'register' && auth.get('loggedIn') === false) {
@@ -769,7 +727,6 @@ define('fuelup/routes/application', ['exports', 'ember'], function (exports, Emb
 						transition.abort();
 						console.log('User is unauthenicated and is requesting public register page, redirecting');
 						t.transitionTo('register');
-						/*transitionToRoute('register');*/
 					}
 					//Otherwise, require auth
 					else if (transition.targetName !== 'auth' && transition.targetName !== 'about' && transition.targetName !== 'register') {
@@ -784,12 +741,11 @@ define('fuelup/routes/application', ['exports', 'ember'], function (exports, Emb
 					transition.abort();
 					console.log('User is authenicated and is requesting registration page, redirecting');
 					t.transitionTo('home');
-					/*transitionToRoute('about');*/
 				} else {
-						console.log('Redirecting back to original request: /' + previoustrans.targetName);
-						t.set('currentTransition', null);
-						previoustrans.retry();
-					}
+					console.log('Redirecting back to original request: /' + previoustrans.targetName);
+					t.set('currentTransition', null);
+					previoustrans.retry();
+				}
 			}
 		},
 		setupController: function setupController(controller) {
@@ -814,28 +770,6 @@ define('fuelup/routes/archive', ['exports', 'ember'], function (exports, Ember) 
 		setupController: function setupController(controller, model) {
 			controller.set('fillup', model);
 		}
-		/*model: function() {
-	 	return [
-	 	{
-	 		id: 1,
-	 		date: '12/31/2014',
-	 		miles: '356.2',
-	 		gallons: '12.4',
-	 		pricePerGallon: '2.429',
-	 		user: 'Colby',
-	 		vehicle: '2015 Hyundai Sonata 2.0'
-	 	},
-	 	{
-	 		id: 2,
-	 		date: '6/20/2015',
-	 		miles: '512.7',
-	 		gallons: '19.8',
-	 		pricePerGallon: '3.479',
-	 		user: 'Colby',
-	 		vehicle: '1986 Mercedes-Benz 300 SDL'
-	 	}
-	 	];
-	 }*/
 	});
 
 });
@@ -852,20 +786,9 @@ define('fuelup/routes/compare', ['exports', 'ember'], function (exports, Ember) 
 
 	exports['default'] = Ember['default'].Route.extend({
 		model: function model() {
-			var allFillups = this.store.peekAll('fillup');
-			var count = allFillups.get('length');
-			return allFillups.objectAt(count - 1);
+			return this.store.findAll('vehicle');
 		},
 
-		/*    mpg: function(){
-	 			var allFillups = this.store.peekAll('fillup');
-	 			var count = allFillups.get('length');
-	 			var lastFillup = allFillups.objectAt(count-1);
-	 			var lastMiles = lastFillup.miles;
-	 			var lastGallons = lastFillup.gallons;
-	 			var mpg = (lastMiles / lastGallons);
-	 			return mpg;
-	     },*/
 		/*    maxMPG: function(){
 	     		var allFillups = this.store.peekAll('fillup');
 	 			var count = allFillups.get('length');
@@ -876,7 +799,7 @@ define('fuelup/routes/compare', ['exports', 'ember'], function (exports, Ember) 
 	     },*/
 
 		setupController: function setupController(controller, model) {
-			controller.set('allFillups', model);
+			controller.set('vehicle', model);
 		}
 	});
 
@@ -1114,7 +1037,7 @@ define('fuelup/templates/add-fill-up', ['exports'], function (exports) {
         ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","date",["loc",[null,[18,39],[18,43]]]]],[],[]],"placeholder","Date","type","date"],["loc",[null,[18,4],[18,76]]]],
         ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","miles",["loc",[null,[21,39],[21,44]]]]],[],[]],"placeholder","Miles","type","number","step","any","min","0"],["loc",[null,[21,4],[21,101]]]],
         ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","gallons",["loc",[null,[24,39],[24,46]]]]],[],[]],"placeholder","Gallons","type","number","step","any","min","0"],["loc",[null,[24,4],[24,105]]]],
-        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","pricePerGallon",["loc",[null,[27,39],[27,53]]]]],[],[]],"placeholder","Price per Gallon","type","number","step","any","min","0"],["loc",[null,[27,4],[27,121]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","pricepergallon",["loc",[null,[27,39],[27,53]]]]],[],[]],"placeholder","Price per Gallon","type","number","step","any","min","0"],["loc",[null,[27,4],[27,121]]]],
         ["content","outlet",["loc",[null,[31,0],[31,10]]]]
       ],
       locals: [],
@@ -2045,6 +1968,150 @@ define('fuelup/templates/compare', ['exports'], function (exports) {
   'use strict';
 
   exports['default'] = Ember.HTMLBars.template((function() {
+    var child0 = (function() {
+      return {
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 14,
+              "column": 6
+            },
+            "end": {
+              "line": 23,
+              "column": 8
+            }
+          },
+          "moduleName": "fuelup/templates/compare.hbs"
+        },
+        arity: 1,
+        cachedFragment: null,
+        hasRendered: false,
+        buildFragment: function buildFragment(dom) {
+          var el0 = dom.createDocumentFragment();
+          var el1 = dom.createTextNode("        ");
+          dom.appendChild(el0, el1);
+          var el1 = dom.createElement("tr");
+          var el2 = dom.createTextNode("\n          ");
+          dom.appendChild(el1, el2);
+          var el2 = dom.createElement("td");
+          var el3 = dom.createComment("");
+          dom.appendChild(el2, el3);
+          var el3 = dom.createTextNode(" ");
+          dom.appendChild(el2, el3);
+          var el3 = dom.createComment("");
+          dom.appendChild(el2, el3);
+          var el3 = dom.createTextNode(" ");
+          dom.appendChild(el2, el3);
+          var el3 = dom.createComment("");
+          dom.appendChild(el2, el3);
+          var el3 = dom.createTextNode(" ");
+          dom.appendChild(el2, el3);
+          var el3 = dom.createComment("");
+          dom.appendChild(el2, el3);
+          dom.appendChild(el1, el2);
+          var el2 = dom.createTextNode("\n          ");
+          dom.appendChild(el1, el2);
+          var el2 = dom.createElement("td");
+          var el3 = dom.createComment("");
+          dom.appendChild(el2, el3);
+          dom.appendChild(el1, el2);
+          var el2 = dom.createTextNode("\n          ");
+          dom.appendChild(el1, el2);
+          var el2 = dom.createElement("td");
+          var el3 = dom.createComment("");
+          dom.appendChild(el2, el3);
+          var el3 = dom.createTextNode("mi");
+          dom.appendChild(el2, el3);
+          dom.appendChild(el1, el2);
+          var el2 = dom.createTextNode("\n          ");
+          dom.appendChild(el1, el2);
+          var el2 = dom.createElement("td");
+          var el3 = dom.createTextNode("mi");
+          dom.appendChild(el2, el3);
+          dom.appendChild(el1, el2);
+          var el2 = dom.createTextNode("\n          ");
+          dom.appendChild(el1, el2);
+          var el2 = dom.createElement("td");
+          var el3 = dom.createTextNode("$");
+          dom.appendChild(el2, el3);
+          dom.appendChild(el1, el2);
+          var el2 = dom.createTextNode("\n          ");
+          dom.appendChild(el1, el2);
+          var el2 = dom.createElement("td");
+          dom.appendChild(el1, el2);
+          var el2 = dom.createTextNode("\n        ");
+          dom.appendChild(el1, el2);
+          dom.appendChild(el0, el1);
+          var el1 = dom.createTextNode("\n");
+          dom.appendChild(el0, el1);
+          return el0;
+        },
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var element0 = dom.childAt(fragment, [1]);
+          var element1 = dom.childAt(element0, [1]);
+          var morphs = new Array(6);
+          morphs[0] = dom.createMorphAt(element1,0,0);
+          morphs[1] = dom.createMorphAt(element1,2,2);
+          morphs[2] = dom.createMorphAt(element1,4,4);
+          morphs[3] = dom.createMorphAt(element1,6,6);
+          morphs[4] = dom.createMorphAt(dom.childAt(element0, [3]),0,0);
+          morphs[5] = dom.createMorphAt(dom.childAt(element0, [5]),0,0);
+          return morphs;
+        },
+        statements: [
+          ["content","allFillups.vehicle.year",["loc",[null,[16,14],[16,41]]]],
+          ["content","allFillups.vehicle.make",["loc",[null,[16,42],[16,69]]]],
+          ["content","allFillups.vehicle.model",["loc",[null,[16,70],[16,98]]]],
+          ["content","allFillups.vehicle.trim",["loc",[null,[16,99],[16,126]]]],
+          ["content","allFillups.pricePerGallon",["loc",[null,[17,14],[17,43]]]],
+          ["content","allFillups.miles",["loc",[null,[18,14],[18,34]]]]
+        ],
+        locals: ["vehicle"],
+        templates: []
+      };
+    }());
+    var child1 = (function() {
+      return {
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 23,
+              "column": 8
+            },
+            "end": {
+              "line": 25,
+              "column": 6
+            }
+          },
+          "moduleName": "fuelup/templates/compare.hbs"
+        },
+        arity: 0,
+        cachedFragment: null,
+        hasRendered: false,
+        buildFragment: function buildFragment(dom) {
+          var el0 = dom.createDocumentFragment();
+          var el1 = dom.createTextNode("      ");
+          dom.appendChild(el0, el1);
+          var el1 = dom.createElement("h4");
+          var el2 = dom.createTextNode("You haven't added any vehicles yet.");
+          dom.appendChild(el1, el2);
+          dom.appendChild(el0, el1);
+          var el1 = dom.createTextNode("\n");
+          dom.appendChild(el0, el1);
+          return el0;
+        },
+        buildRenderNodes: function buildRenderNodes() { return []; },
+        statements: [
+
+        ],
+        locals: [],
+        templates: []
+      };
+    }());
     return {
       meta: {
         "revision": "Ember@1.13.7",
@@ -2055,7 +2122,7 @@ define('fuelup/templates/compare', ['exports'], function (exports) {
             "column": 0
           },
           "end": {
-            "line": 27,
+            "line": 30,
             "column": 0
           }
         },
@@ -2080,121 +2147,43 @@ define('fuelup/templates/compare', ['exports'], function (exports) {
         var el3 = dom.createTextNode("\n      ");
         dom.appendChild(el2, el3);
         var el3 = dom.createElement("tr");
-        var el4 = dom.createTextNode("\n      ");
+        var el4 = dom.createTextNode("\n        ");
         dom.appendChild(el3, el4);
         var el4 = dom.createElement("th");
-        var el5 = dom.createTextNode("Your Last Price per Gallon");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n      ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("th");
-        var el5 = dom.createTextNode("Your Last Miles on Tank");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n      ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("th");
-        var el5 = dom.createTextNode("Your last MPG");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n      ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("th");
-        var el5 = dom.createTextNode("Your Average MPG");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n      ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("th");
-        var el5 = dom.createTextNode("Community Average MPG");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n      ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("th");
-        var el5 = dom.createTextNode("Your Best MPG");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n      ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("th");
-        var el5 = dom.createTextNode("Community Best MPG");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n      ");
-        dom.appendChild(el3, el4);
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n      ");
-        dom.appendChild(el2, el3);
-        dom.appendChild(el1, el2);
-        var el2 = dom.createTextNode("\n      ");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("tbody");
-        var el3 = dom.createTextNode("\n        ");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createElement("tr");
-        var el4 = dom.createTextNode("\n          ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("td");
-        var el5 = dom.createTextNode("$");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createComment("");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n          ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("td");
-        var el5 = dom.createComment("");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode("mi on ");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createComment("");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode(" ");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createComment("");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode(" ");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createComment("");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createTextNode(" ");
-        dom.appendChild(el4, el5);
-        var el5 = dom.createComment("");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n          ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("td");
-        var el5 = dom.createTextNode("last MPG here");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n          ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("td");
-        var el5 = dom.createTextNode("average MPG here");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n          ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("td");
-        var el5 = dom.createTextNode("community average mpg here");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n          ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("td");
-        var el5 = dom.createTextNode("best mpg");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n          ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("td");
-        var el5 = dom.createTextNode("community best mpg here");
+        var el5 = dom.createTextNode("Vehicle");
         dom.appendChild(el4, el5);
         dom.appendChild(el3, el4);
         var el4 = dom.createTextNode("\n        ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("th");
+        var el5 = dom.createTextNode("Last Price per Gallon");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n        ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("th");
+        var el5 = dom.createTextNode("Last Miles on Tank");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n        ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("th");
+        var el5 = dom.createTextNode("Last MPG");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n        ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("th");
+        var el5 = dom.createTextNode("Average MPG");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n        ");
+        dom.appendChild(el3, el4);
+        var el4 = dom.createElement("th");
+        var el5 = dom.createTextNode("Best MPG");
+        dom.appendChild(el4, el5);
+        dom.appendChild(el3, el4);
+        var el4 = dom.createTextNode("\n      ");
         dom.appendChild(el3, el4);
         dom.appendChild(el2, el3);
         var el3 = dom.createTextNode("\n    ");
@@ -2202,39 +2191,37 @@ define('fuelup/templates/compare', ['exports'], function (exports) {
         dom.appendChild(el1, el2);
         var el2 = dom.createTextNode("\n    ");
         dom.appendChild(el1, el2);
+        var el2 = dom.createElement("tbody");
+        var el3 = dom.createTextNode("\n");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createComment("");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("    ");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n");
+        dom.appendChild(el1, el2);
         dom.appendChild(el0, el1);
         var el1 = dom.createTextNode("\n");
         dom.appendChild(el0, el1);
         var el1 = dom.createComment("");
         dom.appendChild(el0, el1);
-        var el1 = dom.createTextNode("\n");
+        var el1 = dom.createTextNode("\n\n");
         dom.appendChild(el0, el1);
         return el0;
       },
       buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
-        var element0 = dom.childAt(fragment, [2, 3, 1]);
-        var element1 = dom.childAt(element0, [3]);
-        var morphs = new Array(7);
-        morphs[0] = dom.createMorphAt(dom.childAt(element0, [1]),1,1);
-        morphs[1] = dom.createMorphAt(element1,0,0);
-        morphs[2] = dom.createMorphAt(element1,2,2);
-        morphs[3] = dom.createMorphAt(element1,4,4);
-        morphs[4] = dom.createMorphAt(element1,6,6);
-        morphs[5] = dom.createMorphAt(element1,8,8);
-        morphs[6] = dom.createMorphAt(fragment,4,4,contextualElement);
+        var morphs = new Array(2);
+        morphs[0] = dom.createMorphAt(dom.childAt(fragment, [2, 3]),1,1);
+        morphs[1] = dom.createMorphAt(fragment,4,4,contextualElement);
         return morphs;
       },
       statements: [
-        ["content","allFillups.pricePerGallon",["loc",[null,[16,15],[16,44]]]],
-        ["content","allFillups.miles",["loc",[null,[17,14],[17,34]]]],
-        ["content","allFillups.vehicle.year",["loc",[null,[17,40],[17,67]]]],
-        ["content","allFillups.vehicle.make",["loc",[null,[17,68],[17,95]]]],
-        ["content","allFillups.vehicle.model",["loc",[null,[17,96],[17,124]]]],
-        ["content","allFillups.vehicle.trim",["loc",[null,[17,125],[17,152]]]],
-        ["content","outlet",["loc",[null,[26,0],[26,10]]]]
+        ["block","each",[["get","vehicle",["loc",[null,[14,25],[14,32]]]]],[],0,1,["loc",[null,[14,6],[25,15]]]],
+        ["content","outlet",["loc",[null,[28,0],[28,10]]]]
       ],
       locals: [],
-      templates: []
+      templates: [child0, child1]
     };
   }()));
 
@@ -5802,7 +5789,7 @@ define('fuelup/tests/routes/compare.jshint', function () {
 
   QUnit.module('JSHint - routes');
   QUnit.test('routes/compare.js should pass jshint', function(assert) { 
-    assert.ok(true, 'routes/compare.js should pass jshint.'); 
+    assert.ok(false, 'routes/compare.js should pass jshint.\nroutes/compare.js: line 5, col 49, Missing semicolon.\n\n1 error'); 
   });
 
 });

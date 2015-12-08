@@ -37,6 +37,7 @@ def removeJavascriptKeyword(value):
 
 # Check to see if vehicle year is 1900-2016, the supported vehicle model years
 def checkYear(value):
+	print value
 	if (value >= 1900) and (value <= 2016):
 		return True
 	return False
@@ -47,10 +48,10 @@ def checkModels(value):
 	'Chevrolet', 'Chrysler', 'Citroen', 'Dodge', 'Ferrari', 'Fiat', 'Ford', 'Geely', 'GMC', 'Honda',
 	'Hyundai', 'Infiniti', 'Jaguar', 'Jeep', 'Kia', 'Koenigsegg', 'Lamborghini', 'Land Rover', 'Lexus',
 	'Maserati', 'Mazda', 'McLaren', 'Mercedes-Benz', 'Mini', 'Mitsubishi', 'Nissan', 'Pagani', 'Peugeot',
-	'Porsche', 'Renault', 'Rolls Royce', 'Saab', 'Subaru', 'Suzuki', 'Tata', 'Tesla', 'Toyota', 'Volkswagen',
-	'Volvo']
+	'Porsche', 'Renault', 'Rolls Royce', 'Saab', 'Saturn', 'Subaru', 'Suzuki', 'Tata', 'Tesla', 'Toyota', 
+	'Volkswagen','Volvo']
 
-	if any(x in value for x in brands):
+	if value in brands:
 		return True
 	return False
 

@@ -14,12 +14,8 @@ class VehicleSerializer(serializers.ModelSerializer):
         model = Vehicle
         fields = ('id', 'year', 'make', 'model', 'trim')
 
-class UserSerializer(serializers.ModelSerializer):
+class FuelupuserSerializer(serializers.ModelSerializer):
+    user = serializers.SlugRelatedField(slug_field='username', queryset=User.objects.filter(username=request.user.username))
     class Meta:
-        model = User
-        fields = ('id', 'username', 'vehicles')
-
-# class SessionSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Session
-#         fields = ('username', 'userid', 'isauthenticated')
+        model = Fuelupuser
+        fields = ('id', 'user', 'vehicles')
