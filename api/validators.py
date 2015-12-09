@@ -1,39 +1,53 @@
 from django.core.exceptions import ValidationError
+from bs4 import BeautifulSoup
 
 # Before saving to database, check to make sure there is no Javascript. Throw ValidationError if Javascript is detected.
 def removeJavascriptKeyword(value):
     if "javascript:" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
     if "document.write" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
     if "alert(" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
     if "</SCRIPT>" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
     if "<SCRIPT>" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
     if "exec(" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
     if "<IMG SRC=" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
     if "<iframe src=" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
     if "<SCRIPT SRC=" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
     if "<SCRIPT/SRC=" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
     if "<BODY onload" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
     if "<BODY ONLOAD=" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
     if "<<SCRIPT>" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
     if "<<SCRIPT>" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
     if "<STYLE>" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
     if "<A HREF=" in value:
-        raise ValidationError(('String contains javascript'), code='invalid')
+        raise ValidationError('String contains XSS code')
+
+# Check input to make sure it does not contain HTML tags
+def checkHTML(value):
+    valid = True
+    soup = BeautifulSoup(value, 'html.parser')
+
+    for tag in soup.findAll(True):
+        if tag.name:
+            valid = False
+            break
+    # Raise an error if invalid tags were found
+    if not valid:
+        raise ValidationError('string contains html')
 
 # Check to see if vehicle year is 1900-2016, the supported vehicle model years
 def checkYear(value):

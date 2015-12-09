@@ -11,9 +11,9 @@ class Vehicle(models.Model):
     This is a vehicle entry for user submitted vehicle entries.
     """
     year = models.IntegerField(blank=False)
-    make = models.CharField(max_length=15, blank=False, validators=[removeJavascriptKeyword])
-    model = models.CharField(max_length=15, blank=False, validators=[removeJavascriptKeyword])
-    trim = models.CharField(max_length=15, blank=False, validators=[removeJavascriptKeyword])
+    make = models.CharField(max_length=15, blank=False, validators=[removeJavascriptKeyword, checkHTML])
+    model = models.CharField(max_length=15, blank=False, validators=[removeJavascriptKeyword, checkHTML])
+    trim = models.CharField(max_length=15, blank=False, validators=[removeJavascriptKeyword, checkHTML])
     def __str__(self):
          return str(self.id)+": "+str(self.year)+" "+str(self.make)+" "+str(self.model)+" "+str(self.trim)
 

@@ -202,8 +202,9 @@ define('fuelup/components/vehicle-display', ['exports', 'ember'], function (expo
 		fillups: null,
 		vehicle: null,
 		init: function init() {
+			this._super();
 			var t = this;
-			this.store.find('vehicle.fillups').then(function (records) {
+			this.store.find('fillups').then(function (records) {
 				t.set('fillups', records.filterBy('vehicle', t.get('vehicle')));
 			});
 		},
@@ -1347,11 +1348,11 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
           "loc": {
             "source": null,
             "start": {
-              "line": 15,
+              "line": 13,
               "column": 6
             },
             "end": {
-              "line": 24,
+              "line": 20,
               "column": 8
             }
           },
@@ -1365,12 +1366,6 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
           var el1 = dom.createTextNode("        ");
           dom.appendChild(el0, el1);
           var el1 = dom.createElement("tr");
-          var el2 = dom.createTextNode("\n          ");
-          dom.appendChild(el1, el2);
-          var el2 = dom.createElement("td");
-          var el3 = dom.createComment("");
-          dom.appendChild(el2, el3);
-          dom.appendChild(el1, el2);
           var el2 = dom.createTextNode("\n          ");
           dom.appendChild(el1, el2);
           var el2 = dom.createElement("td");
@@ -1411,10 +1406,6 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
           var el3 = dom.createComment("");
           dom.appendChild(el2, el3);
           dom.appendChild(el1, el2);
-          var el2 = dom.createTextNode("\n          ");
-          dom.appendChild(el1, el2);
-          var el2 = dom.createElement("td");
-          dom.appendChild(el1, el2);
           var el2 = dom.createTextNode("\n        ");
           dom.appendChild(el1, el2);
           dom.appendChild(el0, el1);
@@ -1424,27 +1415,25 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
         },
         buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element0 = dom.childAt(fragment, [1]);
-          var element1 = dom.childAt(element0, [9]);
-          var morphs = new Array(8);
+          var element1 = dom.childAt(element0, [7]);
+          var morphs = new Array(7);
           morphs[0] = dom.createMorphAt(dom.childAt(element0, [1]),0,0);
           morphs[1] = dom.createMorphAt(dom.childAt(element0, [3]),0,0);
-          morphs[2] = dom.createMorphAt(dom.childAt(element0, [5]),0,0);
-          morphs[3] = dom.createMorphAt(dom.childAt(element0, [7]),1,1);
-          morphs[4] = dom.createMorphAt(element1,0,0);
-          morphs[5] = dom.createMorphAt(element1,2,2);
-          morphs[6] = dom.createMorphAt(element1,4,4);
-          morphs[7] = dom.createMorphAt(element1,6,6);
+          morphs[2] = dom.createMorphAt(dom.childAt(element0, [5]),1,1);
+          morphs[3] = dom.createMorphAt(element1,0,0);
+          morphs[4] = dom.createMorphAt(element1,2,2);
+          morphs[5] = dom.createMorphAt(element1,4,4);
+          morphs[6] = dom.createMorphAt(element1,6,6);
           return morphs;
         },
         statements: [
-          ["content","fillup.id",["loc",[null,[17,14],[17,27]]]],
-          ["content","fillup.date",["loc",[null,[18,14],[18,29]]]],
-          ["content","fillup.miles",["loc",[null,[19,14],[19,30]]]],
-          ["content","fillup.pricepergallon",["loc",[null,[20,15],[20,40]]]],
-          ["content","fillup.vehicle.year",["loc",[null,[21,14],[21,37]]]],
-          ["content","fillup.vehicle.make",["loc",[null,[21,38],[21,61]]]],
-          ["content","fillup.vehicle.model",["loc",[null,[21,62],[21,86]]]],
-          ["content","fillup.vehicle.trim",["loc",[null,[21,87],[21,110]]]]
+          ["content","fillup.date",["loc",[null,[15,14],[15,29]]]],
+          ["content","fillup.miles",["loc",[null,[16,14],[16,30]]]],
+          ["content","fillup.pricepergallon",["loc",[null,[17,15],[17,40]]]],
+          ["content","fillup.vehicle.year",["loc",[null,[18,14],[18,37]]]],
+          ["content","fillup.vehicle.make",["loc",[null,[18,38],[18,61]]]],
+          ["content","fillup.vehicle.model",["loc",[null,[18,62],[18,86]]]],
+          ["content","fillup.vehicle.trim",["loc",[null,[18,87],[18,110]]]]
         ],
         locals: ["fillup"],
         templates: []
@@ -1457,11 +1446,11 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
           "loc": {
             "source": null,
             "start": {
-              "line": 24,
+              "line": 20,
               "column": 8
             },
             "end": {
-              "line": 26,
+              "line": 22,
               "column": 6
             }
           },
@@ -1500,7 +1489,7 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
             "column": 0
           },
           "end": {
-            "line": 29,
+            "line": 25,
             "column": 0
           }
         },
@@ -1528,12 +1517,6 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
         var el4 = dom.createTextNode("\n        ");
         dom.appendChild(el3, el4);
         var el4 = dom.createElement("th");
-        var el5 = dom.createTextNode("ID");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n        ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("th");
         var el5 = dom.createTextNode("Date");
         dom.appendChild(el4, el5);
         dom.appendChild(el3, el4);
@@ -1553,12 +1536,6 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
         dom.appendChild(el3, el4);
         var el4 = dom.createElement("th");
         var el5 = dom.createTextNode("Vehicle");
-        dom.appendChild(el4, el5);
-        dom.appendChild(el3, el4);
-        var el4 = dom.createTextNode("\n        ");
-        dom.appendChild(el3, el4);
-        var el4 = dom.createElement("th");
-        var el5 = dom.createTextNode("Remove Entry?");
         dom.appendChild(el4, el5);
         dom.appendChild(el3, el4);
         var el4 = dom.createTextNode("\n      ");
@@ -1590,7 +1567,7 @@ define('fuelup/templates/archive', ['exports'], function (exports) {
         return morphs;
       },
       statements: [
-        ["block","each",[["get","fillup",["loc",[null,[15,24],[15,30]]]]],[],0,1,["loc",[null,[15,6],[26,15]]]]
+        ["block","each",[["get","fillup",["loc",[null,[13,24],[13,30]]]]],[],0,1,["loc",[null,[13,6],[22,15]]]]
       ],
       locals: [],
       templates: [child0, child1]
@@ -5256,6 +5233,10 @@ define('fuelup/templates/home', ['exports'], function (exports) {
           var el1 = dom.createElement("h4");
           var el2 = dom.createComment("");
           dom.appendChild(el1, el2);
+          var el2 = dom.createTextNode("- ");
+          dom.appendChild(el1, el2);
+          var el2 = dom.createComment("");
+          dom.appendChild(el1, el2);
           var el2 = dom.createTextNode(" ");
           dom.appendChild(el1, el2);
           var el2 = dom.createComment("");
@@ -5275,18 +5256,20 @@ define('fuelup/templates/home', ['exports'], function (exports) {
         },
         buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
           var element0 = dom.childAt(fragment, [1]);
-          var morphs = new Array(4);
+          var morphs = new Array(5);
           morphs[0] = dom.createMorphAt(element0,0,0);
           morphs[1] = dom.createMorphAt(element0,2,2);
           morphs[2] = dom.createMorphAt(element0,4,4);
           morphs[3] = dom.createMorphAt(element0,6,6);
+          morphs[4] = dom.createMorphAt(element0,8,8);
           return morphs;
         },
         statements: [
-          ["content","vehicle.year",["loc",[null,[6,6],[6,22]]]],
-          ["content","vehicle.make",["loc",[null,[6,23],[6,39]]]],
-          ["content","vehicle.model",["loc",[null,[6,40],[6,57]]]],
-          ["content","vehicle.trim",["loc",[null,[6,58],[6,74]]]]
+          ["content","vehicle.id",["loc",[null,[6,6],[6,20]]]],
+          ["content","vehicle.year",["loc",[null,[6,22],[6,38]]]],
+          ["content","vehicle.make",["loc",[null,[6,39],[6,55]]]],
+          ["content","vehicle.model",["loc",[null,[6,56],[6,73]]]],
+          ["content","vehicle.trim",["loc",[null,[6,74],[6,90]]]]
         ],
         locals: ["vehicle"],
         templates: []

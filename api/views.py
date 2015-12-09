@@ -70,7 +70,6 @@ class UserList(APIView):
         return Response(data)
 
     def get(self, request, format=None):
-        print request.user.username
         fuelupuser = Fuelupuser.objects.filter(user__username=request.user.username) #you could limit this to only the posts for which the user has access
         serializer = FuelupuserSerializer(fuelupuser, many=True, context={'request': request})
         return Response(serializer.data) #you can customize the response here
@@ -130,13 +129,9 @@ class VehicleList(APIView):
         modelYear = request.data.get('year')
         brand = request.data.get('make')
         serializer = VehicleSerializer(data=request.data, context={'request': request})
-        print request.data
         if serializer.is_valid():
-            print("serializer is valid")
             if checkYear(modelYear):
-                print("modelYear is valid")
                 if checkModels(brand):
-                    print("checkModels is valid")
                     serializer.save()
                     return Response(serializer.data, status=status.HTTP_201_CREATED) #you could customize the response here
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) #{"errors": {"make": ["Invalid vehicle make!"],}})

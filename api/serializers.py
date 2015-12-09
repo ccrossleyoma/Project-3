@@ -19,8 +19,3 @@ class FuelupuserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Fuelupuser
         fields = ('id', 'user', 'vehicles')
-
-# class SessionSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Session
-#         fields = ('username', 'userid', 'isauthenticated')
