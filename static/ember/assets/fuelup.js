@@ -695,7 +695,7 @@ define('fuelup/models/vehicle', ['exports', 'ember-data'], function (exports, DS
     model: DS['default'].attr('string'),
     trim: DS['default'].attr('string'),
     /*user: DS.belongsTo('user', {async: true}),*/
-    fillup: DS['default'].hasMany('fillup')
+    fillups: DS['default'].hasMany('fillup')
   });
 
 });
@@ -838,19 +838,19 @@ define('fuelup/routes/compare', ['exports', 'ember'], function (exports, Ember) 
 			return this.store.findAll('vehicle');
 		},
 
-		/*    maxMPG: function(){
-	     		var allFillups = this.store.peekAll('fillup');
-	 			var count = allFillups.get('length');
-	 			var lastFillup = allFillups.objectAt(count-1);
-	 			var lastMiles = lastFillup.miles;
-	 			var lastGallons = lastFillup.gallons;
-	 			var mpg = (lastMiles / lastGallons);
-	     },*/
-
 		setupController: function setupController(controller, model) {
 			controller.set('vehicle', model);
 		}
 	});
+
+	/*    maxMPG: function(){
+	    		var allFillups = this.store.peekAll('fillup');
+				var count = allFillups.get('length');
+				var lastFillup = allFillups.objectAt(count-1);
+				var lastMiles = lastFillup.miles;
+				var lastGallons = lastFillup.gallons;
+				var mpg = (lastMiles / lastGallons);
+	    },*/
 
 });
 define('fuelup/routes/home', ['exports', 'ember'], function (exports, Ember) {
@@ -958,6 +958,55 @@ define('fuelup/templates/add-fill-up', ['exports'], function (exports) {
   'use strict';
 
   exports['default'] = Ember.HTMLBars.template((function() {
+    var child0 = (function() {
+      return {
+        meta: {
+          "revision": "Ember@1.13.7",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 4,
+              "column": 3
+            },
+            "end": {
+              "line": 8,
+              "column": 3
+            }
+          },
+          "moduleName": "fuelup/templates/add-fill-up.hbs"
+        },
+        arity: 1,
+        cachedFragment: null,
+        hasRendered: false,
+        buildFragment: function buildFragment(dom) {
+          var el0 = dom.createDocumentFragment();
+          var el1 = dom.createTextNode("				");
+          dom.appendChild(el0, el1);
+          var el1 = dom.createElement("div");
+          dom.setAttribute(el1,"class","error");
+          var el2 = dom.createTextNode("\n				");
+          dom.appendChild(el1, el2);
+          var el2 = dom.createComment("");
+          dom.appendChild(el1, el2);
+          var el2 = dom.createTextNode("\n				");
+          dom.appendChild(el1, el2);
+          dom.appendChild(el0, el1);
+          var el1 = dom.createTextNode("\n");
+          dom.appendChild(el0, el1);
+          return el0;
+        },
+        buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
+          var morphs = new Array(1);
+          morphs[0] = dom.createMorphAt(dom.childAt(fragment, [1]),1,1);
+          return morphs;
+        },
+        statements: [
+          ["content","message",["loc",[null,[6,4],[6,15]]]]
+        ],
+        locals: ["message"],
+        templates: []
+      };
+    }());
     return {
       meta: {
         "revision": "Ember@1.13.7",
@@ -968,7 +1017,7 @@ define('fuelup/templates/add-fill-up', ['exports'], function (exports) {
             "column": 0
           },
           "end": {
-            "line": 32,
+            "line": 27,
             "column": 0
           }
         },
@@ -992,18 +1041,9 @@ define('fuelup/templates/add-fill-up', ['exports'], function (exports) {
         var el1 = dom.createTextNode("\n");
         dom.appendChild(el0, el1);
         var el1 = dom.createElement("form");
-        var el2 = dom.createTextNode("\n			");
-        dom.appendChild(el1, el2);
-        var el2 = dom.createElement("div");
-        dom.setAttribute(el2,"class","form-group has-error");
-        var el3 = dom.createTextNode("\n				");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createComment("");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n			");
-        dom.appendChild(el2, el3);
-        dom.appendChild(el1, el2);
         var el2 = dom.createTextNode("\n");
+        dom.appendChild(el1, el2);
+        var el2 = dom.createComment("");
         dom.appendChild(el1, el2);
         var el2 = dom.createTextNode("			");
         dom.appendChild(el1, el2);
@@ -1051,6 +1091,17 @@ define('fuelup/templates/add-fill-up', ['exports'], function (exports) {
         dom.appendChild(el1, el2);
         var el2 = dom.createTextNode("\n			");
         dom.appendChild(el1, el2);
+        var el2 = dom.createElement("div");
+        dom.setAttribute(el2,"class","form-group has-error");
+        var el3 = dom.createTextNode("\n				");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createComment("");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("\n			");
+        dom.appendChild(el2, el3);
+        dom.appendChild(el1, el2);
+        var el2 = dom.createTextNode("\n			");
+        dom.appendChild(el1, el2);
         var el2 = dom.createElement("button");
         dom.setAttribute(el2,"type","submit");
         dom.setAttribute(el2,"class","btn btn-default");
@@ -1070,27 +1121,29 @@ define('fuelup/templates/add-fill-up', ['exports'], function (exports) {
       },
       buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var element0 = dom.childAt(fragment, [4]);
-        var morphs = new Array(7);
+        var morphs = new Array(8);
         morphs[0] = dom.createElementMorph(element0);
-        morphs[1] = dom.createMorphAt(dom.childAt(element0, [1]),1,1);
-        morphs[2] = dom.createMorphAt(dom.childAt(element0, [4]),1,1);
-        morphs[3] = dom.createMorphAt(dom.childAt(element0, [6]),1,1);
-        morphs[4] = dom.createMorphAt(dom.childAt(element0, [8]),1,1);
-        morphs[5] = dom.createMorphAt(dom.childAt(element0, [10]),1,1);
-        morphs[6] = dom.createMorphAt(fragment,6,6,contextualElement);
+        morphs[1] = dom.createMorphAt(element0,1,1);
+        morphs[2] = dom.createMorphAt(dom.childAt(element0, [3]),1,1);
+        morphs[3] = dom.createMorphAt(dom.childAt(element0, [5]),1,1);
+        morphs[4] = dom.createMorphAt(dom.childAt(element0, [7]),1,1);
+        morphs[5] = dom.createMorphAt(dom.childAt(element0, [9]),1,1);
+        morphs[6] = dom.createMorphAt(dom.childAt(element0, [11]),1,1);
+        morphs[7] = dom.createMorphAt(fragment,6,6,contextualElement);
         return morphs;
       },
       statements: [
         ["element","action",["addFillUp",["get","identification",["loc",[null,[3,27],[3,41]]]]],["on","submit"],["loc",[null,[3,6],[3,55]]]],
-        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","vehicle",["loc",[null,[5,39],[5,46]]]]],[],[]],"placeholder","Vehicle"],["loc",[null,[5,4],[5,70]]]],
-        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","date",["loc",[null,[18,39],[18,43]]]]],[],[]],"placeholder","Date","type","date"],["loc",[null,[18,4],[18,76]]]],
-        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","miles",["loc",[null,[21,39],[21,44]]]]],[],[]],"placeholder","Miles","type","number","step","any","min","0"],["loc",[null,[21,4],[21,101]]]],
-        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","gallons",["loc",[null,[24,39],[24,46]]]]],[],[]],"placeholder","Gallons","type","number","step","any","min","0"],["loc",[null,[24,4],[24,105]]]],
-        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","pricepergallon",["loc",[null,[27,39],[27,53]]]]],[],[]],"placeholder","Price per Gallon","type","number","step","any","min","0"],["loc",[null,[27,4],[27,121]]]],
-        ["content","outlet",["loc",[null,[31,0],[31,10]]]]
+        ["block","each",[["get","model.errors.messages",["loc",[null,[4,11],[4,32]]]]],[],0,null,["loc",[null,[4,3],[8,12]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","vehicle",["loc",[null,[10,39],[10,46]]]]],[],[]],"placeholder","Vehicle"],["loc",[null,[10,4],[10,70]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","date",["loc",[null,[13,39],[13,43]]]]],[],[]],"placeholder","Date","type","date"],["loc",[null,[13,4],[13,76]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","miles",["loc",[null,[16,39],[16,44]]]]],[],[]],"placeholder","Miles","type","number","step","any","min","0"],["loc",[null,[16,4],[16,101]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","gallons",["loc",[null,[19,39],[19,46]]]]],[],[]],"placeholder","Gallons","type","number","step","any","min","0"],["loc",[null,[19,4],[19,105]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","pricepergallon",["loc",[null,[22,39],[22,53]]]]],[],[]],"placeholder","Price per Gallon","type","number","step","any","min","0"],["loc",[null,[22,4],[22,121]]]],
+        ["content","outlet",["loc",[null,[26,0],[26,10]]]]
       ],
       locals: [],
-      templates: []
+      templates: [child0]
     };
   }()));
 
@@ -1107,11 +1160,11 @@ define('fuelup/templates/add-vehicle', ['exports'], function (exports) {
           "loc": {
             "source": null,
             "start": {
-              "line": 9,
+              "line": 5,
               "column": 4
             },
             "end": {
-              "line": 13,
+              "line": 9,
               "column": 4
             }
           },
@@ -1143,9 +1196,9 @@ define('fuelup/templates/add-vehicle', ['exports'], function (exports) {
           return morphs;
         },
         statements: [
-          ["content","error.message",["loc",[null,[11,4],[11,21]]]]
+          ["content","message",["loc",[null,[7,4],[7,15]]]]
         ],
-        locals: ["error"],
+        locals: ["message"],
         templates: []
       };
     }());
@@ -1187,7 +1240,11 @@ define('fuelup/templates/add-vehicle', ['exports'], function (exports) {
         dom.appendChild(el1, el2);
         var el2 = dom.createElement("div");
         dom.setAttribute(el2,"class","form-group has-error");
-        var el3 = dom.createTextNode("\n				");
+        var el3 = dom.createTextNode("\n");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createComment("");
+        dom.appendChild(el2, el3);
+        var el3 = dom.createTextNode("				");
         dom.appendChild(el2, el3);
         var el3 = dom.createComment("");
         dom.appendChild(el2, el3);
@@ -1202,11 +1259,7 @@ define('fuelup/templates/add-vehicle', ['exports'], function (exports) {
         dom.appendChild(el2, el3);
         var el3 = dom.createComment("");
         dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("\n");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createComment("");
-        dom.appendChild(el2, el3);
-        var el3 = dom.createTextNode("			");
+        var el3 = dom.createTextNode("\n			");
         dom.appendChild(el2, el3);
         dom.appendChild(el1, el2);
         var el2 = dom.createTextNode("\n			");
@@ -1252,12 +1305,12 @@ define('fuelup/templates/add-vehicle', ['exports'], function (exports) {
       },
       buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
         var element0 = dom.childAt(fragment, [4]);
-        var element1 = dom.childAt(element0, [3]);
+        var element1 = dom.childAt(element0, [1]);
         var morphs = new Array(7);
         morphs[0] = dom.createElementMorph(element0);
-        morphs[1] = dom.createMorphAt(dom.childAt(element0, [1]),1,1);
-        morphs[2] = dom.createMorphAt(element1,1,1);
-        morphs[3] = dom.createMorphAt(element1,3,3);
+        morphs[1] = dom.createMorphAt(element1,1,1);
+        morphs[2] = dom.createMorphAt(element1,3,3);
+        morphs[3] = dom.createMorphAt(dom.childAt(element0, [3]),1,1);
         morphs[4] = dom.createMorphAt(dom.childAt(element0, [5]),1,1);
         morphs[5] = dom.createMorphAt(dom.childAt(element0, [7]),1,1);
         morphs[6] = dom.createMorphAt(fragment,6,6,contextualElement);
@@ -1265,9 +1318,9 @@ define('fuelup/templates/add-vehicle', ['exports'], function (exports) {
       },
       statements: [
         ["element","action",["addCar",["get","identification",["loc",[null,[3,24],[3,38]]]]],["on","submit"],["loc",[null,[3,6],[3,52]]]],
-        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","year",["loc",[null,[5,39],[5,43]]]]],[],[]],"placeholder","Year","type","number","min","1900","max","2016"],["loc",[null,[5,4],[5,100]]]],
-        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","make",["loc",[null,[8,39],[8,43]]]]],[],[]],"placeholder","Make"],["loc",[null,[8,4],[8,65]]]],
-        ["block","each",[["get","model.errors.make",["loc",[null,[9,12],[9,29]]]]],[],0,null,["loc",[null,[9,4],[13,13]]]],
+        ["block","each",[["get","model.errors.messages",["loc",[null,[5,12],[5,33]]]]],[],0,null,["loc",[null,[5,4],[9,13]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","year",["loc",[null,[10,39],[10,43]]]]],[],[]],"placeholder","Year","type","number","min","1900","max","2016"],["loc",[null,[10,4],[10,100]]]],
+        ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","make",["loc",[null,[13,39],[13,43]]]]],[],[]],"placeholder","Make"],["loc",[null,[13,4],[13,65]]]],
         ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","model",["loc",[null,[16,39],[16,44]]]]],[],[]],"placeholder","Model"],["loc",[null,[16,4],[16,67]]]],
         ["inline","input",[],["class","form-control","value",["subexpr","@mut",[["get","trim",["loc",[null,[19,39],[19,43]]]]],[],[]],"placeholder","Trim"],["loc",[null,[19,4],[19,65]]]],
         ["content","outlet",["loc",[null,[23,0],[23,10]]]]

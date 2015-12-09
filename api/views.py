@@ -69,18 +69,18 @@ class UserList(APIView):
         data['message'] = error
         return Response(data)
 
+    # Limit to only Fuelupuser objects user has access to
     def get(self, request, format=None):
-        fuelupuser = Fuelupuser.objects.filter(user__username=request.user.username) #you could limit this to only the posts for which the user has access
+        fuelupuser = Fuelupuser.objects.filter(user__username=request.user.username) 
         serializer = FuelupuserSerializer(fuelupuser, many=True, context={'request': request})
         return Response(serializer.data) #you can customize the response here
     
     def post(self, request, *args, **kwargs):
-    # def post(self, request, format=None):
         username = request.data.get('username')
         password = request.data.get('password')
         user = User.objects.filter(username=username)
         if user.exists():
-            return self.form_response("Username has been taken. Please choose another.")
+            return Response(status=status.HTTP_400_BAD_REQUEST) # username exists
         user = User.objects.create_user(username=username, email='noemail', password=password)
         fuelupuser = Fuelupuser(user=user)
         fuelupuser.save()
